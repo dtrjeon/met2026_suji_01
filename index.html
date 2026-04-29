@@ -32,7 +32,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:#f7f4ef;-webkit-text-size-
 .lbl{font-size:12px;font-weight:600;color:rgba(20,30,70,0.9);}
 .req{color:#2050c8;}
 input[type=text],input[type=tel],select,textarea{background:#fff;border:1px solid rgba(0,0,20,0.18);border-radius:6px;padding:9px 12px;font-family:'Noto Sans KR',sans-serif;font-size:16px!important;color:#0f1428;outline:none;width:100%;-webkit-appearance:none;appearance:none;}
-input[readonly]{background:#f0f2f8;color:rgba(20,30,70,0.65);cursor:default;-webkit-user-select:none;}
+input[readonly]{background:#f0f2f8;color:rgba(20,30,70,0.65);cursor:default;-webkit-user-select:none;user-select:none;pointer-events:none;}
 input::placeholder,textarea::placeholder{color:rgba(100,110,140,0.5);}
 select option{background:#fff;color:#0f1428;}
 /* iOS: .sw::after 가상요소가 select 터치를 막지 않도록 select를 z-index:1로 올림 */
@@ -147,34 +147,35 @@ textarea{resize:none;min-height:52px;}
 .restyes{flex:1;padding:12px;background:linear-gradient(135deg,#2a5cd8,#1a3ab0);border:none;border-radius:8px;color:#fff;font-family:‘Noto Sans KR’,sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-height:46px;-webkit-appearance:none;touch-action:manipulation;}
 .restno{flex:1;padding:12px;background:transparent;border:1.5px solid rgba(0,0,20,0.15);border-radius:8px;color:rgba(60,70,100,0.8);font-family:‘Noto Sans KR’,sans-serif;font-size:13px;font-weight:600;cursor:pointer;min-height:46px;-webkit-appearance:none;touch-action:manipulation;}
 
-
-/* ── 내용확인 오버레이 ── */
-.cfmovl{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(247,244,239,0.98);display:none;flex-direction:column;align-items:center;z-index:150;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+/* 내용확인 오버레이 */
+.cfmovl{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(247,244,239,0.97);display:none;align-items:flex-start;justify-content:center;z-index:100;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:28px 18px 120px;}
 .cfmovl.show{display:flex;}
-.cfmwrap{width:100%;max-width:720px;padding:28px 18px 130px;}
-.cfm-hd{text-align:center;margin-bottom:22px;}
-.cfm-icon{font-size:38px;margin-bottom:8px;}
-.cfm-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:#1a3a9e;margin-bottom:4px;}
-.cfm-sub{font-size:11px;color:rgba(40,50,90,0.6);letter-spacing:1px;}
-.cfm-typebadge{display:inline-flex;padding:7px 14px;background:rgba(32,80,200,0.07);border:1px solid rgba(32,80,200,0.18);border-radius:6px;font-size:12px;color:#1a3a9e;font-weight:700;margin-bottom:16px;}
+.cfmcard{max-width:720px;width:100%;padding-bottom:20px;}
+.cfm-hd{text-align:center;margin-bottom:24px;padding-top:8px;}
+.cfm-icon{font-size:40px;margin-bottom:10px;}
+.cfm-title{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:#1a3a9e;margin-bottom:4px;}
+.cfm-sub{font-size:12px;color:rgba(40,50,90,0.65);letter-spacing:1px;}
+.cfm-sec{margin-bottom:16px;}
 .cfm-sec-lbl{font-size:10px;font-weight:700;letter-spacing:3px;color:#1a3a9e;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
 .cfm-sec-lbl::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(32,80,200,0.2),transparent);}
-.cfm-card{background:#fff;border:1.5px solid rgba(32,80,200,0.13);border-radius:12px;padding:15px;margin-bottom:12px;}
-.cfm-mhd{display:flex;align-items:center;gap:9px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(0,0,20,0.07);}
+.cfm-member{background:#fff;border:1.5px solid rgba(32,80,200,0.15);border-radius:12px;padding:16px;margin-bottom:12px;}
+.cfm-mhd{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(0,0,20,0.07);}
 .cfm-mnum{width:26px;height:26px;border-radius:50%;background:#2050c8;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .cfm-mname{font-size:14px;font-weight:700;color:#1a1e3a;}
 .cfm-mrel{font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(20,160,80,0.1);color:#0a5c30;border:1px solid rgba(20,160,80,0.3);font-weight:600;margin-left:4px;}
-.cfm-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.cfm-rows{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .cfm-row{background:#f7f9ff;border-radius:6px;padding:8px 10px;}
-.cfm-row.full{grid-column:1/-1;}
 .cfm-key{font-size:10px;color:rgba(30,50,120,0.6);font-weight:600;margin-bottom:2px;}
 .cfm-val{font-size:13px;color:#0f1428;font-weight:500;word-break:break-all;}
-.cfm-val.dim{color:rgba(120,130,160,0.55);font-size:12px;}
-.cfm-btns{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid rgba(0,0,20,0.08);padding:12px 18px;padding-bottom:calc(12px + env(safe-area-inset-bottom));display:flex;gap:10px;z-index:151;box-shadow:0 -2px 16px rgba(0,0,0,0.07);}
+.cfm-val.empty{color:rgba(120,130,160,0.6);font-style:italic;font-size:12px;}
+.cfm-row.full{grid-column:1/-1;}
+.cfm-typebadge{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(32,80,200,0.06);border:1px solid rgba(32,80,200,0.15);border-radius:8px;font-size:12px;color:#1a3a9e;font-weight:600;margin-bottom:16px;}
+.cfm-btns{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid rgba(0,0,20,0.1);padding:12px 18px;padding-bottom:calc(12px + env(safe-area-inset-bottom));display:flex;gap:10px;z-index:101;box-shadow:0 -2px 16px rgba(0,0,0,0.08);}
 .cfm-back{flex:1;padding:14px;background:transparent;border:1.5px solid rgba(0,0,20,0.18);border-radius:8px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:600;color:rgba(40,50,80,0.8);cursor:pointer;min-height:50px;-webkit-appearance:none;outline:none;touch-action:manipulation;}
 .cfm-submit{flex:2;padding:14px;background:linear-gradient(135deg,#2a5cd8,#1a3ab0);border:none;border-radius:8px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;color:#fff;cursor:pointer;letter-spacing:1px;min-height:50px;-webkit-appearance:none;outline:none;touch-action:manipulation;}
 .cfm-submit:disabled{opacity:0.6;}
-@media(max-width:400px){.cfm-grid{grid-template-columns:1fr;}.cfm-row.full{grid-column:1;}}
+@media(max-width:400px){.cfm-rows{grid-template-columns:1fr;}.cfm-row.full{grid-column:1;}}
+
 /* 완료 */
 .doneovl{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(247,244,239,0.97);display:none;align-items:flex-start;justify-content:center;z-index:100;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:40px 18px;}
 .doneovl.show{display:flex;}
@@ -188,7 +189,15 @@ textarea{resize:none;min-height:52px;}
 .doneitem strong{color:#1a3a9e;font-size:13px;display:block;margin-bottom:2px;}
 .mbadge{font-size:10px;font-weight:600;color:rgba(32,80,200,0.6);background:rgba(32,80,200,0.08);padding:1px 6px;border-radius:3px;margin-left:5px;}
 .doneftxt{font-size:12px;color:rgba(80,90,130,0.6);margin-top:14px;line-height:1.8;}
-.donereset{margin-top:20px;padding:14px 32px;background:linear-gradient(135deg,#2a5cd8,#1a3ab0);border:none;border-radius:6px;color:#fff;font-family:‘Noto Sans KR’,sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;cursor:pointer;min-height:46px;-webkit-appearance:none;position:relative;z-index:10;touch-action:manipulation;}
+.donereset{margin-top:12px;padding:14px 28px;background:linear-gradient(135deg,#2a5cd8,#1a3ab0);border:none;border-radius:8px;color:#fff;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;min-height:50px;-webkit-appearance:none;position:relative;z-index:10;touch-action:manipulation;width:100%;}
+/* 종료 화면 */
+.endovl{position:fixed;top:0;left:0;right:0;bottom:0;background:linear-gradient(160deg,#fdf9f4 0%,#f5efea 100%);display:none;align-items:center;justify-content:center;z-index:300;padding:40px 18px;}
+.endovl.show{display:flex;}
+.endcard{text-align:center;max-width:380px;width:100%;}
+.endico{font-size:60px;margin-bottom:20px;}
+.endtitle{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:4px;color:#1a3a9e;margin-bottom:12px;}
+.endsub{font-size:15px;color:rgba(30,40,80,0.75);line-height:2;margin-bottom:28px;word-break:keep-all;}
+.endclose{font-size:12px;color:rgba(80,90,130,0.55);line-height:1.8;padding:14px 16px;background:rgba(32,80,200,0.05);border:1px solid rgba(32,80,200,0.15);border-radius:8px;}
 
 @media(max-width:520px){.g2{grid-template-columns:1fr;}.g3{grid-template-columns:1fr 1fr;}}
 </style>
@@ -219,22 +228,6 @@ textarea{resize:none;min-height:52px;}
   <button type="button" class="savebtn" onclick="doSave()">임시저장</button>
 </div>
 
-<!-- 내용확인 오버레이 -->
-<div class="cfmovl" id="cfmovl">
-  <div class="cfmwrap">
-    <div class="cfm-hd">
-      <div class="cfm-icon">📋</div>
-      <div class="cfm-title">등록 내용 확인</div>
-      <div class="cfm-sub">내용을 확인하신 후 제출해 주세요</div>
-    </div>
-    <div id="cfm-body"></div>
-  </div>
-  <div class="cfm-btns">
-    <button type="button" class="cfm-back" onclick="onCfmBack()">✏️ 수정하기</button>
-    <button type="button" class="cfm-submit" id="cfmsubbtn" onclick="onCfmSubmit()">✅ 완료 및 제출하기</button>
-  </div>
-</div>
-
 <!-- 완료 -->
 
 <div class="doneovl" id="doneovl">
@@ -253,7 +246,33 @@ textarea{resize:none;min-height:52px;}
         → 갤러리에 자동 저장됩니다
       </div>
     </div>
-    <button type="button" class="donereset" onclick="doReset()">🙏 수고하셨습니다</button>  </div>
+    <button type="button" class="donereset" onclick="doFinish()">수고하셨습니다. 눌러주세요</button>  </div>
+</div>
+
+<!-- 종료 화면 -->
+<div class="endovl" id="endovl">
+  <div class="endcard">
+    <div class="endico">🙏</div>
+    <div class="endtitle">수고하셨습니다</div>
+    <div class="endsub">MET2026 블레싱 삼척<br>신청이 완료되었습니다.<br>하나님의 은혜가 함께하시길 바랍니다.</div>
+    <div class="endclose" id="endclosemsg">이 창을 닫아주세요</div>
+  </div>
+</div>
+
+<!-- 내용 확인 오버레이 -->
+<div class="cfmovl" id="cfmovl">
+  <div class="cfmcard">
+    <div class="cfm-hd">
+      <div class="cfm-icon">📋</div>
+      <div class="cfm-title">등록 내용 확인</div>
+      <div class="cfm-sub">내용을 확인하신 후 제출해 주세요</div>
+    </div>
+    <div id="cfm-body"></div>
+  </div>
+  <div class="cfm-btns">
+    <button type="button" class="cfm-back" onclick="onCfmBack()">✏️ 수정하기</button>
+    <button type="button" class="cfm-submit" id="cfmsubbtn" onclick="onCfmSubmit()">✅ 완료 및 제출하기</button>
+  </div>
 </div>
 
 <!-- 헤더 -->
@@ -262,10 +281,10 @@ textarea{resize:none;min-height:52px;}
   <div class="hd-eyebrow">MISSION EXPLOSION TEAM</div>
   <div class="hd-title">MET <span>2026</span></div>
   <div class="hd-sub">블레싱 삼척 &nbsp;·&nbsp; 국내선교 신청서</div>
-  <div class="hd-dir">총괄 · 수지2지구 &nbsp;고영수 목사님</div>
+  <div class="hd-dir">지구촌교회 · 수지2지구 &nbsp;고영수 목사</div>
   <div class="hd-badge">
     동해 큰사랑순복음교회 &nbsp;|&nbsp; 7/21(화) — 7/22(수)
-    <span style="font-size:11px;font-weight:400;opacity:0.8;">유준규 목사님 · 곽미영 사모님</span>
+    <span style="font-size:11px;font-weight:400;opacity:0.8;">유준규 목사 · 곽미영 사모</span>
   </div>
 </div>
 
@@ -282,8 +301,8 @@ textarea{resize:none;min-height:52px;}
     <div class="couple-box" id="couplebox">
       <div class="couple-lbl">목장 구분</div>
       <div class="couple-row">
-        <button type="button" class="couple-btn" id="cbtnyes" onclick="onCouple(true)">부부목장</button>
-        <button type="button" class="couple-btn" id="cbtnno" onclick="onCouple(false)">형제 / 자매목장</button>
+        <button type="button" class="couple-btn" id="cbtnyes">부부목장</button>
+        <button type="button" class="couple-btn" id="cbtnno">형제 / 자매목장</button>
       </div>
     </div>
   </div>
@@ -302,7 +321,9 @@ textarea{resize:none;min-height:52px;}
 </div>
 
 <script>
-var GSURL = 'https://script.google.com/macros/s/AKfycbxaoK05EdwG8cVrYgMUndVKP58iOLDSVYj2xY7PVmUGCAFr2yaZtsWk40Y9Q-ms1UCk/exec'; // ← Apps Script 배포 URL로 교체
+// iOS 구버전 Promise.finally 폴리필
+if(!Promise.prototype.finally){Promise.prototype.finally=function(fn){return this.then(function(v){return Promise.resolve(fn()).then(function(){return v;});},function(e){return Promise.resolve(fn()).then(function(){throw e;});});};}
+var GSURL = 'https://script.google.com/macros/s/AKfycbw55U5mONWA48-hlwGX4o_bMmBgd0CcpezT0vQDC4WSkS5s5l2t0mlHVd7uceAq7CtF8Q/exec'; // ← Apps Script 배포 URL로 교체
 var SAVEKEY = 'MET2026_draft';
 
 var PL = [
@@ -353,16 +374,15 @@ var MT = ['전도팀','장금이팀','이미용팀','장수사진/메이크업�
 var SC = ['7/21(화)','7/22(수)','7/21~22(화~수)'];
 var REL = ['본인','배우자','자녀','부모','기타'];
 
-var seq=1, uid=1;
-function gGroup(){return '2026-G'+String(seq++).padStart(3,'0');}
-function gSingle(){return '2026-'+String(seq++).padStart(3,'0');}
+var uid=1;
+// 관리번호/그룹번호는 서버(Code.gs)에서 순차 생성
 function nuid(){return uid++;}
 
 var isFamily=false, isCouple=null, members=[], restData=null;
 
 function nm(rel){
   return {uid:nuid(),rel:rel||'본인',name:'',ids:'',gender:'',ssn:'',phone:'',
-    spouse:'',has_spouse:false,pastor:null,mteam:'',sched:'',trans:'',ride:'',accom:'',note:'',open:true};
+    spouse:'',has_spouse:false,pastor:null,mteam:'',sched:'7/21~22(화~수)',trans:'버스',ride:'',accom:'단체(교회준비)',note:'',open:true};
 }
 
 // ---- 토글 ----
@@ -439,7 +459,7 @@ function initSearch(uid){
     if(!f.length){lel.innerHTML='<div class="ace">검색 결과가 없습니다</div>';lel.style.display='block';return;}
     lel.innerHTML=f.map(function(p){
       var i=PL.indexOf(p);
-      return '<div class="aci" onclick="selP('+i+','+uid+')">'
+      return '<div class="aci" ontouchend="event.preventDefault();selP('+i+','+uid+')" onclick="selP('+i+','+uid+')">'
         +'<span><span class="acn">'+p.n+'</span>'+(p.i?'<span class="acid">'+p.i+'</span>':'')+'</span>'
         +'<span class="acm">'+p.v+' / '+p.p+'</span></div>';
     }).join('');
@@ -488,20 +508,40 @@ function selP(idx,uid){
       members.forEach(function(x,xi){if(xi>0&&x.rel==='배우자') x.pastor=p;});
     }
   }
-  collect(); render();
+  collect();
+  // 배우자 자동복사된 경우 해당 카드 목자 표시 업데이트
+  members.forEach(function(x){
+    var qx=document.getElementById('pq'+x.uid);
+    var bx=document.getElementById('pb'+x.uid);
+    var g3=document.querySelectorAll('#card'+x.uid+' .g3 input[readonly]');
+    if(x.pastor && qx && qx.readOnly){
+      if(bx){bx.textContent='v '+x.pastor.v+' / '+x.pastor.p; bx.style.display='inline-flex';}
+      if(g3.length>=3){g3[0].value=x.pastor.n;g3[1].value=x.pastor.v;g3[2].value=x.pastor.p;}
+    }
+  });
 }
 
 function onTransChange(uid,val){
-  collect();
   var m=members.find(function(x){return x.uid===uid;});
   if(m){
     m.trans=val;
     if(isFamily){
       var idx=members.indexOf(m);
-      if(idx===0) members.forEach(function(x,xi){if(xi>0) x.trans=val;});
+      if(idx===0){
+        members.forEach(function(x,xi){
+          if(xi>0){
+            x.trans=val;
+            // atrans 텍스트 직접 업데이트 (render() 없이)
+            var at=document.querySelector('#card'+x.uid+' .atrans');
+            if(at){
+              var disp=val==='버스'?'버스':val==='자차'?'자차(동승)':val||'대표자 차량 선택 후 자동 적용';
+              at.innerHTML=disp+'<span>대표자 차량 자동 적용</span>';
+            }
+          }
+        });
+      }
     }
   }
-  render();
 }
 
 function onToggleSpouse(uid){
@@ -679,11 +719,10 @@ var cnt=members.length;
 document.getElementById('subbtn').textContent='등록내용 확인하기 '+(isFamily&&cnt>1?'(가족 '+cnt+'명)':'(1명)');
 }
 
-// –– 제출 ––
-// ── 전역: 확인화면용 임시 저장 ──
-var _cfmPayload=null, _cfmMdata=null, _cfmRnos=[], _cfmGno='';
+// –– 제출 payload를 전역에 보관 ––
+var _cfmPayload=null, _cfmRnos=null, _cfmGno='', _cfmMdata=null;
 
-// ── 등록내용 확인하기: 유효성 검사 후 확인화면 표시 ──
+// –– 확인화면 표시 ––
 function onSubmit(){
 collect();
 var errs=[];
@@ -713,11 +752,7 @@ return;
 }
 eb.className='errbox';
 
-// payload 준비
-var rnos=[],gno='';
-if(isFamily&&members.length>1){gno=gGroup();rnos=members.map(function(_,i){return gno+'-'+(i+1);});}
-else{rnos=[gSingle()];}
-
+// payload 준비 (번호는 서버에서 부여)
 var mdata=members.map(function(m,i){
 var isAC=isFamily&&isCouple===true&&i>0&&m.rel==='배우자';
 var isF=isFamily&&i>0;
@@ -729,85 +764,129 @@ sched:m.sched,trans:tr,accom:m.accom,note:m.note||'',
 pn:mp?mp.n:'',pv:mp?mp.v:'',pp:mp?mp.p:''};
 });
 
-_cfmRnos=rnos; _cfmGno=gno; _cfmMdata=mdata;
-_cfmPayload={isFamily:isFamily&&members.length>1,isCouple:isCouple,gno:gno,rnos:rnos,mdata:mdata};
+_cfmMdata=mdata;
+_cfmPayload={isFamily:isFamily&&members.length>1,isCouple:isCouple,mdata:mdata};
 
-// 확인화면 내용 구성
+// 확인 화면 구성
+var body=document.getElementById('cfm-body');
 var typeText=(isFamily&&members.length>1?'가족 '+members.length+'명':'개인 신청')
-  +(isCouple===true?' — 부부목장':isCouple===false?' — 형제/자매목장':'');
-var html='<div style="text-align:center;margin-bottom:16px;">'
-  +'<span class="cfm-typebadge">'+typeText+'</span></div>';
+  +(isCouple===true?' - 부부목장':isCouple===false?' - 형제/자매목장':'');
+var html='<div class="cfm-sec">'
+  +'<div class="cfm-sec-lbl">신청 정보</div>'
+  +'<div class="cfm-typebadge">'+typeText+'</div>'
+  +'</div>';
 
 mdata.forEach(function(m,i){
-  function row(k,v){
-    var empty=(!v||v==='-');
-    return '<div class="cfm-row"><div class="cfm-key">'+k+'</div>'
-      +'<div class="cfm-val'+(empty?' dim':'')+'">'+( v||'-')+'</div></div>';
-  }
-  html+='<div style="margin-bottom:6px;"><div class="cfm-sec-lbl">'
-    +(isFamily?'구성원 '+(i+1):'신청자')+'</div>'
-    +'<div class="cfm-card">'
+  html+='<div class="cfm-sec"><div class="cfm-sec-lbl">'+(isFamily?'구성원 '+(i+1):'신청자')+'</div>'
+    +'<div class="cfm-member">'
     +'<div class="cfm-mhd">'
     +'<div class="cfm-mnum">'+(i+1)+'</div>'
     +'<div class="cfm-mname">'+m.name+' ('+m.gender+')</div>'
     +(isFamily?'<span class="cfm-mrel">'+m.rel+'</span>':'')
     +'</div>'
-    +'<div class="cfm-grid">'
-    +row('관리번호', rnos[i])
-    +row('이름', m.name+(m.ids?' ('+m.ids+')':''))
-    +row('성별', m.gender)
-    +row('전화번호', m.phone)
-    +row('주민등록번호', m.ssn||'-')
-    +row('목자명', m.pn||'-')
-    +row('마을', m.pv||'-')
-    +row('목장', m.pp||'-')
-    +row('사역팀', m.mteam||'-')
-    +row('참여일정', m.sched)
-    +row('차량', m.trans)
-    +row('숙소', m.accom)
-    +(m.ride?row('동승운전자',m.ride):'')
-    +(m.spouse?row('배우자성명',m.spouse):'')
-    +(m.note?'<div class="cfm-row full">'+
-      '<div class="cfm-key">비고</div><div class="cfm-val">'+m.note+'</div></div>':'')
+    +'<div class="cfm-rows">'
+    +cfmRow('관리번호','제출 후 자동 부여')
+    +cfmRow('이름',m.name+(m.ids?' ('+m.ids+')':''))
+    +cfmRow('성별',m.gender)
+    +cfmRow('전화번호',m.phone)
+    +cfmRow('주민등록번호',m.ssn||'-')
+    +cfmRow('목자명',m.pn||'-')
+    +cfmRow('마을',m.pv||'-')
+    +cfmRow('목장',m.pp||'-')
+    +cfmRow('사역팀',m.mteam||'-')
+    +cfmRow('참여일정',m.sched)
+    +cfmRow('차량',m.trans)
+    +cfmRow('숙소',m.accom)
+    +(m.ride?cfmRow('동승운전자',m.ride):'')
+    +(m.spouse?cfmRow('배우자성명',m.spouse):'')
+    +(m.note?'<div class="cfm-row full"><div class="cfm-key">비고</div><div class="cfm-val">'+m.note+'</div></div>':'')
     +'</div></div></div>';
 });
+body.innerHTML=html;
 
-document.getElementById('cfm-body').innerHTML=html;
 document.getElementById('cfmovl').className='cfmovl show';
 document.getElementById('cfmovl').scrollTop=0;
 }
 
-// ── 수정하기: 확인화면 닫고 폼으로 복귀 ──
+function cfmRow(key,val){
+  return '<div class="cfm-row"><div class="cfm-key">'+key+'</div>'
+    +'<div class="cfm-val'+((!val||val==='-')?' empty':'')+'">'+(val||'-')+'</div></div>';
+}
+
+// –– 수정하기: 확인 화면 닫기 ––
 function onCfmBack(){
   document.getElementById('cfmovl').className='cfmovl';
 }
 
-// ── 완료 및 제출하기: 구글시트 전송 ──
+// –– 완료 및 제출하기: 실제 전송 ––
 function onCfmSubmit(){
 var btn=document.getElementById('cfmsubbtn');
 btn.textContent='저장 중…'; btn.disabled=true;
 
 var ps; try{ps=new URLSearchParams(); ps.append('data',JSON.stringify(_cfmPayload));}catch(e){ps='data='+encodeURIComponent(JSON.stringify(_cfmPayload));}
-fetch(GSURL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:ps.toString()})
-.catch(function(){});
 
-document.getElementById('doneno').textContent=_cfmPayload.isFamily&&_cfmMdata.length>1?'그룹번호 '+_cfmGno:'관리번호 '+_cfmRnos[0];
-document.getElementById('doneinfo').innerHTML=(_cfmPayload.isFamily&&_cfmMdata.length>1?'가족 '+_cfmMdata.length+'명':'개인 신청')+(_cfmPayload.isCouple===true?' - 부부목장':_cfmPayload.isCouple===false?' - 형제/자매목장':'');
+// no-cors → 응답 본문을 읽을 수 없으므로 cors 모드로 전송
+fetch(GSURL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:ps.toString()})
+.then(function(res){return res.json();})
+.then(function(data){
+  var rnos = data.rnos || [];
+  var gno  = data.gno  || '';
+  showDone(rnos, gno);
+})
+.catch(function(){
+  btn.textContent='✅ 완료 및 제출하기'; btn.disabled=false;
+  alert('네트워크 오류가 발생했습니다.\n잠시 후 다시 시도해주세요.');
+})
+.finally(function(){
+  // finally는 then/catch 이후 항상 실행 - 버튼 복구는 각 분기에서 처리
+});
+}
+
+function showDone(rnos, gno){
+var isGrp=_cfmPayload.isFamily&&_cfmMdata.length>1;
+document.getElementById('doneno').textContent=
+  gno ? (isGrp?'그룹번호 '+gno:'관리번호 '+rnos[0]) : '번호 확인 중…';
+document.getElementById('doneinfo').innerHTML=
+  (isGrp?'가족 '+_cfmMdata.length+'명':'개인 신청')
+  +(_cfmPayload.isCouple===true?' - 부부목장':_cfmPayload.isCouple===false?' - 형제/자매목장':'');
 document.getElementById('donelist').innerHTML=_cfmMdata.map(function(m,i){
-return '<div class="doneitem"><strong>'+(i+1)+'. '+m.name+' ('+m.gender+')'+(isFamily?'<span class="mbadge">'+m.rel+'</span>':'')+'<span class="mbadge">'+_cfmRnos[i]+'</span></strong>'
+return '<div class="doneitem"><strong>'+(i+1)+'. '+m.name+' ('+m.gender+')'
+  +(_cfmPayload.isFamily?'<span class="mbadge">'+m.rel+'</span>':'')
+  +(rnos[i]?'<span class="mbadge">'+rnos[i]+'</span>':'')+'</strong>'
 +'목자: '+m.pn+' / '+m.pv+' / '+m.pp+'<br>'
 +'사역팀: '+(m.mteam||'-')+' / 일정: '+m.sched+' / 차량: '+m.trans+' / 숙소: '+(m.accom||'-')+'<br>'
 +(!isFamily&&m.spouse?'배우자: '+m.spouse+'<br>':'')
 +(m.note?'비고: '+m.note+'<br>':'')+'</div>';
 }).join('');
-
 document.getElementById('cfmovl').className='cfmovl';
 document.getElementById('doneovl').className='doneovl show';
-btn.textContent='✅ 완료 및 제출하기'; btn.disabled=false;
 clearSave();
 }
 
 // –– 리셋 ––
+function doFinish(){
+  // 1) 창 닫기 시도
+  var closed = false;
+  try { window.close(); } catch(e) {}
+  // 2) 300ms 후 창이 안 닫혔으면 종료 화면 표시
+  setTimeout(function(){
+    if(!window.closed){
+      document.getElementById('doneovl').className='doneovl';
+      var msg = document.getElementById('endclosemsg');
+      // 기기별 안내 문구
+      var ua = navigator.userAgent.toLowerCase();
+      if(/iphone|ipad/.test(ua)){
+        msg.innerHTML = '📱 아이폰: 홈 버튼(또는 스와이프)으로 돌아가시거나<br>브라우저 탭을 닫아주세요.';
+      } else if(/android/.test(ua)){
+        msg.innerHTML = '📱 갤럭시: 뒤로 가기 버튼을 누르거나<br>브라우저 탭을 닫아주세요.';
+      } else {
+        msg.innerHTML = '브라우저 탭을 닫아주세요.';
+      }
+      document.getElementById('endovl').className='endovl show';
+    }
+  }, 300);
+}
+
 function doReset(){
 document.getElementById('doneovl').className='doneovl';
 document.getElementById('cfmovl').className='cfmovl';
@@ -865,8 +944,8 @@ document.getElementById('cbtnno').className='couple-btn'+(isCouple===false?' on'
 members=restData.members.map(function(m){
 return {uid:m.uid||nuid(),rel:m.rel||'본인',name:m.name||'',ids:m.ids||'',
 gender:m.gender||'',ssn:m.ssn||'',phone:m.phone||'',spouse:m.spouse||'',
-has_spouse:m.has_spouse||false,mteam:m.mteam||'',sched:m.sched||'',
-trans:m.trans||'',ride:m.ride||'',accom:m.accom||'',note:m.note||'',
+has_spouse:m.has_spouse||false,mteam:m.mteam||'',sched:m.sched||'7/21~22(화~수)',
+trans:m.trans||'버스',ride:m.ride||'',accom:m.accom||'단체(교회준비)',note:m.note||'',
 open:m.open!==undefined?m.open:true,
 pastor:m.pastor?{n:m.pastor.n,v:m.pastor.v,p:m.pastor.p,i:m.pastor.i}:null};
 });
@@ -917,6 +996,21 @@ tglbtn.addEventListener('click', function(e){
   if(_touched){_touched=false;return;}
   onToggle();
 });
+})();
+
+// 목장구분 버튼 이벤트 - iOS 이중 발화 방지
+(function(){
+  function bindCouple(id, val){
+    var btn=document.getElementById(id);
+    var _t=false;
+    btn.addEventListener('touchend',function(e){
+      e.preventDefault();_t=true;onCouple(val);
+      setTimeout(function(){_t=false;},400);
+    },{passive:false});
+    btn.addEventListener('click',function(){if(_t){_t=false;return;}onCouple(val);});
+  }
+  bindCouple('cbtnyes', true);
+  bindCouple('cbtnno', false);
 })();
 
 try{
