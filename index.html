@@ -147,35 +147,34 @@ textarea{resize:none;min-height:52px;}
 .restyes{flex:1;padding:12px;background:linear-gradient(135deg,#2a5cd8,#1a3ab0);border:none;border-radius:8px;color:#fff;font-family:‘Noto Sans KR’,sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-height:46px;-webkit-appearance:none;touch-action:manipulation;}
 .restno{flex:1;padding:12px;background:transparent;border:1.5px solid rgba(0,0,20,0.15);border-radius:8px;color:rgba(60,70,100,0.8);font-family:‘Noto Sans KR’,sans-serif;font-size:13px;font-weight:600;cursor:pointer;min-height:46px;-webkit-appearance:none;touch-action:manipulation;}
 
-/* 내용확인 오버레이 */
-.cfmovl{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(247,244,239,0.97);display:none;align-items:flex-start;justify-content:center;z-index:100;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:28px 18px 120px;}
+
+/* ── 내용확인 오버레이 ── */
+.cfmovl{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(247,244,239,0.98);display:none;flex-direction:column;align-items:center;z-index:150;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .cfmovl.show{display:flex;}
-.cfmcard{max-width:720px;width:100%;padding-bottom:20px;}
-.cfm-hd{text-align:center;margin-bottom:24px;padding-top:8px;}
-.cfm-icon{font-size:40px;margin-bottom:10px;}
-.cfm-title{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:#1a3a9e;margin-bottom:4px;}
-.cfm-sub{font-size:12px;color:rgba(40,50,90,0.65);letter-spacing:1px;}
-.cfm-sec{margin-bottom:16px;}
+.cfmwrap{width:100%;max-width:720px;padding:28px 18px 130px;}
+.cfm-hd{text-align:center;margin-bottom:22px;}
+.cfm-icon{font-size:38px;margin-bottom:8px;}
+.cfm-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:#1a3a9e;margin-bottom:4px;}
+.cfm-sub{font-size:11px;color:rgba(40,50,90,0.6);letter-spacing:1px;}
+.cfm-typebadge{display:inline-flex;padding:7px 14px;background:rgba(32,80,200,0.07);border:1px solid rgba(32,80,200,0.18);border-radius:6px;font-size:12px;color:#1a3a9e;font-weight:700;margin-bottom:16px;}
 .cfm-sec-lbl{font-size:10px;font-weight:700;letter-spacing:3px;color:#1a3a9e;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
 .cfm-sec-lbl::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(32,80,200,0.2),transparent);}
-.cfm-member{background:#fff;border:1.5px solid rgba(32,80,200,0.15);border-radius:12px;padding:16px;margin-bottom:12px;}
-.cfm-mhd{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(0,0,20,0.07);}
+.cfm-card{background:#fff;border:1.5px solid rgba(32,80,200,0.13);border-radius:12px;padding:15px;margin-bottom:12px;}
+.cfm-mhd{display:flex;align-items:center;gap:9px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(0,0,20,0.07);}
 .cfm-mnum{width:26px;height:26px;border-radius:50%;background:#2050c8;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .cfm-mname{font-size:14px;font-weight:700;color:#1a1e3a;}
 .cfm-mrel{font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(20,160,80,0.1);color:#0a5c30;border:1px solid rgba(20,160,80,0.3);font-weight:600;margin-left:4px;}
-.cfm-rows{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.cfm-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
 .cfm-row{background:#f7f9ff;border-radius:6px;padding:8px 10px;}
+.cfm-row.full{grid-column:1/-1;}
 .cfm-key{font-size:10px;color:rgba(30,50,120,0.6);font-weight:600;margin-bottom:2px;}
 .cfm-val{font-size:13px;color:#0f1428;font-weight:500;word-break:break-all;}
-.cfm-val.empty{color:rgba(120,130,160,0.6);font-style:italic;font-size:12px;}
-.cfm-row.full{grid-column:1/-1;}
-.cfm-typebadge{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(32,80,200,0.06);border:1px solid rgba(32,80,200,0.15);border-radius:8px;font-size:12px;color:#1a3a9e;font-weight:600;margin-bottom:16px;}
-.cfm-btns{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid rgba(0,0,20,0.1);padding:12px 18px;padding-bottom:calc(12px + env(safe-area-inset-bottom));display:flex;gap:10px;z-index:101;box-shadow:0 -2px 16px rgba(0,0,0,0.08);}
+.cfm-val.dim{color:rgba(120,130,160,0.55);font-size:12px;}
+.cfm-btns{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid rgba(0,0,20,0.08);padding:12px 18px;padding-bottom:calc(12px + env(safe-area-inset-bottom));display:flex;gap:10px;z-index:151;box-shadow:0 -2px 16px rgba(0,0,0,0.07);}
 .cfm-back{flex:1;padding:14px;background:transparent;border:1.5px solid rgba(0,0,20,0.18);border-radius:8px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:600;color:rgba(40,50,80,0.8);cursor:pointer;min-height:50px;-webkit-appearance:none;outline:none;touch-action:manipulation;}
 .cfm-submit{flex:2;padding:14px;background:linear-gradient(135deg,#2a5cd8,#1a3ab0);border:none;border-radius:8px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;color:#fff;cursor:pointer;letter-spacing:1px;min-height:50px;-webkit-appearance:none;outline:none;touch-action:manipulation;}
 .cfm-submit:disabled{opacity:0.6;}
-@media(max-width:400px){.cfm-rows{grid-template-columns:1fr;}.cfm-row.full{grid-column:1;}}
-
+@media(max-width:400px){.cfm-grid{grid-template-columns:1fr;}.cfm-row.full{grid-column:1;}}
 /* 완료 */
 .doneovl{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(247,244,239,0.97);display:none;align-items:flex-start;justify-content:center;z-index:100;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:40px 18px;}
 .doneovl.show{display:flex;}
@@ -189,7 +188,7 @@ textarea{resize:none;min-height:52px;}
 .doneitem strong{color:#1a3a9e;font-size:13px;display:block;margin-bottom:2px;}
 .mbadge{font-size:10px;font-weight:600;color:rgba(32,80,200,0.6);background:rgba(32,80,200,0.08);padding:1px 6px;border-radius:3px;margin-left:5px;}
 .doneftxt{font-size:12px;color:rgba(80,90,130,0.6);margin-top:14px;line-height:1.8;}
-.donereset{margin-top:12px;padding:12px 28px;background:transparent;border:1px solid rgba(26,58,158,0.3);border-radius:6px;color:#1a3a9e;font-family:‘Noto Sans KR’,sans-serif;font-size:13px;font-weight:500;letter-spacing:2px;cursor:pointer;min-height:46px;-webkit-appearance:none;position:relative;z-index:10;touch-action:manipulation;}
+.donereset{margin-top:20px;padding:14px 32px;background:linear-gradient(135deg,#2a5cd8,#1a3ab0);border:none;border-radius:6px;color:#fff;font-family:‘Noto Sans KR’,sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;cursor:pointer;min-height:46px;-webkit-appearance:none;position:relative;z-index:10;touch-action:manipulation;}
 
 @media(max-width:520px){.g2{grid-template-columns:1fr;}.g3{grid-template-columns:1fr 1fr;}}
 </style>
@@ -220,6 +219,22 @@ textarea{resize:none;min-height:52px;}
   <button type="button" class="savebtn" onclick="doSave()">임시저장</button>
 </div>
 
+<!-- 내용확인 오버레이 -->
+<div class="cfmovl" id="cfmovl">
+  <div class="cfmwrap">
+    <div class="cfm-hd">
+      <div class="cfm-icon">📋</div>
+      <div class="cfm-title">등록 내용 확인</div>
+      <div class="cfm-sub">내용을 확인하신 후 제출해 주세요</div>
+    </div>
+    <div id="cfm-body"></div>
+  </div>
+  <div class="cfm-btns">
+    <button type="button" class="cfm-back" onclick="onCfmBack()">✏️ 수정하기</button>
+    <button type="button" class="cfm-submit" id="cfmsubbtn" onclick="onCfmSubmit()">✅ 완료 및 제출하기</button>
+  </div>
+</div>
+
 <!-- 완료 -->
 
 <div class="doneovl" id="doneovl">
@@ -238,23 +253,7 @@ textarea{resize:none;min-height:52px;}
         → 갤러리에 자동 저장됩니다
       </div>
     </div>
-    <button type="button" class="donereset" onclick="doReset()">다시 작성하기</button>  </div>
-</div>
-
-<!-- 내용 확인 오버레이 -->
-<div class="cfmovl" id="cfmovl">
-  <div class="cfmcard">
-    <div class="cfm-hd">
-      <div class="cfm-icon">📋</div>
-      <div class="cfm-title">등록 내용 확인</div>
-      <div class="cfm-sub">내용을 확인하신 후 제출해 주세요</div>
-    </div>
-    <div id="cfm-body"></div>
-  </div>
-  <div class="cfm-btns">
-    <button type="button" class="cfm-back" onclick="onCfmBack()">✏️ 수정하기</button>
-    <button type="button" class="cfm-submit" id="cfmsubbtn" onclick="onCfmSubmit()">✅ 완료 및 제출하기</button>
-  </div>
+    <button type="button" class="donereset" onclick="doReset()">🙏 수고하셨습니다</button>  </div>
 </div>
 
 <!-- 헤더 -->
@@ -354,8 +353,9 @@ var MT = ['전도팀','장금이팀','이미용팀','장수사진/메이크업�
 var SC = ['7/21(화)','7/22(수)','7/21~22(화~수)'];
 var REL = ['본인','배우자','자녀','부모','기타'];
 
-var uid=1;
-// 관리번호/그룹번호는 서버(Code.gs)에서 순차 생성
+var seq=1, uid=1;
+function gGroup(){return '2026-G'+String(seq++).padStart(3,'0');}
+function gSingle(){return '2026-'+String(seq++).padStart(3,'0');}
 function nuid(){return uid++;}
 
 var isFamily=false, isCouple=null, members=[], restData=null;
@@ -679,10 +679,11 @@ var cnt=members.length;
 document.getElementById('subbtn').textContent='등록내용 확인하기 '+(isFamily&&cnt>1?'(가족 '+cnt+'명)':'(1명)');
 }
 
-// –– 제출 payload를 전역에 보관 ––
-var _cfmPayload=null, _cfmRnos=null, _cfmGno='', _cfmMdata=null;
+// –– 제출 ––
+// ── 전역: 확인화면용 임시 저장 ──
+var _cfmPayload=null, _cfmMdata=null, _cfmRnos=[], _cfmGno='';
 
-// –– 확인화면 표시 ––
+// ── 등록내용 확인하기: 유효성 검사 후 확인화면 표시 ──
 function onSubmit(){
 collect();
 var errs=[];
@@ -712,7 +713,11 @@ return;
 }
 eb.className='errbox';
 
-// payload 준비 (번호는 서버에서 부여)
+// payload 준비
+var rnos=[],gno='';
+if(isFamily&&members.length>1){gno=gGroup();rnos=members.map(function(_,i){return gno+'-'+(i+1);});}
+else{rnos=[gSingle()];}
+
 var mdata=members.map(function(m,i){
 var isAC=isFamily&&isCouple===true&&i>0&&m.rel==='배우자';
 var isF=isFamily&&i>0;
@@ -724,102 +729,81 @@ sched:m.sched,trans:tr,accom:m.accom,note:m.note||'',
 pn:mp?mp.n:'',pv:mp?mp.v:'',pp:mp?mp.p:''};
 });
 
-_cfmMdata=mdata;
-_cfmPayload={isFamily:isFamily&&members.length>1,isCouple:isCouple,mdata:mdata};
+_cfmRnos=rnos; _cfmGno=gno; _cfmMdata=mdata;
+_cfmPayload={isFamily:isFamily&&members.length>1,isCouple:isCouple,gno:gno,rnos:rnos,mdata:mdata};
 
-// 확인 화면 구성
-var body=document.getElementById('cfm-body');
+// 확인화면 내용 구성
 var typeText=(isFamily&&members.length>1?'가족 '+members.length+'명':'개인 신청')
-  +(isCouple===true?' - 부부목장':isCouple===false?' - 형제/자매목장':'');
-var html='<div class="cfm-sec">'
-  +'<div class="cfm-sec-lbl">신청 정보</div>'
-  +'<div class="cfm-typebadge">'+typeText+'</div>'
-  +'</div>';
+  +(isCouple===true?' — 부부목장':isCouple===false?' — 형제/자매목장':'');
+var html='<div style="text-align:center;margin-bottom:16px;">'
+  +'<span class="cfm-typebadge">'+typeText+'</span></div>';
 
 mdata.forEach(function(m,i){
-  html+='<div class="cfm-sec"><div class="cfm-sec-lbl">'+(isFamily?'구성원 '+(i+1):'신청자')+'</div>'
-    +'<div class="cfm-member">'
+  function row(k,v){
+    var empty=(!v||v==='-');
+    return '<div class="cfm-row"><div class="cfm-key">'+k+'</div>'
+      +'<div class="cfm-val'+(empty?' dim':'')+'">'+( v||'-')+'</div></div>';
+  }
+  html+='<div style="margin-bottom:6px;"><div class="cfm-sec-lbl">'
+    +(isFamily?'구성원 '+(i+1):'신청자')+'</div>'
+    +'<div class="cfm-card">'
     +'<div class="cfm-mhd">'
     +'<div class="cfm-mnum">'+(i+1)+'</div>'
     +'<div class="cfm-mname">'+m.name+' ('+m.gender+')</div>'
     +(isFamily?'<span class="cfm-mrel">'+m.rel+'</span>':'')
     +'</div>'
-    +'<div class="cfm-rows">'
-    +cfmRow('관리번호','제출 후 자동 부여')
-    +cfmRow('이름',m.name+(m.ids?' ('+m.ids+')':''))
-    +cfmRow('성별',m.gender)
-    +cfmRow('전화번호',m.phone)
-    +cfmRow('주민등록번호',m.ssn||'-')
-    +cfmRow('목자명',m.pn||'-')
-    +cfmRow('마을',m.pv||'-')
-    +cfmRow('목장',m.pp||'-')
-    +cfmRow('사역팀',m.mteam||'-')
-    +cfmRow('참여일정',m.sched)
-    +cfmRow('차량',m.trans)
-    +cfmRow('숙소',m.accom)
-    +(m.ride?cfmRow('동승운전자',m.ride):'')
-    +(m.spouse?cfmRow('배우자성명',m.spouse):'')
-    +(m.note?'<div class="cfm-row full"><div class="cfm-key">비고</div><div class="cfm-val">'+m.note+'</div></div>':'')
+    +'<div class="cfm-grid">'
+    +row('관리번호', rnos[i])
+    +row('이름', m.name+(m.ids?' ('+m.ids+')':''))
+    +row('성별', m.gender)
+    +row('전화번호', m.phone)
+    +row('주민등록번호', m.ssn||'-')
+    +row('목자명', m.pn||'-')
+    +row('마을', m.pv||'-')
+    +row('목장', m.pp||'-')
+    +row('사역팀', m.mteam||'-')
+    +row('참여일정', m.sched)
+    +row('차량', m.trans)
+    +row('숙소', m.accom)
+    +(m.ride?row('동승운전자',m.ride):'')
+    +(m.spouse?row('배우자성명',m.spouse):'')
+    +(m.note?'<div class="cfm-row full">'+
+      '<div class="cfm-key">비고</div><div class="cfm-val">'+m.note+'</div></div>':'')
     +'</div></div></div>';
 });
-body.innerHTML=html;
 
+document.getElementById('cfm-body').innerHTML=html;
 document.getElementById('cfmovl').className='cfmovl show';
 document.getElementById('cfmovl').scrollTop=0;
 }
 
-function cfmRow(key,val){
-  return '<div class="cfm-row"><div class="cfm-key">'+key+'</div>'
-    +'<div class="cfm-val'+((!val||val==='-')?' empty':'')+'">'+(val||'-')+'</div></div>';
-}
-
-// –– 수정하기: 확인 화면 닫기 ––
+// ── 수정하기: 확인화면 닫고 폼으로 복귀 ──
 function onCfmBack(){
   document.getElementById('cfmovl').className='cfmovl';
 }
 
-// –– 완료 및 제출하기: 실제 전송 ––
+// ── 완료 및 제출하기: 구글시트 전송 ──
 function onCfmSubmit(){
 var btn=document.getElementById('cfmsubbtn');
 btn.textContent='저장 중…'; btn.disabled=true;
 
 var ps; try{ps=new URLSearchParams(); ps.append('data',JSON.stringify(_cfmPayload));}catch(e){ps='data='+encodeURIComponent(JSON.stringify(_cfmPayload));}
+fetch(GSURL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:ps.toString()})
+.catch(function(){});
 
-// no-cors → 응답 본문을 읽을 수 없으므로 cors 모드로 전송
-fetch(GSURL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:ps.toString()})
-.then(function(res){return res.json();})
-.then(function(data){
-  var rnos = data.rnos || [];
-  var gno  = data.gno  || '';
-  showDone(rnos, gno);
-})
-.catch(function(){
-  // 네트워크 오류 시에도 완료 화면은 보여줌 (번호는 미확인 표시)
-  showDone([], '');
-})
-.finally(function(){
-  btn.textContent='✅ 완료 및 제출하기'; btn.disabled=false;
-});
-}
-
-function showDone(rnos, gno){
-var isGrp=_cfmPayload.isFamily&&_cfmMdata.length>1;
-document.getElementById('doneno').textContent=
-  gno ? (isGrp?'그룹번호 '+gno:'관리번호 '+rnos[0]) : '번호 확인 중…';
-document.getElementById('doneinfo').innerHTML=
-  (isGrp?'가족 '+_cfmMdata.length+'명':'개인 신청')
-  +(_cfmPayload.isCouple===true?' - 부부목장':_cfmPayload.isCouple===false?' - 형제/자매목장':'');
+document.getElementById('doneno').textContent=_cfmPayload.isFamily&&_cfmMdata.length>1?'그룹번호 '+_cfmGno:'관리번호 '+_cfmRnos[0];
+document.getElementById('doneinfo').innerHTML=(_cfmPayload.isFamily&&_cfmMdata.length>1?'가족 '+_cfmMdata.length+'명':'개인 신청')+(_cfmPayload.isCouple===true?' - 부부목장':_cfmPayload.isCouple===false?' - 형제/자매목장':'');
 document.getElementById('donelist').innerHTML=_cfmMdata.map(function(m,i){
-return '<div class="doneitem"><strong>'+(i+1)+'. '+m.name+' ('+m.gender+')'
-  +(isFamily?'<span class="mbadge">'+m.rel+'</span>':'')
-  +(rnos[i]?'<span class="mbadge">'+rnos[i]+'</span>':'')+'</strong>'
+return '<div class="doneitem"><strong>'+(i+1)+'. '+m.name+' ('+m.gender+')'+(isFamily?'<span class="mbadge">'+m.rel+'</span>':'')+'<span class="mbadge">'+_cfmRnos[i]+'</span></strong>'
 +'목자: '+m.pn+' / '+m.pv+' / '+m.pp+'<br>'
 +'사역팀: '+(m.mteam||'-')+' / 일정: '+m.sched+' / 차량: '+m.trans+' / 숙소: '+(m.accom||'-')+'<br>'
 +(!isFamily&&m.spouse?'배우자: '+m.spouse+'<br>':'')
 +(m.note?'비고: '+m.note+'<br>':'')+'</div>';
 }).join('');
+
 document.getElementById('cfmovl').className='cfmovl';
 document.getElementById('doneovl').className='doneovl show';
+btn.textContent='✅ 완료 및 제출하기'; btn.disabled=false;
 clearSave();
 }
 
