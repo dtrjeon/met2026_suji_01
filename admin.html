@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<title>MET2026 관리</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{height:-webkit-fill-available;}
+body{font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;background:#f0f4ff;-webkit-text-size-adjust:100%;min-height:100vh;min-height:-webkit-fill-available;}
+
+/* ── 비밀번호 화면 ── */
+.pw-screen{position:fixed;inset:0;background:linear-gradient(160deg,#1a3a9e,#0d2060);display:flex;align-items:center;justify-content:center;z-index:999;padding:24px;}
+.pw-screen.hide{display:none;}
+.pw-box{background:#fff;border-radius:20px;padding:36px 28px;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,30,0.35);}
+.pw-logo{text-align:center;font-size:32px;margin-bottom:8px;}
+.pw-title{text-align:center;font-size:17px;font-weight:800;color:#1a1e3a;margin-bottom:4px;}
+.pw-sub{text-align:center;font-size:12px;color:rgba(60,70,110,0.6);margin-bottom:28px;}
+.pw-label{font-size:11px;font-weight:700;color:#1a3a9e;letter-spacing:1px;margin-bottom:6px;}
+.pw-input-wrap{position:relative;margin-bottom:10px;}
+.pw-input{width:100%;padding:13px 44px 13px 14px;border:2px solid rgba(32,80,200,0.2);border-radius:10px;font-size:15px;color:#1a1e3a;outline:none;-webkit-appearance:none;background:#f7f9ff;letter-spacing:2px;}
+.pw-input:focus{border-color:#2050c8;background:#fff;}
+.pw-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:18px;cursor:pointer;color:rgba(32,80,200,0.4);padding:4px;touch-action:manipulation;}
+.pw-btn{width:100%;padding:14px;background:linear-gradient(135deg,#2050c8,#1a3ab0);border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;-webkit-appearance:none;touch-action:manipulation;margin-top:4px;letter-spacing:1px;}
+.pw-btn:active{opacity:0.85;}
+.pw-err{font-size:12px;color:#e03030;text-align:center;margin-top:10px;min-height:18px;font-weight:600;}
+.pw-spinner{display:none;text-align:center;margin-top:10px;}
+.pw-spinner.show{display:block;}
+
+/* ── 헤더 ── */
+.hd{background:linear-gradient(135deg,#1a3a9e,#2050c8);color:#fff;padding:env(safe-area-inset-top) 0 0;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,30,0.2);}
+.hd-inner{padding:14px 16px 12px;}
+.hd-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.hd-title{font-size:16px;font-weight:700;letter-spacing:1px;}
+.hd-right{display:flex;align-items:center;gap:8px;}
+.hd-count{font-size:11px;background:rgba(255,255,255,0.2);border-radius:20px;padding:3px 10px;letter-spacing:0.5px;}
+.hd-logout{font-size:11px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:20px;padding:3px 10px;cursor:pointer;color:#fff;-webkit-appearance:none;touch-action:manipulation;}
+.hd-updated{font-size:10px;opacity:0.65;margin-top:2px;}
+
+/* 통계 바 */
+.stat-bar{display:flex;gap:8px;padding:10px 16px;background:rgba(255,255,255,0.1);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.stat-bar::-webkit-scrollbar{display:none;}
+.stat-chip{flex-shrink:0;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;color:#fff;white-space:nowrap;}
+.stat-chip span{font-size:13px;font-weight:800;margin-left:4px;}
+
+/* 필터 */
+.filter-wrap{background:#fff;border-bottom:1px solid rgba(0,0,20,0.08);padding:10px 16px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.filter-wrap::-webkit-scrollbar{display:none;}
+.filter-sel{flex-shrink:0;padding:7px 12px;background:#f0f4ff;border:1.5px solid rgba(32,80,200,0.2);border-radius:20px;font-size:12px;font-weight:600;color:#1a3a9e;-webkit-appearance:none;appearance:none;outline:none;cursor:pointer;min-height:36px;}
+.filter-sel.active{background:#2050c8;border-color:#2050c8;color:#fff;}
+.filter-reset{flex-shrink:0;padding:7px 14px;background:transparent;border:1.5px solid rgba(0,0,20,0.15);border-radius:20px;font-size:12px;font-weight:600;color:rgba(60,70,100,0.7);-webkit-appearance:none;appearance:none;outline:none;cursor:pointer;min-height:36px;touch-action:manipulation;}
+
+/* 검색 */
+.search-wrap{padding:10px 16px 6px;background:#fff;border-bottom:1px solid rgba(0,0,20,0.06);}
+.search-box{display:flex;align-items:center;background:#f0f4ff;border:1.5px solid rgba(32,80,200,0.15);border-radius:10px;padding:8px 12px;gap:8px;}
+.search-box input{flex:1;border:none;background:transparent;font-size:14px;color:#1a1e3a;outline:none;-webkit-appearance:none;}
+.search-box input::placeholder{color:rgba(100,110,150,0.5);}
+.search-ico{font-size:14px;color:rgba(32,80,200,0.5);}
+.search-clr{font-size:13px;color:#aaa;cursor:pointer;display:none;padding:2px 4px;touch-action:manipulation;}
+
+/* 결과 수 */
+.result-bar{padding:8px 16px;font-size:11px;color:rgba(60,70,100,0.7);background:#f8f9ff;border-bottom:1px solid rgba(0,0,20,0.05);}
+.result-bar strong{color:#1a3a9e;}
+
+/* 리스트 */
+.list{padding:10px 12px 80px;}
+.card{background:#fff;border-radius:12px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,30,0.07);border:1px solid rgba(0,0,20,0.06);overflow:hidden;cursor:pointer;}
+.card:active{background:#f7f9ff;}
+.card-top{display:flex;align-items:center;padding:11px 14px;gap:10px;}
+.card-num{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#2050c8,#1a3a9e);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.card-num.family{background:linear-gradient(135deg,#c87820,#a05a10);}
+.card-info{flex:1;min-width:0;}
+.card-name{font-size:14px;font-weight:700;color:#1a1e3a;display:flex;align-items:center;gap:6px;}
+.card-name .gender{font-size:11px;color:rgba(80,90,130,0.7);font-weight:400;}
+.card-sub{font-size:11px;color:rgba(80,90,130,0.75);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;}
+.tag{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600;white-space:nowrap;}
+.tag.village{background:rgba(32,80,200,0.08);color:#1a3a9e;border:1px solid rgba(32,80,200,0.15);}
+.tag.mteam{background:rgba(20,160,80,0.08);color:#0a5c30;border:1px solid rgba(20,160,80,0.2);}
+.tag.sched{background:rgba(180,80,20,0.08);color:#7a3000;border:1px solid rgba(180,80,20,0.2);}
+.tag.trans{background:rgba(100,30,180,0.08);color:#4a0090;border:1px solid rgba(100,30,180,0.2);}
+.tag.rel{background:rgba(200,140,20,0.1);color:#7a4800;border:1px solid rgba(200,140,20,0.2);}
+.card-rno{font-size:10px;color:rgba(32,80,200,0.55);font-weight:700;flex-shrink:0;}
+.card-arrow{font-size:14px;color:rgba(120,130,160,0.4);flex-shrink:0;margin-left:4px;}
+
+/* 상세 오버레이 */
+.detail-ovl{position:fixed;inset:0;background:rgba(10,15,40,0.55);z-index:200;display:none;align-items:flex-end;justify-content:center;overscroll-behavior:contain;}
+.detail-ovl.show{display:flex;}
+.detail-sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:600px;max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:env(safe-area-inset-bottom);}
+.detail-handle{width:36px;height:4px;background:rgba(0,0,20,0.12);border-radius:2px;margin:12px auto 16px;}
+.detail-hd{padding:0 20px 14px;border-bottom:1px solid rgba(0,0,20,0.07);}
+.detail-name{font-size:20px;font-weight:800;color:#1a1e3a;}
+.detail-rno{font-size:12px;color:rgba(32,80,200,0.7);font-weight:700;margin-top:4px;}
+.detail-body{padding:16px 20px;}
+.detail-sec{margin-bottom:16px;}
+.detail-sec-title{font-size:10px;font-weight:700;letter-spacing:2px;color:#1a3a9e;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.detail-sec-title::after{content:'';flex:1;height:1px;background:rgba(32,80,200,0.15);}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.detail-row{background:#f7f9ff;border-radius:8px;padding:8px 10px;}
+.detail-row.full{grid-column:1/-1;}
+.detail-key{font-size:10px;color:rgba(30,50,120,0.6);font-weight:600;margin-bottom:2px;}
+.detail-val{font-size:13px;color:#0f1428;font-weight:500;word-break:break-all;}
+.detail-val.empty{color:rgba(120,130,160,0.5);font-style:italic;font-size:12px;}
+.detail-close{display:block;width:calc(100% - 40px);margin:0 20px 16px;padding:14px;background:linear-gradient(135deg,#2a5cd8,#1a3ab0);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;-webkit-appearance:none;touch-action:manipulation;}
+
+/* 통계 패널 */
+.stat-panel{display:none;padding:12px 16px 80px;}
+.stat-panel.show{display:block;}
+.stat-section{background:#fff;border-radius:12px;margin-bottom:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,30,0.07);}
+.stat-sec-title{padding:12px 16px;background:linear-gradient(90deg,rgba(32,80,200,0.05),transparent);font-size:12px;font-weight:700;color:#1a3a9e;letter-spacing:1px;border-bottom:1px solid rgba(32,80,200,0.08);}
+.stat-item{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid rgba(0,0,20,0.04);}
+.stat-item:last-child{border-bottom:none;}
+.stat-label{flex:1;font-size:13px;color:#1a1e3a;font-weight:500;}
+.stat-bar-wrap{flex:2;height:8px;background:#f0f2f8;border-radius:4px;overflow:hidden;margin:0 10px;}
+.stat-bar-fill{height:100%;background:linear-gradient(90deg,#2050c8,#4070e0);border-radius:4px;}
+.stat-count{font-size:13px;font-weight:700;color:#2050c8;min-width:28px;text-align:right;}
+
+/* 탭 바 */
+.tab-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid rgba(0,0,20,0.1);padding:8px 0;padding-bottom:calc(8px + env(safe-area-inset-bottom));display:flex;z-index:150;box-shadow:0 -2px 12px rgba(0,0,0,0.06);}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;touch-action:manipulation;}
+.tab-ico{font-size:20px;}
+.tab-lbl{font-size:10px;font-weight:600;color:rgba(80,90,130,0.6);}
+.tab.active .tab-lbl{color:#2050c8;}
+
+/* 로딩 / 에러 */
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:14px;}
+.spinner{width:36px;height:36px;border:3px solid rgba(32,80,200,0.15);border-top-color:#2050c8;border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-txt{font-size:13px;color:rgba(60,70,100,0.6);}
+.empty{text-align:center;padding:60px 20px;}
+.empty-ico{font-size:40px;margin-bottom:12px;}
+.empty-txt{font-size:14px;color:rgba(60,70,100,0.6);}
+
+/* 새로고침 버튼 */
+.refresh-btn{position:fixed;bottom:calc(70px + env(safe-area-inset-bottom));right:16px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#2050c8,#1a3a9e);border:none;color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 14px rgba(32,80,200,0.4);display:flex;align-items:center;justify-content:center;z-index:140;touch-action:manipulation;-webkit-appearance:none;}
+.refresh-btn.spinning{animation:spin .8s linear infinite;}
+
+/* 메인 앱 (로그인 전 숨김) */
+.app{display:none;}
+.app.show{display:block;}
+
+@media(max-width:360px){.detail-grid{grid-template-columns:1fr;}.detail-row.full{grid-column:1;}}
+</style>
+</head>
+<body>
+
+<!-- ── 비밀번호 화면 ── -->
+<div class="pw-screen" id="pwScreen">
+  <div class="pw-box">
+    <div class="pw-logo">🙏</div>
+    <div class="pw-title">MET2026 블레싱 삼척</div>
+    <div class="pw-sub">관리자 전용 페이지입니다</div>
+    <div class="pw-label">비밀번호</div>
+    <div class="pw-input-wrap">
+      <input type="password" id="pwInput" class="pw-input" placeholder="비밀번호를 입력하세요"
+        autocomplete="current-password" onkeydown="if(event.key==='Enter')tryLogin()"/>
+      <span class="pw-eye" id="pwEye" onclick="togglePwEye()">👁</span>
+    </div>
+    <button class="pw-btn" onclick="tryLogin()">로그인</button>
+    <div class="pw-err" id="pwErr"></div>
+    <div class="pw-spinner" id="pwSpinner">⏳ 확인 중…</div>
+  </div>
+</div>
+
+<!-- ── 메인 앱 ── -->
+<div class="app" id="app">
+
+  <!-- 헤더 -->
+  <div class="hd">
+    <div class="hd-inner">
+      <div class="hd-top">
+        <div>
+          <div class="hd-title">🙏 MET2026 블레싱 삼척</div>
+          <div class="hd-updated" id="updatedAt">데이터 불러오는 중…</div>
+        </div>
+        <div class="hd-right">
+          <div class="hd-count" id="totalCount">— 명</div>
+          <button class="hd-logout" onclick="logout()">로그아웃</button>
+        </div>
+      </div>
+      <div class="stat-bar" id="statBar">
+        <div class="stat-chip">로딩 중…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 필터 -->
+  <div class="filter-wrap" id="filterWrap">
+    <select class="filter-sel" id="fVillage" onchange="applyFilter()"><option value="">전체 마을</option></select>
+    <select class="filter-sel" id="fMoksang" onchange="applyFilter()"><option value="">전체 목장</option></select>
+    <select class="filter-sel" id="fMteam"   onchange="applyFilter()"><option value="">전체 사역팀</option></select>
+    <select class="filter-sel" id="fSched"   onchange="applyFilter()"><option value="">전체 일정</option></select>
+    <button class="filter-reset" onclick="resetFilter()">✕ 초기화</button>
+  </div>
+
+  <!-- 검색 -->
+  <div class="search-wrap">
+    <div class="search-box">
+      <span class="search-ico">🔍</span>
+      <input type="text" id="searchInput" placeholder="이름, 목장, 사역팀 검색…"
+        oninput="onSearch(this)" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <span class="search-clr" id="searchClr" onclick="clearSearch()">✕</span>
+    </div>
+  </div>
+
+  <!-- 결과 수 -->
+  <div class="result-bar" id="resultBar"><strong>0</strong>명 표시 중</div>
+
+  <!-- 리스트 -->
+  <div class="list" id="listWrap">
+    <div class="loading"><div class="spinner"></div><div class="loading-txt">데이터를 불러오는 중입니다…</div></div>
+  </div>
+
+  <!-- 통계 -->
+  <div class="stat-panel" id="statPanel"></div>
+
+  <!-- 탭 바 -->
+  <div class="tab-bar">
+    <div class="tab active" id="tabList" onclick="switchTab('list')">
+      <span class="tab-ico">📋</span><span class="tab-lbl">명단</span>
+    </div>
+    <div class="tab" id="tabStat" onclick="switchTab('stat')">
+      <span class="tab-ico">📊</span><span class="tab-lbl">통계</span>
+    </div>
+  </div>
+
+  <!-- 새로고침 -->
+  <button class="refresh-btn" id="refreshBtn" onclick="loadData()">↻</button>
+
+</div><!-- /app -->
+
+<!-- 상세 오버레이 -->
+<div class="detail-ovl" id="detailOvl" onclick="closeDetail(event)">
+  <div class="detail-sheet" id="detailSheet">
+    <div class="detail-handle"></div>
+    <div class="detail-hd">
+      <div class="detail-name" id="detailName"></div>
+      <div class="detail-rno"  id="detailRno"></div>
+    </div>
+    <div class="detail-body" id="detailBody"></div>
+    <button class="detail-close" onclick="closeDetail()">닫기</button>
+  </div>
+</div>
+
+<script>
+// ★ GAS 배포 URL — Code.gs 배포 후 발급된 URL로 교체하세요
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbzcr1AWNWThcfeL3o2E6yLs9x1whdG9nH1zBuXmHm-7Z_Ou4GKpIMEyrEZs8-oVq-dWcQ/exec';
+
+var allData  = [];
+var filtered = [];
+var _pw      = '';
+
+// ── 비밀번호 로그인 ──
+function tryLogin() {
+  var pw = document.getElementById('pwInput').value.trim();
+  if (!pw) { setErr('비밀번호를 입력해주세요.'); return; }
+
+  setErr('');
+  document.getElementById('pwSpinner').className = 'pw-spinner show';
+  document.querySelector('.pw-btn').disabled = true;
+
+  var url = GAS_URL + '?action=data&pw=' + encodeURIComponent(pw);
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      document.getElementById('pwSpinner').className = 'pw-spinner';
+      document.querySelector('.pw-btn').disabled = false;
+      if (res.result === 'auth_error') {
+        setErr('비밀번호가 올바르지 않습니다.');
+        document.getElementById('pwInput').value = '';
+        document.getElementById('pwInput').focus();
+      } else if (res.result === 'ok') {
+        _pw = pw;
+        // 세션 저장 (탭 닫으면 초기화)
+        sessionStorage.setItem('admin_pw', pw);
+        showApp(res);
+      } else {
+        setErr('오류: ' + (res.message || '알 수 없는 오류'));
+      }
+    })
+    .catch(function(e){
+      document.getElementById('pwSpinner').className = 'pw-spinner';
+      document.querySelector('.pw-btn').disabled = false;
+      setErr('네트워크 오류. 다시 시도해주세요.');
+    });
+}
+
+function setErr(msg){ document.getElementById('pwErr').textContent = msg; }
+
+function togglePwEye(){
+  var inp = document.getElementById('pwInput');
+  var eye = document.getElementById('pwEye');
+  if (inp.type === 'password'){ inp.type = 'text'; eye.textContent = '🙈'; }
+  else { inp.type = 'password'; eye.textContent = '👁'; }
+}
+
+function showApp(res) {
+  document.getElementById('pwScreen').className = 'pw-screen hide';
+  document.getElementById('app').className = 'app show';
+  processData(res);
+}
+
+function logout() {
+  sessionStorage.removeItem('admin_pw');
+  _pw = '';
+  allData = []; filtered = [];
+  document.getElementById('pwScreen').className = 'pw-screen';
+  document.getElementById('app').className = 'app';
+  document.getElementById('pwInput').value = '';
+  setErr('');
+}
+
+// ── 데이터 로드 (새로고침) ──
+function loadData() {
+  if (!_pw) return;
+  var btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  document.getElementById('listWrap').innerHTML =
+    '<div class="loading"><div class="spinner"></div><div class="loading-txt">데이터를 불러오는 중입니다…</div></div>';
+
+  fetch(GAS_URL + '?action=data&pw=' + encodeURIComponent(_pw))
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      btn.classList.remove('spinning');
+      if (res.result === 'auth_error') { logout(); return; }
+      if (res.result === 'ok') { processData(res); }
+      else { showListError(res.message || '데이터 오류'); }
+    })
+    .catch(function(e){
+      btn.classList.remove('spinning');
+      showListError('네트워크 오류: ' + e.message);
+    });
+}
+
+function processData(res) {
+  allData = res.data || [];
+  document.getElementById('updatedAt').textContent = '마지막 업데이트: ' + (res.updated || '-');
+  document.getElementById('totalCount').textContent = allData.length + ' 명';
+  buildFilters();
+  applyFilter();
+  renderStats();
+}
+
+function showListError(msg) {
+  document.getElementById('listWrap').innerHTML =
+    '<div class="empty"><div class="empty-ico">⚠️</div><div class="empty-txt">' + esc(msg) + '</div></div>';
+}
+
+// ── 필터 구성 ──
+function buildFilters() {
+  var villages = uniq(allData.map(function(d){ return d.village; }).filter(Boolean)).sort();
+  var moksangs = uniq(allData.map(function(d){ return d.moksang; }).filter(Boolean)).sort();
+  var mteams   = uniq(allData.map(function(d){ return d.mteam;   }).filter(Boolean)).sort();
+  var scheds   = uniq(allData.map(function(d){ return d.sched;   }).filter(Boolean));
+  fillSelect('fVillage', '전체 마을',   villages);
+  fillSelect('fMoksang', '전체 목장',   moksangs);
+  fillSelect('fMteam',   '전체 사역팀', mteams);
+  fillSelect('fSched',   '전체 일정',   scheds);
+
+  // 통계 바 (마을별 인원)
+  var vMap = {};
+  allData.forEach(function(d){ if(d.village) vMap[d.village]=(vMap[d.village]||0)+1; });
+  var chips = '<div class="stat-chip">전체 <span>' + allData.length + '</span></div>';
+  villages.forEach(function(v){ chips += '<div class="stat-chip">' + esc(v) + ' <span>' + (vMap[v]||0) + '</span></div>'; });
+  document.getElementById('statBar').innerHTML = chips;
+}
+
+function fillSelect(id, placeholder, items) {
+  var sel = document.getElementById(id);
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">' + placeholder + '</option>' +
+    items.map(function(v){ return '<option value="' + esc(v) + '">' + esc(v) + '</option>'; }).join('');
+  if (cur) sel.value = cur;
+  sel.classList.toggle('active', !!sel.value);
+}
+
+function uniq(arr) {
+  var seen={}, out=[];
+  arr.forEach(function(v){ if(v&&!seen[v]){seen[v]=1;out.push(v);} });
+  return out;
+}
+
+// ── 필터 적용 ──
+function applyFilter() {
+  var fv = document.getElementById('fVillage').value;
+  var fm = document.getElementById('fMoksang').value;
+  var ft = document.getElementById('fMteam').value;
+  var fs = document.getElementById('fSched').value;
+  var sq = document.getElementById('searchInput').value.trim();
+
+  ['fVillage','fMoksang','fMteam','fSched'].forEach(function(id){
+    document.getElementById(id).classList.toggle('active', !!document.getElementById(id).value);
+  });
+
+  // 마을 선택 시 목장 선택지 연동
+  if (fv) {
+    var sub = uniq(allData.filter(function(d){ return d.village===fv; }).map(function(d){ return d.moksang; }).filter(Boolean)).sort();
+    fillSelect('fMoksang','전체 목장', sub);
+    if (fm) document.getElementById('fMoksang').value = fm;
+  } else {
+    fillSelect('fMoksang','전체 목장', uniq(allData.map(function(d){ return d.moksang; }).filter(Boolean)).sort());
+    if (fm) document.getElementById('fMoksang').value = fm;
+  }
+
+  filtered = allData.filter(function(d){
+    if (fv && d.village !== fv) return false;
+    if (fm && d.moksang !== fm) return false;
+    if (ft && d.mteam   !== ft) return false;
+    if (fs && d.sched   !== fs) return false;
+    if (sq) {
+      var hay = (d.name+d.moksang+d.village+d.mteam+d.pastor+d.phone).toLowerCase();
+      if (hay.indexOf(sq.toLowerCase()) < 0) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('resultBar').innerHTML =
+    '<strong>' + filtered.length + '</strong>명 표시 중' +
+    (filtered.length < allData.length ? ' (전체 ' + allData.length + '명)' : '');
+  renderList();
+}
+
+function resetFilter() {
+  ['fVillage','fMoksang','fMteam','fSched'].forEach(function(id){
+    document.getElementById(id).value='';
+    document.getElementById(id).classList.remove('active');
+  });
+  document.getElementById('searchInput').value='';
+  document.getElementById('searchClr').style.display='none';
+  buildFilters();
+  applyFilter();
+}
+
+// ── 검색 ──
+function onSearch(el){
+  document.getElementById('searchClr').style.display = el.value ? 'block' : 'none';
+  applyFilter();
+}
+function clearSearch(){
+  document.getElementById('searchInput').value='';
+  document.getElementById('searchClr').style.display='none';
+  applyFilter();
+}
+
+// ── 리스트 렌더링 ──
+function renderList() {
+  var wrap = document.getElementById('listWrap');
+  if (!filtered.length) {
+    wrap.innerHTML = '<div class="empty"><div class="empty-ico">🔍</div><div class="empty-txt">해당하는 신청자가 없습니다</div></div>';
+    return;
+  }
+  wrap.innerHTML = filtered.map(function(d, i) {
+    var isFamily = d.type === '가족/단체';
+    var tags = '';
+    if (d.village) tags += '<span class="tag village">' + esc(d.village) + '</span>';
+    if (d.mteam)   tags += '<span class="tag mteam">'   + esc(d.mteam)   + '</span>';
+    if (d.sched)   tags += '<span class="tag sched">'   + esc(d.sched)   + '</span>';
+    if (d.trans)   tags += '<span class="tag trans">'   + esc(d.trans)   + '</span>';
+    if (isFamily && d.rel) tags += '<span class="tag rel">' + esc(d.rel) + '</span>';
+    return '<div class="card" onclick="openDetail(' + i + ')">'
+      + '<div class="card-top">'
+      + '<div class="card-num' + (isFamily?' family':'') + '">' + (i+1) + '</div>'
+      + '<div class="card-info">'
+      + '<div class="card-name">' + esc(d.name) + (d.ids?' <small style="color:rgba(32,80,200,0.7);font-size:11px;font-weight:700;">(' + esc(d.ids) + ')</small>':'') + '<span class="gender">' + esc(d.gender) + '</span></div>'
+      + '<div class="card-sub">' + esc(d.pastor||'-') + ' / ' + esc(d.moksang||'-') + (d.phone?' · '+esc(d.phone):'') + '</div>'
+      + '<div class="card-tags">' + tags + '</div>'
+      + '</div>'
+      + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">'
+      + '<div class="card-rno">' + esc(d.rno) + '</div>'
+      + '<div class="card-arrow">›</div>'
+      + '</div></div></div>';
+  }).join('');
+}
+
+// ── 상세 보기 ──
+function openDetail(idx) {
+  var d = filtered[idx]; if(!d) return;
+  document.getElementById('detailName').textContent = d.name + (d.gender?' ('+d.gender+')':'') + (d.ids?' · '+d.ids:'');
+  document.getElementById('detailRno').textContent  = d.rno + (d.gno&&d.gno!==d.rno?'  /  그룹: '+d.gno:'');
+
+  function row(key,val,full){
+    return '<div class="detail-row'+(full?' full':'')+'"><div class="detail-key">'+key+'</div>'
+      +'<div class="detail-val'+(val?'':' empty')+'">'+(val?esc(val):'-')+'</div></div>';
+  }
+
+  document.getElementById('detailBody').innerHTML =
+    '<div class="detail-sec"><div class="detail-sec-title">기본 정보</div><div class="detail-grid">'
+    + row('신청유형', d.type+(d.couple&&d.couple!=='-'?' · '+d.couple:''))
+    + row('가족관계', d.rel)
+    + row('이름', d.name+(d.ids?' ('+d.ids+')':''))
+    + row('성별', d.gender)
+    + row('전화번호', d.phone, true)
+    + '</div></div>'
+    + '<div class="detail-sec"><div class="detail-sec-title">목장 정보</div><div class="detail-grid">'
+    + row('목자명', d.pastor)
+    + row('마을', d.village)
+    + row('목장', d.moksang, true)
+    + '</div></div>'
+    + '<div class="detail-sec"><div class="detail-sec-title">사역 / 일정</div><div class="detail-grid">'
+    + row('사역팀', d.mteam)
+    + row('참여일정', d.sched)
+    + row('차량', d.trans+(d.ride?' · '+d.ride:''))
+    + row('숙소', d.accom)
+    + '</div></div>'
+    + (d.spouse||d.note?'<div class="detail-sec"><div class="detail-sec-title">기타</div><div class="detail-grid">'
+      +(d.spouse?row('배우자성명',d.spouse):'')
+      +(d.note?row('비고',d.note,true):'')
+      +'</div></div>':'')
+    + '<div class="detail-sec"><div class="detail-sec-title">제출 정보</div><div class="detail-grid">'
+    + row('제출시각', d.submitAt)
+    + row('관리번호', d.rno)
+    + '</div></div>';
+
+  document.getElementById('detailOvl').className = 'detail-ovl show';
+  document.getElementById('detailSheet').scrollTop = 0;
+}
+
+function closeDetail(e) {
+  if (!e || e.target === document.getElementById('detailOvl')) {
+    document.getElementById('detailOvl').className = 'detail-ovl';
+  }
+}
+
+// ── 통계 렌더링 ──
+function renderStats() {
+  function countBy(key){ var m={}; allData.forEach(function(d){ var v=d[key]; if(v) m[v]=(m[v]||0)+1; }); return m; }
+  function makeSection(title, dataMap) {
+    var items = Object.keys(dataMap).sort(function(a,b){ return dataMap[b]-dataMap[a]; });
+    if (!items.length) return '';
+    var max = dataMap[items[0]] || 1;
+    return '<div class="stat-section"><div class="stat-sec-title">'+title+'</div>'
+      + items.map(function(k){
+          var cnt=dataMap[k], pct=Math.round(cnt/max*100);
+          return '<div class="stat-item"><div class="stat-label">'+esc(k)+'</div>'
+            +'<div class="stat-bar-wrap"><div class="stat-bar-fill" style="width:'+pct+'%"></div></div>'
+            +'<div class="stat-count">'+cnt+'</div></div>';
+        }).join('')+'</div>';
+  }
+  document.getElementById('statPanel').innerHTML =
+    '<div style="padding:12px 0 4px;font-size:11px;font-weight:700;color:rgba(60,70,100,0.6);letter-spacing:1px;">총 '+allData.length+'명 등록</div>'
+    + makeSection('마을별',      countBy('village'))
+    + makeSection('사역팀별',    countBy('mteam'))
+    + makeSection('참여일정별',  countBy('sched'))
+    + makeSection('차량별',      countBy('trans'))
+    + makeSection('숙소별',      countBy('accom'));
+}
+
+// ── 탭 전환 ──
+function switchTab(tab) {
+  document.getElementById('tabList').className = 'tab'+(tab==='list'?' active':'');
+  document.getElementById('tabStat').className = 'tab'+(tab==='stat'?' active':'');
+  document.getElementById('listWrap').style.display    = tab==='list'?'block':'none';
+  document.getElementById('statPanel').className       = 'stat-panel'+(tab==='stat'?' show':'');
+  document.getElementById('filterWrap').style.display  = tab==='list'?'flex':'none';
+  document.querySelector('.search-wrap').style.display = tab==='list'?'block':'none';
+  document.getElementById('resultBar').style.display   = tab==='list'?'block':'none';
+  document.getElementById('refreshBtn').style.display  = tab==='list'?'flex':'none';
+}
+
+// ── XSS 방지 ──
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── iOS 상세 스와이프 닫기 ──
+(function(){
+  var sheet=document.getElementById('detailSheet'), startY=0;
+  sheet.addEventListener('touchstart',function(e){startY=e.touches[0].clientY;},{passive:true});
+  sheet.addEventListener('touchend',function(e){
+    if(e.changedTouches[0].clientY-startY>80) closeDetail({target:document.getElementById('detailOvl')});
+  },{passive:true});
+})();
+
+// ── 세션 자동 복원 ──
+(function(){
+  var saved = sessionStorage.getItem('admin_pw');
+  if (saved) {
+    _pw = saved;
+    document.getElementById('pwSpinner').className = 'pw-spinner show';
+    fetch(GAS_URL + '?action=data&pw=' + encodeURIComponent(saved))
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        document.getElementById('pwSpinner').className = 'pw-spinner';
+        if (res.result === 'ok') { showApp(res); }
+        else { sessionStorage.removeItem('admin_pw'); _pw=''; }
+      })
+      .catch(function(){ document.getElementById('pwSpinner').className='pw-spinner'; });
+  }
+})();
+</script>
+</body>
+</html>
