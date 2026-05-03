@@ -749,6 +749,8 @@ return;
 eb.className='errbox';
 
 // payload 준비 (번호는 서버에서 부여)
+var ua=navigator.userAgent.toLowerCase();
+var device=/iphone|ipad/.test(ua)?'iOS':(/android/.test(ua)?'Android':'PC');
 var mdata=members.map(function(m,i){
 var isAC=isFamily&&isCouple===true&&i>0&&m.rel==='배우자';
 var isF=isFamily&&i>0;
@@ -761,7 +763,7 @@ pn:mp?mp.n:'',pv:mp?mp.v:'',pp:mp?mp.p:''};
 });
 
 _cfmMdata=mdata;
-_cfmPayload={isFamily:isFamily&&members.length>1,isCouple:isCouple,mdata:mdata};
+_cfmPayload={isFamily:isFamily&&members.length>1,isCouple:isCouple,mdata:mdata,device:device};
 
 // 확인 화면 구성
 var body=document.getElementById('cfm-body');
