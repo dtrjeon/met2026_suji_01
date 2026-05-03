@@ -1080,7 +1080,7 @@ render();
   btn.addEventListener('touchend', function(e){
     if(Date.now()-_ts<300){
       e.preventDefault();
-      onSubmit();
+      setTimeout(function(){ onSubmit(); }, 10);
     }
   }, {passive:false});
   btn.addEventListener('click', function(){
