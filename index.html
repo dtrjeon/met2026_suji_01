@@ -176,7 +176,9 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
 .cfm-submit:disabled{opacity:0.6;}
 @media(max-width:400px){.cfm-rows{grid-template-columns:1fr;}.cfm-row.full{grid-column:1;}}
 
-/* 완료 */
+/* 확인 페이지 */
+#cfmpage{position:fixed;top:0;left:0;right:0;bottom:0;background:linear-gradient(160deg,#fdf9f4 0%,#f5efea 100%);display:none;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;z-index:500;}
+#cfmpage.show{display:flex;}
 .doneovl{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(247,244,239,0.97);display:none;align-items:flex-start;justify-content:center;z-index:2000;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:40px 18px;}
 .doneovl.show{display:flex;}
 .donecard{text-align:center;max-width:460px;width:100%;padding-bottom:40px;}
@@ -803,13 +805,24 @@ cfmShow();
 
 function cfmShow(){
   document.getElementById('mainpage').style.display='none';
-  document.getElementById('cfmpage').style.display='block';
-  setTimeout(function(){ window.scrollTo(0,0); }, 50);
+  var cp=document.getElementById('cfmpage');
+  cp.style.display='flex';
+  cp.style.visibility='visible';
+  cp.scrollTop=0;
+  var bar=cp.querySelector('.savebar');
+  if(bar) bar.style.display='flex';
 }
 
 function cfmHide(){
-  document.getElementById('cfmpage').style.display='none';
+  var cp=document.getElementById('cfmpage');
+  cp.style.display='none';
+  cp.style.visibility='hidden';
   document.getElementById('mainpage').style.display='block';
+  var mainBar=document.getElementById('mainpage').querySelector ? null : null;
+  // 메인 savebar 복원
+  document.querySelectorAll('.savebar').forEach(function(b){
+    if(!b.closest('#cfmpage')) b.style.display='flex';
+  });
   setTimeout(function(){ window.scrollTo(0,0); }, 50);
 }
 
