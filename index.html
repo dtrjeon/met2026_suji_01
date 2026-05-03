@@ -26,7 +26,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:#f7f4ef;-webkit-text-size-
 .sec{margin-bottom:20px;}
 .sec-lbl{font-size:10px;font-weight:700;letter-spacing:3px;color:#1a3a9e;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
 .sec-lbl::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(32,80,200,0.2),transparent);}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}.g2-fixed{display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-bottom:10px;}
 .g1{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:10px;}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;}
 .fld{display:flex;flex-direction:column;gap:5px;}
@@ -147,13 +147,11 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
 .resttime{font-size:11px;color:rgba(32,80,200,0.7);background:rgba(32,80,200,0.07);border-radius:4px;padding:3px 10px;display:inline-block;margin-bottom:14px;}
 .restdesc{font-size:12px;color:rgba(60,70,100,0.7);line-height:1.7;margin-bottom:18px;}
 .restbtns{display:flex;gap:10px;}
-.restyes{flex:1;padding:12px;background:linear-gradient(135deg,#2a5cd8,#1a3ab0);border:none;border-radius:8px;color:#fff;font-family:‘Noto Sans KR’,sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-height:46px;-webkit-appearance:none;touch-action:manipulation;}-webkit-user-select:none;user-select:none;
-.restno{flex:1;padding:12px;background:transparent;border:1.5px solid rgba(0,0,20,0.15);border-radius:8px;color:rgba(60,70,100,0.8);font-family:‘Noto Sans KR’,sans-serif;font-size:13px;font-weight:600;cursor:pointer;min-height:46px;-webkit-appearance:none;touch-action:manipulation;}-webkit-user-select:none;user-select:none;
+.restyes{flex:1;padding:12px;background:linear-gradient(135deg,#2a5cd8,#1a3ab0);border:none;border-radius:8px;color:#fff;font-family:‘Noto Sans KR’,sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-height:46px;-webkit-appearance:none;touch-action:manipulation;-webkit-user-select:none;user-select:none;}
+.restno{flex:1;padding:12px;background:transparent;border:1.5px solid rgba(0,0,20,0.15);border-radius:8px;color:rgba(60,70,100,0.8);font-family:‘Noto Sans KR’,sans-serif;font-size:13px;font-weight:600;cursor:pointer;min-height:46px;-webkit-appearance:none;touch-action:manipulation;-webkit-user-select:none;user-select:none;}
 
 /* 내용확인 오버레이 */
-.cfmovl{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(247,244,239,0.97);display:none;align-items:flex-start;justify-content:center;z-index:100;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:28px 18px 120px;}
-.cfmovl.show{display:flex;}
-.cfmcard{max-width:720px;width:100%;padding-bottom:20px;}
+
 .cfm-hd{text-align:center;margin-bottom:24px;padding-top:8px;}
 .cfm-icon{font-size:40px;margin-bottom:10px;}
 .cfm-title{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:#1a3a9e;margin-bottom:4px;}
@@ -173,9 +171,9 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
 .cfm-val.empty{color:rgba(120,130,160,0.6);font-style:italic;font-size:12px;}
 .cfm-row.full{grid-column:1/-1;}
 .cfm-typebadge{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(32,80,200,0.06);border:1px solid rgba(32,80,200,0.15);border-radius:8px;font-size:12px;color:#1a3a9e;font-weight:600;margin-bottom:16px;}
-.cfm-btns{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid rgba(0,0,20,0.1);padding:12px 18px;padding-bottom:calc(12px + env(safe-area-inset-bottom));display:flex;gap:10px;z-index:101;box-shadow:0 -2px 16px rgba(0,0,0,0.08);}
-.cfm-back{flex:1;padding:14px;background:transparent;border:1.5px solid rgba(0,0,20,0.18);border-radius:8px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:600;color:rgba(40,50,80,0.8);cursor:pointer;min-height:50px;-webkit-appearance:none;outline:none;touch-action:manipulation;}-webkit-user-select:none;user-select:none;
-.cfm-submit{flex:2;padding:14px;background:linear-gradient(135deg,#2a5cd8,#1a3ab0);border:none;border-radius:8px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;color:#fff;cursor:pointer;letter-spacing:1px;min-height:50px;-webkit-appearance:none;outline:none;touch-action:manipulation;}-webkit-user-select:none;user-select:none;
+.cfm-btns{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid rgba(0,0,20,0.1);padding:12px 18px;padding-bottom:calc(12px + env(safe-area-inset-bottom));display:none;gap:10px;z-index:10000;box-shadow:0 -2px 16px rgba(0,0,0,0.08);}
+.cfm-back{flex:1;padding:14px;background:transparent;border:1.5px solid rgba(0,0,20,0.18);border-radius:8px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:600;color:rgba(40,50,80,0.8);cursor:pointer;min-height:50px;-webkit-appearance:none;outline:none;touch-action:manipulation;-webkit-user-select:none;user-select:none;}
+.cfm-submit{flex:2;padding:14px;background:linear-gradient(135deg,#2a5cd8,#1a3ab0);border:none;border-radius:8px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;color:#fff;cursor:pointer;letter-spacing:1px;min-height:50px;-webkit-appearance:none;outline:none;touch-action:manipulation;-webkit-user-select:none;user-select:none;}
 .cfm-submit:disabled{opacity:0.6;}
 @media(max-width:400px){.cfm-rows{grid-template-columns:1fr;}.cfm-row.full{grid-column:1;}}
 
@@ -202,7 +200,7 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
 .endsub{font-size:15px;color:rgba(30,40,80,0.75);line-height:2;margin-bottom:28px;word-break:keep-all;}
 .endclose{font-size:12px;color:rgba(80,90,130,0.55);line-height:1.8;padding:14px 16px;background:rgba(32,80,200,0.05);border:1px solid rgba(32,80,200,0.15);border-radius:8px;}
 
-@media(max-width:520px){.g2{grid-template-columns:1fr;}.g3{grid-template-columns:1fr 1fr;}}
+@media(max-width:520px){.g2{grid-template-columns:1fr;}.g2-fixed{grid-template-columns:2fr 1fr;}.g3{grid-template-columns:1fr 1fr;}}
 </style>
 
 </head>
@@ -262,21 +260,10 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
   </div>
 </div>
 
-<!-- 내용 확인 오버레이 -->
-<div class="cfmovl" id="cfmovl">
-  <div class="cfmcard">
-    <div class="cfm-hd">
-      <div class="cfm-icon">📋</div>
-      <div class="cfm-title">등록 내용 확인</div>
-      <div class="cfm-sub">내용을 확인하신 후 제출해 주세요</div>
-    </div>
-    <div id="cfm-body"></div>
-  </div>
-  <div class="cfm-btns">
-    <button type="button" class="cfm-back" onclick="onCfmBack()">✏️ 수정하기</button>
-    <button type="button" class="cfm-submit" id="cfmsubbtn" onclick="onCfmSubmit()">✅ 완료 및 제출하기</button>
-  </div>
-</div>
+
+
+<!-- 메인 페이지 -->
+<div id="mainpage">
 
 <!-- 헤더 -->
 
@@ -289,6 +276,7 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
     동해 큰사랑순복음교회 &nbsp;|&nbsp; 7/21(화) — 7/22(수)
     <span style="font-size:11px;font-weight:400;opacity:0.8;">유준규 목사 · 곽미영 사모</span>
   </div>
+
 </div>
 
 <div class="con">
@@ -315,12 +303,28 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
     <div class="members" id="members"></div>
     <button type="button" class="addbtn" id="addbtn" onclick="onAddMember()" style="display:none;">+ 가족 구성원 추가</button>
   </div>
-  <button type="button" class="subbtn" id="subbtn" onclick="onSubmit()">등록내용 확인하기 (1명)</button>
+  <button type="button" class="subbtn" id="subbtn" onclick="onSubmit()">등록하기 (1명)</button>
   <div class="errbox" id="errbox">
     <div class="errtitle">아래 항목을 확인해주세요</div>
     <div id="errlist"></div>
   </div>
 </div>
+</div><!-- /mainpage -->
+
+<!-- 확인 페이지 -->
+<div id="cfmpage" style="display:none;">
+  <div class="hd" style="padding:20px 20px 16px;">
+    <div class="hd-eyebrow">STEP 2</div>
+    <div class="hd-title" style="font-size:clamp(28px,7vw,44px);">등록 내용 <span>확인</span></div>
+    <div class="hd-sub">내용을 확인하신 후 제출해 주세요</div>
+  </div>
+  <div class="con" style="padding-bottom:100px;">
+    <div id="cfm-body"></div>
+  </div>
+  <div class="savebar" style="gap:10px;">
+    <button type="button" class="cfm-back" onclick="onCfmBack()">✏️ 수정하기</button>
+    <button type="button" class="cfm-submit" id="cfmsubbtn" onclick="onCfmSubmit()">✅ 완료 및 제출하기</button>
+  </div>
 </div>
 
 <script>
@@ -396,7 +400,7 @@ var PL = [
   {n:'최희병',i:'A',p:'C드림',v:'신정F'}
 ];
 
-var MT = ['전도팀','장금이팀','이미용팀','장수사진/메이크업팀','맛사지팀','간식팀','어린이(청소년)팀','시설팀','바자회','중보기도팀','-'];
+var MT = ['전도팀','장금이팀','이미용팀','장수사진/메이크업팀','맛사지팀','간식팀','어린이(청소년)팀','시설지원팀','바자회','중보기도팀','-'];
 var SC = ['7/21(화)','7/22(수)','7/21~22(화~수)'];
 var REL = ['본인','배우자','자녀','부모','기타'];
 
@@ -599,9 +603,20 @@ function fmtPhone(el){
   var n=el.value.replace(/\D/g,'');
   el.value=n.length<=3?n:n.length<=7?n.slice(0,3)+'-'+n.slice(3):n.slice(0,3)+'-'+n.slice(3,7)+'-'+n.slice(7,11);
 }
-function fmtSsn(el){
+function fmtSsn(el, uid){
   var n=el.value.replace(/\D/g,'');
   el.value=n.length<=6?n:n.slice(0,6)+'-'+n.slice(6,13);
+  // 8번째 숫자(하이픈 제외 7번째 인덱스)로 성별 자동 설정
+  if(uid && n.length>=7){
+    var code=parseInt(n[6],10);
+    var gender=([1,3].indexOf(code)>=0)?'남':([2,4].indexOf(code)>=0)?'여':null;
+    if(gender){
+      var radios=document.querySelectorAll('input[name="g'+uid+'"]');
+      radios.forEach(function(r){
+        r.checked=(r.value===gender);
+      });
+    }
+  }
 }
 
 // ---- 렌더링 ----
@@ -696,17 +711,17 @@ function buildCard(m,i){
     +'<input type="text" id="m'+m.uid+'_name" placeholder="홍길동" value="'+m.name+'" style="flex:2;"/>'
     +'<input type="text" id="m'+m.uid+'_ids" placeholder="A, B" value="'+m.ids+'" style="flex:1;"/>'
     +'</div></div></div>'
-    +'<div class="g2">'
+    +'<div class="g2-fixed">'
+    +'<div class="fld"><div class="lbl">주민등록번호</div>'
+    +'<input type="text" id="m'+m.uid+'_ssn" placeholder="000000-0000000" value="'+m.ssn+'" inputmode="numeric" oninput="fmtSsn(this,\''+m.uid+'\')"/>'
+    +'<div class="hint">단체상해보험 가입 목적으로만 사용, 사역 종료 후 즉시 파기</div>'
+    +'</div>'
     +'<div class="fld"><div class="lbl">성별 <span class="req">*</span></div><div class="rg">'
     +['남','여'].map(function(g){return'<div class="rb"><input type="radio" id="g'+m.uid+'_'+g+'" name="g'+m.uid+'" value="'+g+'"'+(m.gender===g?' checked':'')+'><label for="g'+m.uid+'_'+g+'">'+g+'</label></div>';}).join('')
     +'</div></div>'
-    +'<div class="fld"><div class="lbl">전화번호 <span class="req">*</span></div>'
-    +'<input type="tel" id="m'+m.uid+'_phone" placeholder="010-0000-0000" value="'+m.phone+'" inputmode="numeric" oninput="fmtPhone(this)"/></div>'
     +'</div>'
-    +'<div class="g1"><div class="fld"><div class="lbl">주민등록번호</div>'
-    +'<input type="text" id="m'+m.uid+'_ssn" placeholder="000000-0000000" value="'+m.ssn+'" inputmode="numeric" oninput="fmtSsn(this)"/>'
-    +'<div class="hint">단체상해보험 가입 목적으로만 사용, 사역 종료 후 즉시 파기</div>'
-    +'</div></div>'
+    +'<div class="g1"><div class="fld"><div class="lbl">전화번호 <span class="req">*</span></div>'
+    +'<input type="tel" id="m'+m.uid+'_phone" placeholder="010-0000-0000" value="'+m.phone+'" inputmode="numeric" oninput="fmtPhone(this)"/></div></div>'
     +pastorH
     +spH
     +'<div class="sub">사역팀 <span class="req">*</span></div>'
@@ -730,7 +745,7 @@ function buildCard(m,i){
 
 function updateBtn(){
 var cnt=members.length;
-document.getElementById('subbtn').textContent='등록내용 확인하기 '+(isFamily&&cnt>1?'(가족 '+cnt+'명)':'(1명)');
+document.getElementById('subbtn').textContent='등록하기 '+(isFamily&&cnt>1?'(가족 '+cnt+'명)':'(1명)');
 }
 
 // –– 제출 payload를 전역에 보관 ––
@@ -819,8 +834,19 @@ mdata.forEach(function(m,i){
 });
 body.innerHTML=html;
 
-document.getElementById('cfmovl').className='cfmovl show';
-document.getElementById('cfmovl').scrollTop=0;
+cfmShow();
+}
+
+function cfmShow(){
+  document.getElementById('mainpage').style.display='none';
+  document.getElementById('cfmpage').style.display='block';
+  setTimeout(function(){ window.scrollTo(0,0); }, 50);
+}
+
+function cfmHide(){
+  document.getElementById('cfmpage').style.display='none';
+  document.getElementById('mainpage').style.display='block';
+  setTimeout(function(){ window.scrollTo(0,0); }, 50);
 }
 
 function cfmRow(key,val){
@@ -830,13 +856,26 @@ function cfmRow(key,val){
 
 // –– 수정하기: 확인 화면 닫기 ––
 function onCfmBack(){
-  document.getElementById('cfmovl').className='cfmovl';
+  cfmHide();
 }
 
 // –– 완료 및 제출하기: 실제 전송 ––
+// ── 테스트 모드 (true = 서버 전송 없이 완료 화면 확인) ──
+var TEST_MODE = false;
+
 function onCfmSubmit(){
 var btn=document.getElementById('cfmsubbtn');
 btn.textContent='저장 중…'; btn.disabled=true;
+
+// 테스트 모드: 서버 전송 생략, 가짜 번호로 완료 화면 표시
+if(TEST_MODE){
+  setTimeout(function(){
+    btn.textContent='✅ 완료 및 제출하기'; btn.disabled=false;
+    var fakeRnos=_cfmMdata.map(function(_,i){return 'T'+(100+i);});
+    showDone(fakeRnos,'TG-001');
+  }, 800);
+  return;
+}
 
 var ps;
 try{
@@ -860,6 +899,8 @@ fetch(GSURL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlen
 });
 }
 
+
+
 function showDone(rnos, gno){
 var isGrp=_cfmPayload.isFamily&&_cfmMdata.length>1;
 document.getElementById('doneno').textContent=
@@ -876,9 +917,8 @@ return '<div class="doneitem"><strong>'+(i+1)+'. '+m.name+' ('+m.gender+')'
 +(!_cfmPayload.isFamily&&m.spouse?'배우자: '+m.spouse+'<br>':'')
 +(m.note?'비고: '+m.note+'<br>':'')+'</div>';
 }).join('');
-document.getElementById('cfmovl').className='cfmovl';
-document.getElementById('doneovl').className='doneovl show';
-clearSave();
+cfmHide();
+document.getElementById('doneovl').className='doneovl show';clearSave();
 }
 
 // –– 리셋 ––
@@ -907,7 +947,7 @@ function doFinish(){
 
 function doReset(){
 document.getElementById('doneovl').className='doneovl';
-document.getElementById('cfmovl').className='cfmovl';
+cfmHide();
 isFamily=false; isCouple=null;
 document.getElementById('tglbtn').className='tgl-btn';
 document.getElementById('tglsw').className='tgl-sw';
@@ -978,11 +1018,17 @@ clearSave(); render();
 
 // –– 키보드 대응 (iOS + 안드로이드) ––
 (function(){
-  var bar=document.querySelector('.savebar');
-  var _iosKb=false;
-  // iOS: visualViewport API 사용 (iOS 13+)
+  function getVisibleBar(){
+    // 현재 보이는 페이지의 savebar 반환
+    var cfmpage=document.getElementById('cfmpage');
+    if(cfmpage&&cfmpage.style.display!=='none'){
+      return cfmpage.querySelector('.savebar');
+    }
+    return document.querySelector('#mainpage .savebar, .wrap .savebar');
+  }
   if(window.visualViewport){
     window.visualViewport.addEventListener('resize',function(){
+      var bar=getVisibleBar();
       if(bar){
         var kbVisible=window.visualViewport.height < window.innerHeight * 0.85;
         bar.style.display=kbVisible?'none':'flex';
@@ -991,9 +1037,8 @@ clearSave(); render();
   }
   document.addEventListener('focusin',function(e){
     if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT'){
-      _iosKb=true;
+      var bar=getVisibleBar();
       if(bar) bar.style.display='none';
-      // iOS: 포커스된 요소가 키보드에 가리지 않도록 스크롤
       setTimeout(function(){
         if(e.target&&e.target.scrollIntoViewIfNeeded){
           e.target.scrollIntoViewIfNeeded(true);
@@ -1005,7 +1050,7 @@ clearSave(); render();
   });
   document.addEventListener('focusout',function(){
     setTimeout(function(){
-      _iosKb=false;
+      var bar=getVisibleBar();
       if(bar) bar.style.display='flex';
     },300);
   });
