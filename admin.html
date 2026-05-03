@@ -172,7 +172,7 @@ body{font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif
     <div class="hd-inner">
       <div class="hd-top">
         <div>
-          <div class="hd-title">🙏 MET2026 블레싱 삼척</div>
+          <div class="hd-title" id="hdTitle">🙏 MET2026 블레싱 삼척</div>
           <div class="hd-updated" id="updatedAt">데이터 불러오는 중…</div>
         </div>
         <div class="hd-right">
@@ -248,12 +248,31 @@ body{font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif
 // ★ GAS 배포 URL — Code.gs 배포 후 발급된 URL로 교체하세요
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbwOboMr1J3ucCrTdMa-26STDF9oMZZQAV9aOQxdOfOiGhhOuu5vNj3dR323uZWcEWV8KQ/exec';
 
+// ── 테스트 모드 (true = 서버 없이 가짜 데이터로 확인) ──
+var TEST_MODE = false;
+
+var TEST_DATA = [
+  {submitAt:'2026-05-01 10:23',rno:'2026-A001',gno:'2026-A001',type:'개인',couple:'-',rel:'본인',name:'홍길동',ids:'A',gender:'남',phone:'010-1234-5678',pastor:'김하연',village:'신정1',moksang:'S사랑하는1',mteam:'전도팀',sched:'7/21~22(화~수)',trans:'버스',ride:'',accom:'단체(교회준비)',spouse:'',note:'',device:'iOS'},
+  {submitAt:'2026-05-01 10:45',rno:'2026-A002',gno:'2026-A002',type:'개인',couple:'-',rel:'본인',name:'김영희',ids:'BW',gender:'여',phone:'010-2345-6789',pastor:'정호영',village:'신정2',moksang:'S하늘정원1',mteam:'이미용팀',sched:'7/21~22(화~수)',trans:'버스',ride:'',accom:'단체(교회준비)',spouse:'',note:'',device:'Android'},
+  {submitAt:'2026-05-01 11:02',rno:'2026-G001-1',gno:'2026-G001',type:'가족/단체',couple:'부부목장',rel:'본인',name:'이철수',ids:'B',gender:'남',phone:'010-3456-7890',pastor:'오은영',village:'신정2',moksang:'S하늘정원2',mteam:'시설지원팀',sched:'7/21~22(화~수)',trans:'자차',ride:'',accom:'단체(교회준비)',spouse:'',note:'',device:'Android'},
+  {submitAt:'2026-05-01 11:02',rno:'2026-G001-2',gno:'2026-G001',type:'가족/단체',couple:'부부목장',rel:'배우자',name:'박미영',ids:'',gender:'여',phone:'010-4567-8901',pastor:'오은영',village:'신정2',moksang:'S하늘정원2',mteam:'장금이팀',sched:'7/21~22(화~수)',trans:'자차',ride:'',accom:'단체(교회준비)',spouse:'',note:'',device:'Android'},
+  {submitAt:'2026-05-01 11:02',rno:'2026-G001-3',gno:'2026-G001',type:'가족/단체',couple:'부부목장',rel:'자녀',name:'이민준',ids:'',gender:'남',phone:'',pastor:'',village:'신정2',moksang:'S하늘정원2',mteam:'어린이(청소년)팀',sched:'7/21(화)',trans:'자차',ride:'',accom:'단체(교회준비)',spouse:'',note:'중2',device:'Android'},
+  {submitAt:'2026-05-01 12:15',rno:'2026-A003',gno:'2026-A003',type:'개인',couple:'-',rel:'본인',name:'최순희',ids:'F',gender:'여',phone:'010-5678-9012',pastor:'안선영',village:'신정3',moksang:'S양떼1',mteam:'중보기도팀',sched:'7/22(수)',trans:'버스',ride:'',accom:'단체(교회준비)',spouse:'',note:'',device:'iOS'},
+  {submitAt:'2026-05-01 13:30',rno:'2026-A004',gno:'2026-A004',type:'개인',couple:'-',rel:'본인',name:'박준호',ids:'C',gender:'남',phone:'010-6789-0123',pastor:'유수영',village:'신정4',moksang:'S샘물1',mteam:'바자회팀',sched:'7/21~22(화~수)',trans:'버스',ride:'',accom:'개인(개별준비)',spouse:'',note:'',device:'Android'},
+  {submitAt:'2026-05-01 14:05',rno:'2026-A005',gno:'2026-A005',type:'개인',couple:'-',rel:'본인',name:'정은주',ids:'R',gender:'여',phone:'010-7890-1234',pastor:'황은성',village:'신정5',moksang:'S참포도나무1',mteam:'간식팀',sched:'7/21~22(화~수)',trans:'버스',ride:'',accom:'단체(교회준비)',spouse:'',note:'',device:'iOS'}
+];
+
 var allData  = [];
 var filtered = [];
 var _pw      = '';
 
 // ── 비밀번호 로그인 ──
 function tryLogin() {
+  if (TEST_MODE) {
+    _pw = 'test';
+    showApp({ result:'ok', data: TEST_DATA, updated: '테스트 데이터' });
+    return;
+  }
   var pw = document.getElementById('pwInput').value.trim();
   if (!pw) { setErr('비밀번호를 입력해주세요.'); return; }
 
@@ -299,6 +318,10 @@ function togglePwEye(){
 function showApp(res) {
   document.getElementById('pwScreen').className = 'pw-screen hide';
   document.getElementById('app').className = 'app show';
+  if (TEST_MODE) {
+    document.getElementById('hdTitle').textContent = '🧪 MET2026 관리 [테스트]';
+    document.getElementById('hdTitle').style.color = '#ffe066';
+  }
   processData(res);
 }
 
@@ -314,6 +337,10 @@ function logout() {
 
 // ── 데이터 로드 (새로고침) ──
 function loadData() {
+  if (TEST_MODE) {
+    processData({ result:'ok', data: TEST_DATA, updated: '테스트 데이터' });
+    return;
+  }
   if (!_pw) return;
   var btn = document.getElementById('refreshBtn');
   btn.classList.add('spinning');
@@ -523,24 +550,35 @@ function closeDetail(e) {
   }
 }
 
+// ── 마을별 마을장 (수지2지구 목자리스트 기준) ──
+var VILLAGE_LEADERS = {
+  '신정1':'김하연','신정2':'금장숙','신정3':'김영미','신정4':'유수영',
+  '신정5':'황은성','신정6':'김미라',
+  'J신정직장1':'이은영','J신정직장2':'임수현','J신정직장3':'김의겸','J신정직장4':'최난주',
+  '신정A':'유원종','신정B':'정지원','신정C':'최종문','신정D':'손오성',
+  '신정E':'문동훈','신정F':'기재호'
+};
+
 // ── 통계 렌더링 ──
 function renderStats() {
   function countBy(key){ var m={}; allData.forEach(function(d){ var v=d[key]; if(v) m[v]=(m[v]||0)+1; }); return m; }
-  function makeSection(title, dataMap) {
+  function makeSection(title, dataMap, subMap) {
     var items = Object.keys(dataMap).sort(function(a,b){ return dataMap[b]-dataMap[a]; });
     if (!items.length) return '';
     var max = dataMap[items[0]] || 1;
     return '<div class="stat-section"><div class="stat-sec-title">'+title+'</div>'
       + items.map(function(k){
           var cnt=dataMap[k], pct=Math.round(cnt/max*100);
-          return '<div class="stat-item"><div class="stat-label">'+esc(k)+'</div>'
+          var sub = subMap ? subMap[k] : null;
+          return '<div class="stat-item">'
+            +'<div class="stat-label">'+esc(k)+(sub?'<span style="font-size:10px;color:rgba(32,80,200,0.6);font-weight:500;margin-left:5px;">'+esc(sub)+'</span>':'')+'</div>'
             +'<div class="stat-bar-wrap"><div class="stat-bar-fill" style="width:'+pct+'%"></div></div>'
             +'<div class="stat-count">'+cnt+'</div></div>';
         }).join('')+'</div>';
   }
   document.getElementById('statPanel').innerHTML =
     '<div style="padding:12px 0 4px;font-size:11px;font-weight:700;color:rgba(60,70,100,0.6);letter-spacing:1px;">총 '+allData.length+'명 등록</div>'
-    + makeSection('마을별',      countBy('village'))
+    + makeSection('마을별',      countBy('village'), VILLAGE_LEADERS)
     + makeSection('사역팀별',    countBy('mteam'))
     + makeSection('참여일정별',  countBy('sched'))
     + makeSection('차량별',      countBy('trans'))
@@ -573,6 +611,11 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 
 // ── 세션 자동 복원 ──
 (function(){
+  if (TEST_MODE) {
+    _pw = 'test';
+    showApp({ result:'ok', data: TEST_DATA, updated: '테스트 데이터' });
+    return;
+  }
   var saved = sessionStorage.getItem('admin_pw');
   if (saved) {
     _pw = saved;
