@@ -267,11 +267,12 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
     <div class="members" id="members"></div>
     <button type="button" class="addbtn" id="addbtn" onclick="onAddMember()" style="display:none;">+ 가족 구성원 추가</button>
   </div>
-  <button type="button" class="subbtn" id="subbtn" onclick="onSubmit()">등록하기 (1명)</button>
+  <button type="button" class="subbtn" id="subbtn">등록하기 (1명)</button>
   <div class="errbox" id="errbox">
     <div class="errtitle">아래 항목을 확인해주세요</div>
     <div id="errlist"></div>
   </div>
+</div><!-- /con -->
 </div><!-- /mainpage -->
 
 <!-- 확인 페이지 -->
@@ -890,26 +891,17 @@ clearSave();
 
 // –– 리셋 ––
 function doFinish(){
-  // 1) 창 닫기 시도
-  var closed = false;
-  try { window.close(); } catch(e) {}
-  // 2) 300ms 후 창이 안 닫혔으면 종료 화면 표시
-  setTimeout(function(){
-    if(!window.closed){
-      document.getElementById('doneovl').className='doneovl';
-      var msg = document.getElementById('endclosemsg');
-      // 기기별 안내 문구
-      var ua = navigator.userAgent.toLowerCase();
-      if(/iphone|ipad/.test(ua)){
-        msg.innerHTML = '📱 아이폰: 홈 버튼(또는 스와이프)으로 돌아가시거나<br>브라우저 탭을 닫아주세요.';
-      } else if(/android/.test(ua)){
-        msg.innerHTML = '📱 갤럭시: 뒤로 가기 버튼을 누르거나<br>브라우저 탭을 닫아주세요.';
-      } else {
-        msg.innerHTML = '브라우저 탭을 닫아주세요.';
-      }
-      document.getElementById('endovl').className='endovl show';
-    }
-  }, 300);
+  document.getElementById('doneovl').className='doneovl';
+  var msg = document.getElementById('endclosemsg');
+  var ua = navigator.userAgent.toLowerCase();
+  if(/iphone|ipad/.test(ua)){
+    msg.innerHTML = '📱 아이폰: 홈 버튼(또는 스와이프)으로 돌아가시거나<br>브라우저 탭을 닫아주세요.';
+  } else if(/android/.test(ua)){
+    msg.innerHTML = '📱 갤럭시: 뒤로 가기 버튼을 누르거나<br>브라우저 탭을 닫아주세요.';
+  } else {
+    msg.innerHTML = '브라우저 탭을 닫아주세요.';
+  }
+  document.getElementById('endovl').className='endovl show';
 }
 
 function doReset(){
@@ -1076,6 +1068,25 @@ render();
   }
   bindCouple('cbtnyes', true);
   bindCouple('cbtnno', false);
+})();
+
+// 등록하기 버튼 이벤트 - iOS/Android 완전 호환
+(function(){
+  var btn=document.getElementById('subbtn');
+  var _ts=0;
+  btn.addEventListener('touchstart', function(e){
+    _ts=Date.now();
+  }, {passive:true});
+  btn.addEventListener('touchend', function(e){
+    if(Date.now()-_ts<300){
+      e.preventDefault();
+      onSubmit();
+    }
+  }, {passive:false});
+  btn.addEventListener('click', function(){
+    if(Date.now()-_ts<600) return;
+    onSubmit();
+  });
 })();
 
 try{
