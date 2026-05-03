@@ -13,8 +13,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html{height:-webkit-fill-available;}
-body{font-family:'Noto Sans KR',sans-serif;background:#f7f4ef;-webkit-text-size-adjust:100%;overscroll-behavior:none;min-height:100vh;min-height:-webkit-fill-available;}
-.wrap{min-height:100vh;min-height:-webkit-fill-available;background:linear-gradient(160deg,#fdf9f4 0%,#f5efea 100%);color:#1a1e3a;padding-bottom:calc(80px + env(safe-area-inset-bottom));}
+body{font-family:'Noto Sans KR',sans-serif;background:linear-gradient(160deg,#fdf9f4 0%,#f5efea 100%);color:#1a1e3a;-webkit-text-size-adjust:100%;overscroll-behavior:none;min-height:100vh;min-height:-webkit-fill-available;padding-bottom:calc(80px + env(safe-area-inset-bottom));}
 .hd{background:linear-gradient(180deg,rgba(30,60,120,0.07) 0%,transparent 100%);border-bottom:1px solid rgba(30,60,120,0.13);padding:36px 20px 28px;text-align:center;}
 .hd-eyebrow{font-size:11px;letter-spacing:6px;color:rgba(40,70,160,0.45);margin-bottom:10px;}
 .hd-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(38px,9vw,66px);letter-spacing:5px;color:#1a1e3a;line-height:1;margin-bottom:6px;}
@@ -205,10 +204,8 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
 
 </head>
 <body>
-<div class="wrap">
 
-<!-- 불러오기 팝업 -->
-
+<!-- 불러오기 팝업 (wrap 밖) -->
 <div class="restovl" id="restovl">
   <div class="restcard">
     <div class="resticon">&#128190;</div>
@@ -222,45 +219,11 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
   </div>
 </div>
 
-<!-- 임시저장 바 -->
-
+<!-- 임시저장 바 (wrap 밖) -->
 <div class="savebar">
   <span class="savestat" id="savestat">작성 중</span>
   <button type="button" class="savebtn" onclick="doSave()">임시저장</button>
 </div>
-
-<!-- 완료 -->
-
-<div class="doneovl" id="doneovl">
-  <div class="donecard" id="donecard">
-    <div class="doneico">✅</div>
-    <div class="donetitle">신청 완료</div>
-    <div class="doneno" id="doneno"></div>
-    <div class="doneinfo" id="doneinfo"></div>
-    <div class="donelist" id="donelist"></div>
-    <div class="doneftxt">하나님의 인도하심 가운데 귀한 사역 함께하겠습니다</div>
-    <div style="margin-top:12px;padding:14px 16px;background:rgba(32,80,200,0.06);border:1px solid rgba(32,80,200,0.2);border-radius:10px;text-align:left;">
-      <div style="font-size:12px;font-weight:700;color:#1a3a9e;margin-bottom:8px;">신청 내용 저장 방법</div>
-      <div style="font-size:12px;color:rgba(30,40,80,0.75);line-height:1.9;">
-        아이폰: <strong>전원 + 음량 올리기</strong> 동시에 누르기<br>
-        갤럭시: <strong>전원 + 음량 낮추기</strong> 동시에 누르기<br>
-        → 갤러리에 자동 저장됩니다
-      </div>
-    </div>
-    <button type="button" class="donereset" onclick="doFinish()">수고하셨습니다. 눌러주세요</button>  </div>
-</div>
-
-<!-- 종료 화면 -->
-<div class="endovl" id="endovl">
-  <div class="endcard">
-    <div class="endico">🙏</div>
-    <div class="endtitle">수고하셨습니다</div>
-    <div class="endsub">MET2026 블레싱 삼척<br>신청이 완료되었습니다.<br>하나님의 은혜가 함께하시길 바랍니다.</div>
-    <div class="endclose" id="endclosemsg">이 창을 닫아주세요</div>
-  </div>
-</div>
-
-
 
 <!-- 메인 페이지 -->
 <div id="mainpage">
@@ -309,7 +272,6 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
     <div class="errtitle">아래 항목을 확인해주세요</div>
     <div id="errlist"></div>
   </div>
-</div>
 </div><!-- /mainpage -->
 
 <!-- 확인 페이지 -->
@@ -1128,6 +1090,37 @@ document.getElementById('restovl').className='restovl show';
 }
 }catch(e){}
 </script>
+
+<!-- 완료 화면 (wrap 밖 - Android/iOS 터치 보장) -->
+<div class="doneovl" id="doneovl">
+  <div class="donecard" id="donecard">
+    <div class="doneico">✅</div>
+    <div class="donetitle">신청 완료</div>
+    <div class="doneno" id="doneno"></div>
+    <div class="doneinfo" id="doneinfo"></div>
+    <div class="donelist" id="donelist"></div>
+    <div class="doneftxt">하나님의 인도하심 가운데 귀한 사역 함께하겠습니다</div>
+    <div style="margin-top:12px;padding:14px 16px;background:rgba(32,80,200,0.06);border:1px solid rgba(32,80,200,0.2);border-radius:10px;text-align:left;">
+      <div style="font-size:12px;font-weight:700;color:#1a3a9e;margin-bottom:8px;">신청 내용 저장 방법</div>
+      <div style="font-size:12px;color:rgba(30,40,80,0.75);line-height:1.9;">
+        아이폰: <strong>전원 + 음량 올리기</strong> 동시에 누르기<br>
+        갤럭시: <strong>전원 + 음량 낮추기</strong> 동시에 누르기<br>
+        → 갤러리에 자동 저장됩니다
+      </div>
+    </div>
+    <button type="button" class="donereset" onclick="doFinish()">수고하셨습니다. 눌러주세요</button>
+  </div>
+</div>
+
+<!-- 종료 화면 (wrap 밖 - Android/iOS 터치 보장) -->
+<div class="endovl" id="endovl">
+  <div class="endcard">
+    <div class="endico">🙏</div>
+    <div class="endtitle">수고하셨습니다</div>
+    <div class="endsub">MET2026 블레싱 삼척<br>신청이 완료되었습니다.<br>하나님의 은혜가 함께하시길 바랍니다.</div>
+    <div class="endclose" id="endclosemsg">이 창을 닫아주세요</div>
+  </div>
+</div>
 
 </body>
 </html>
