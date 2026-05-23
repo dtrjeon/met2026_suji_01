@@ -228,6 +228,10 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
 .lkup-card-item span{font-weight:600;color:#1a1e3a;}
 .lkup-msg{text-align:center;padding:20px;font-size:13px;color:rgba(60,70,100,0.6);}
 .lkup-close{display:block;width:100%;margin:8px 0 0;padding:13px;background:#f0f2f8;border:none;border-radius:10px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:600;color:rgba(60,70,100,0.8);cursor:pointer;-webkit-appearance:none;}
+.lkup-card-del{margin-top:8px;padding:7px 14px;background:rgba(200,30,30,0.07);border:1px solid rgba(200,30,30,0.2);border-radius:7px;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:#c00;cursor:pointer;-webkit-appearance:none;width:100%;}
+.lkup-card-del:active{background:rgba(200,30,30,0.15);}
+.lkup-card-actions{display:flex;gap:8px;margin-top:8px;}
+.lkup-card-load{flex:1;padding:8px 14px;background:#2050c8;border:none;border-radius:7px;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:#fff;cursor:pointer;-webkit-appearance:none;}
 </style>
 
 </head>
@@ -354,7 +358,7 @@ if(!Element.prototype.closest){Element.prototype.closest=function(s){var el=this
 if(typeof NodeList!=='undefined'&&NodeList.prototype&&!NodeList.prototype.forEach){NodeList.prototype.forEach=Array.prototype.forEach;}
 if(typeof Array.prototype.find==='undefined'){Array.prototype.find=function(predicate){for(var i=0;i<this.length;i++){if(predicate(this[i],i,this))return this[i];}return undefined;};}
 if(typeof Array.prototype.some==='undefined'){Array.prototype.some=function(fn){for(var i=0;i<this.length;i++){if(fn(this[i],i,this))return true;}return false;};}
-var GSURL = 'https://script.google.com/macros/s/AKfycbyZW1Jmvs3A80w4TT-j4j8oGutD3V9Un26amg1D6NfQlh52B1uHCkXmcVfn6tesltTP_Q/exec';
+var GSURL = 'https://script.google.com/macros/s/AKfycbwJhhM1gMCOjFX9YJoO7nbKR5ofKLQIAz1qK2BsajGXlEtftt2ow7QQEtUnuT53VrtAMg/exec';
 
 // ── 불러오기 ──
 function openLookup(){
@@ -386,7 +390,7 @@ function doLookup(){
     if(!data.data||!data.data.length){res.innerHTML='<div class="lkup-msg">등록된 신청서가 없습니다.<br><small style="color:rgba(120,130,160,0.5);">이름·식별번호를 다시 확인해주세요</small></div>';return;}
     var html='';
     data.data.forEach(function(d,i){
-      html+='<div class="lkup-card" onclick="applyLookup('+i+')" id="lkupc'+i+'">'
+      html+='<div class="lkup-card" id="lkupc'+i+'">'
         +'<div class="lkup-card-name">'+esc2(d.name)+(d.ids?' ('+esc2(d.ids)+')':'')+(d.gender?' · '+esc2(d.gender):'')+'</div>'
         +'<div class="lkup-card-rno">관리번호: '+esc2(d.rno)+'&nbsp;&nbsp;|&nbsp;&nbsp;'+esc2(d.submitAt)+'</div>'
         +'<div class="lkup-card-rows">'
@@ -397,7 +401,10 @@ function doLookup(){
         +'<div class="lkup-card-item">차량 <span>'+esc2(d.trans||'-')+'</span></div>'
         +'<div class="lkup-card-item">숙소 <span>'+esc2(d.accom||'-')+'</span></div>'
         +'</div>'
-        +'<div style="font-size:11px;color:#2050c8;font-weight:700;margin-top:8px;text-align:right;">탭하여 불러오기 →</div>'
+        +'<div class="lkup-card-actions">'
+        +'<button class="lkup-card-load" onclick="applyLookup('+i+')">✏️ 불러와서 수정</button>'
+        +'<button class="lkup-card-del"  onclick="selfDelete('+i+',event)">🗑️ 삭제</button>'
+        +'</div>'
         +'</div>';
     });
     res.innerHTML=html;
@@ -407,6 +414,58 @@ function doLookup(){
 }
 
 function esc2(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function selfDelete(i, e) {
+  e.stopPropagation();
+  var res = document.getElementById('lkupResult');
+  var d   = res._lookupData && res._lookupData[i];
+  if (!d) return;
+
+  if (!confirm('아래 신청 내용을 삭제하시겠습니까?\n\n'
+    + '이름: ' + d.name + (d.ids?' ('+d.ids+')':'') + '\n'
+    + '관리번호: ' + d.rno + '\n'
+    + '목장: ' + (d.moksang||'-') + '\n\n'
+    + '삭제된 내용은 관리자 확인용 시트로 이동됩니다.')) return;
+
+  // 버튼 비활성화
+  var card = document.getElementById('lkupc'+i);
+  var btn  = card ? card.querySelector('.lkup-card-del') : null;
+  if (btn) { btn.disabled=true; btn.textContent='삭제 중…'; }
+
+  var ps = 'data='+encodeURIComponent(JSON.stringify({
+    action: 'selfDelete',
+    rno:    d.rno,
+    name:   d.name
+  }));
+
+  fetch(GSURL, {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:ps})
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (data.result === 'ok' && data.deleted > 0) {
+      // 카드 시각적으로 제거
+      if (card) {
+        card.style.transition = 'opacity .3s';
+        card.style.opacity = '0';
+        setTimeout(function(){ card.style.display='none'; }, 300);
+      }
+      // 데이터에서도 제거
+      res._lookupData[i] = null;
+      // 안내 토스트
+      var banner = document.createElement('div');
+      banner.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#c03000;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:999;box-shadow:0 4px 16px rgba(0,0,30,0.25);white-space:nowrap;';
+      banner.textContent = '🗑️ ' + d.rno + ' 삭제 완료';
+      document.body.appendChild(banner);
+      setTimeout(function(){ banner.style.opacity='0'; banner.style.transition='opacity .5s'; setTimeout(function(){ document.body.removeChild(banner); }, 500); }, 2500);
+    } else {
+      alert('❌ 삭제 실패: ' + (data.message||''));
+      if (btn) { btn.disabled=false; btn.textContent='🗑️ 삭제'; }
+    }
+  })
+  .catch(function(){
+    alert('❌ 네트워크 오류가 발생했습니다.');
+    if (btn) { btn.disabled=false; btn.textContent='🗑️ 삭제'; }
+  });
+}
 
 function applyLookup(i){
   var res = document.getElementById('lkupResult');
