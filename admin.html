@@ -833,8 +833,8 @@ function makeVillageTableView() {
     +'<thead><tr>'
     +'<th style="'+thS+'">마을</th>'
     +'<th style="'+thS+'">목장명</th>'
-    +'<th style="'+thS+'">참석자</th>'
-    +'<th style="'+thS+' text-align:center;">합계</th>'
+    +'<th style="'+thS+'">신청자명</th>'
+    +'<th style="'+thS+' text-align:center;">인원수</th>'
     +'</tr></thead><tbody>';
 
   villages.forEach(function(village, vi){
@@ -846,7 +846,7 @@ function makeVillageTableView() {
     // 마을별 총인원
     var vTotal = allData.filter(function(d){ return d.village===village; }).length;
 
-    // 목장별 신청자 집계 (여→남 정렬)
+    // 목장별 신청자 (여→남 정렬)
     var mMembers = {};
     allData.filter(function(d){ return d.village===village; })
       .forEach(function(d){
@@ -861,17 +861,15 @@ function makeVillageTableView() {
       });
     });
 
-    // 5명씩 청크
+    // 5명씩 줄바꿈
     function chunk5(arr){ var out=[]; for(var i=0;i<arr.length;i+=5) out.push(arr.slice(i,i+5)); return out.length?out:[[]]; }
 
-    // 목장별 행 수 계산 (5명 단위 wrap)
+    // 전체 행 수 (마을 rowSpan 계산용)
     var totalRows = 0;
-    moksangs.forEach(function(mk){
-      totalRows += chunk5(mMembers[mk]||[]).length;
-    });
+    moksangs.forEach(function(mk){ totalRows += chunk5(mMembers[mk]||[]).length; });
 
-    var firstMoksang = true;
-    moksangs.forEach(function(mk, mi){
+    var firstRow = true;
+    moksangs.forEach(function(mk){
       var members = mMembers[mk] || [];
       var cnt     = members.length;
       var rows    = chunk5(members);
@@ -879,13 +877,14 @@ function makeVillageTableView() {
       rows.forEach(function(rowMembers, ri){
         html += '<tr style="background:'+rowBg+';">';
 
-        // 마을 셀 — 전체 목장 첫 행만 rowSpan
-        if(firstMoksang && ri===0){
+        // 마을 셀 — 전체 첫 행만 rowSpan
+        if(firstRow && ri===0){
           html += '<td rowspan="'+totalRows+'" style="padding:7px 12px;font-size:12px;vertical-align:middle;'
             +'border-bottom:1px solid rgba(0,0,20,0.05);background:'+sideBg+';'
             +'font-weight:700;color:#1a3a9e;border-right:2px solid rgba(32,80,200,0.15);white-space:nowrap;">'
             +esc(village)
             +(leader?'<div style="font-size:10px;font-weight:500;color:rgba(32,80,200,0.6);margin-top:2px;">'+esc(leader)+'</div>':'')
+            +'<div style="font-size:11px;font-weight:800;color:#2050c8;margin-top:4px;">총 '+vTotal+'명</div>'
             +'</td>';
         }
 
@@ -895,28 +894,31 @@ function makeVillageTableView() {
             ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#2050c8;margin-right:5px;vertical-align:middle;"></span>'
             : '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#e0e4f0;margin-right:5px;vertical-align:middle;"></span>';
           html += '<td rowspan="'+rows.length+'" style="padding:7px 12px;font-size:12px;vertical-align:middle;'
-            +'border-bottom:1px solid rgba(0,0,20,0.05);white-space:nowrap;">'
+            +'border-bottom:1px solid rgba(0,0,20,0.05);white-space:nowrap;border-right:1px solid rgba(32,80,200,0.08);">'
             +dot+esc(mk)+'</td>';
         }
 
-        // 참석자 셀 (5명 가로 나열)
+        // 신청자명 셀 — 5명 가로 나열
         html += '<td style="padding:6px 12px;font-size:12px;vertical-align:middle;border-bottom:1px solid rgba(0,0,20,0.05);">';
         if(rowMembers.length===0){
-          html += '<span style="color:rgba(150,160,180,0.6);font-size:11px;">-</span>';
+          html += '<span style="color:rgba(150,160,180,0.5);font-size:11px;font-style:italic;">-</span>';
         } else {
           rowMembers.forEach(function(m){
+            var yth = isYouth(m); var grd = youthGrade(m);
             var gClass = m.gender==='여' ? 'f' : 'm';
             html += '<span class="nm-badge">'
+              +(yth?'<span style="font-size:10px;">🎒</span>':'')
               +'<span class="nm">'+esc(m.name)+'</span>'
+              +(grd?'<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:rgba(255,140,0,0.12);color:#b85c00;border:1px solid rgba(255,140,0,0.2);font-weight:700;">'+esc(grd)+'</span>':'')
               +'<span class="gd '+gClass+'">'+esc(m.gender)+'</span>'
               +'</span>';
           });
         }
         html += '</td>';
 
-        // 합계 셀 — 목장 첫 행만 rowSpan
+        // 인원수 셀 — 목장 첫 행만 rowSpan
         if(ri===0){
-          html += '<td rowspan="'+rows.length+'" style="padding:7px 12px;font-size:13px;text-align:center;'
+          html += '<td rowspan="'+rows.length+'" style="padding:7px 12px;font-size:14px;text-align:center;'
             +'vertical-align:middle;border-bottom:1px solid rgba(0,0,20,0.05);'
             +'font-weight:800;color:'+(cnt>0?'#2050c8':'rgba(150,160,180,0.5)')+';'
             +'border-left:1px solid rgba(32,80,200,0.08);background:'+sideBg+';white-space:nowrap;">'
@@ -924,23 +926,19 @@ function makeVillageTableView() {
             +'</td>';
         }
         html += '</tr>';
-      });
 
-      if(firstMoksang && ri!==undefined) firstMoksang = false;
-      // firstMoksang 은 목장 루프 첫번째에서 끔
+        if(firstRow) firstRow = false;
+      });
     });
-    firstMoksang = true; // 리셋은 다음 village 전에 — 아래서 처리
   });
 
-  // 마을별 합계 행 추가
-  // 위 로직에서 firstMoksang 리셋이 필요하므로 별도 변수로 처리
   html += '</tbody></table></div>';
 
-  // 마을 합계 footer 테이블
+  // 마을 합계 footer
   var footHtml = '<div style="overflow-x:auto;margin-top:8px;"><table class="stat-table">'
     +'<thead><tr>'
     +'<th style="'+thS+'">마을</th>'
-    +'<th style="'+thS+' text-align:center;">합계</th>'
+    +'<th style="'+thS+' text-align:center;">인원수</th>'
     +'</tr></thead><tbody>';
   var grandTotal = 0;
   villages.forEach(function(village, vi){
@@ -960,7 +958,6 @@ function makeVillageTableView() {
 
   return html + footHtml;
 }
-
 function toggleVillageSection() {
   statTableMode['village'] = !statTableMode['village'];
   var on = statTableMode['village'];
