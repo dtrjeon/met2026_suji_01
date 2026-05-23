@@ -1133,6 +1133,19 @@ function renderMissing() {
     .filter(function(k){ return nameMap[k].length > 1; })
     .sort();
 
+  // 두 항목 간 다른 필드 찾기
+  function diffFields(members) {
+    var keys = ['moksang','mteam','sched','trans','accom','village','pastor'];
+    var labels = {'moksang':'목장','mteam':'사역팀','sched':'일정','trans':'차량','accom':'숙소','village':'마을','pastor':'목자'};
+    var diffs = [];
+    keys.forEach(function(k){
+      var vals = members.map(function(m){ return m[k]||'-'; });
+      var unique = vals.filter(function(v,i,a){ return a.indexOf(v)===i; });
+      if(unique.length > 1) diffs.push(labels[k]);
+    });
+    return diffs;
+  }
+
   var dupHtml = '';
   if(dupGroups.length === 0){
     dupHtml = '<div class="miss-empty">✅ 중복 이름 없음</div>';
@@ -1141,26 +1154,57 @@ function renderMissing() {
       var members = nameMap[name].slice().sort(function(a,b){
         return (a.submitAt||'').localeCompare(b.submitAt||'');
       });
+      var diffs = diffFields(members);
+
       dupHtml += '<div class="dup-group">'
         +'<div class="dup-group-hd">👤 '+esc(name)
-        +' <span style="font-size:10px;background:rgba(180,80,20,0.12);color:#8a3800;border:1px solid rgba(180,80,20,0.2);border-radius:8px;padding:1px 7px;">'+members.length+'건</span></div>';
+        +' <span style="font-size:10px;background:rgba(180,80,20,0.12);color:#8a3800;border:1px solid rgba(180,80,20,0.2);border-radius:8px;padding:1px 7px;">'+members.length+'건</span>'
+        +(diffs.length
+          ? ' <span style="font-size:10px;color:rgba(80,90,130,0.6);font-weight:400;">차이: '+diffs.join(' · ')+'</span>'
+          : ' <span style="font-size:10px;color:rgba(150,50,50,0.7);font-weight:400;">⚠️ 완전 중복</span>')
+        +'</div>';
+
       members.forEach(function(d){
         var ids = d.ids ? ' ('+d.ids+')' : '';
+        var date = (d.submitAt||'').substring(5,10).replace('-','/'); // MM/DD
+
+        // 각 행의 차이 필드 값만 강조해서 표시
+        var diffVals = [];
+        if(diffs.indexOf('목장')  >=0 && d.moksang) diffVals.push({label:'목장', val:d.moksang});
+        if(diffs.indexOf('사역팀')>=0 && d.mteam)   diffVals.push({label:'사역팀', val:d.mteam});
+        if(diffs.indexOf('일정')  >=0 && d.sched)   diffVals.push({label:'일정', val:d.sched});
+        if(diffs.indexOf('차량')  >=0 && d.trans)   diffVals.push({label:'차량', val:d.trans});
+        if(diffs.indexOf('숙소')  >=0 && d.accom)   diffVals.push({label:'숙소', val:d.accom});
+        if(diffs.indexOf('마을')  >=0 && d.village) diffVals.push({label:'마을', val:d.village});
+        if(diffs.indexOf('목자')  >=0 && d.pastor)  diffVals.push({label:'목자', val:d.pastor});
+
+        // 요약 줄: 이름(식별) - 목장명 - 등록일 - [차이항목들]
+        var summaryParts = [
+          '<span style="font-weight:700;color:#1a1e3a;">'+esc(d.name)+esc(ids)+'</span>',
+          '<span style="color:rgba(60,70,110,0.8);">'+esc(d.moksang||'-')+'</span>',
+          '<span style="color:rgba(100,110,150,0.7);">'+esc(date)+'</span>'
+        ];
+        diffVals.forEach(function(df){
+          summaryParts.push(
+            '<span style="background:rgba(180,80,20,0.1);color:#8a3800;border:1px solid rgba(180,80,20,0.2);'
+            +'border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;">'+esc(df.val)+'</span>'
+          );
+        });
+
         dupHtml += '<div class="dup-row" id="duprow-'+esc(d.rno)+'">'
           +'<div class="dup-chk" id="dupchk-'+esc(d.rno)+'" onclick="toggleDupChk(&apos;'+esc(d.rno)+'&apos;)"></div>'
-          +'<div class="dup-info">'
-          +'<div class="dup-name">'+esc(d.name)+esc(ids)
-          +(isYouth(d)?'<span style="margin-left:5px;font-size:10px;padding:1px 5px;border-radius:3px;background:rgba(255,140,0,0.12);color:#b85c00;border:1px solid rgba(255,140,0,0.2);font-weight:700;">🎒'+esc(youthGrade(d))+'</span>':'')
+          +'<div class="dup-info" style="flex:1;">'
+          +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
+          +summaryParts.join('<span style="color:rgba(150,160,180,0.5);font-size:11px;">—</span>')
+          +(isYouth(d)?'<span style="font-size:10px;padding:1px 5px;border-radius:3px;background:rgba(255,140,0,0.12);color:#b85c00;border:1px solid rgba(255,140,0,0.2);font-weight:700;">🎒'+esc(youthGrade(d))+'</span>':'')
           +'</div>'
-          +'<div class="dup-sub">'+esc(d.moksang||'-')+' · '+esc(d.mteam||'-')+' · '+esc(d.sched||'-')+'</div>'
+          +'<div style="font-size:10px;color:rgba(100,110,150,0.6);margin-top:3px;">'+esc(d.rno)+'</div>'
           +'</div>'
-          +'<div class="dup-date">'+esc(d.rno)+'<br>'+esc((d.submitAt||'').substring(0,16))+'</div>'
           +'</div>';
       });
       dupHtml += '</div>';
     });
   }
-
   document.getElementById('missPanel').innerHTML =
     '<div style="padding:8px 0 12px;font-size:11px;font-weight:700;color:rgba(60,70,100,0.6);letter-spacing:1px;">'
     +'총 '+allData.length+'명 · 확인 필요 항목</div>'
