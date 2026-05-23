@@ -631,6 +631,26 @@ var VILLAGE_MOKSANG = {
   '신정F':['B굿뉴스1','B굿뉴스2','B굿뉴스3','C드림']
 };
 
+// ── 목장별 목자 이름 ──
+var MOKSANG_PASTOR = {
+  'S사랑하는1':'홍성민','S사랑하는2':'심상철','S사랑하는3':'정정용','S사랑하는4':'황진우',
+  'S하늘정원1':'정호영','S하늘정원2':'오은영','S하늘정원3':'이광훈','S하늘정원4':'이철우','S하늘정원5':'박성진',
+  'S양떼1':'안선영','S양떼2':'김경민','S양떼3':'이승우','S양떼4':'최진호',
+  'S샘물1':'유수영','S샘물2':'강태훈','S샘물3':'박준혁','S샘물4':'이민수','S샘물5':'조성현',
+  'S참포도나무1':'황은성','S참포도나무2':'이재훈','S참포도나무3':'김동현','S참포도나무4':'박성훈',
+  'S씨뿌리는1':'김미라','S씨뿌리는2':'이수진','S씨뿌리는3':'최영민','S씨뿌리는4':'정재원',
+  'J형통1':'이은영','J형통2':'김철수','J형통3':'박민준','J형통4':'이성호',
+  'J더형통1':'임수현','J더형통2':'최민영','J더형통3':'황준서','J더형통4':'오재원',
+  'J시온1':'김의겸','J시온3':'이재성',
+  'J늘형통1':'최난주','J늘형통2':'박선영','J늘형통3':'김민수','J늘형통4':'이준혁',
+  'C사랑이넘치는':'유원종','C감사가넘치는':'이정호','C소중한':'박진영','C나눔이넘치는':'최성민',
+  'Ce-편한1':'정지원','C예처럼':'김태준','C예처럼2':'이상민','C예처럼3':'박형준','C하쀼':'이민호',
+  'B큰바위밑':'최종문','B바위틈':'김성진','B욥':'이철호','B이삭과리브가':'박준영',
+  'C참포도나무3':'손오성','C참포도나무4':'이진수','C믿음이넘치는':'박상현','C축복의통로':'김영준','C축복의통로2':'이재민','C축복의통로3':'최진수',
+  'B글로벌':'문동훈','B신정느헤미야':'이성민','C임광':'박진수','CYES':'김재원',
+  'B굿뉴스1':'기재호','B굿뉴스2':'이동민','B굿뉴스3':'박성현','C드림':'최영준'
+};
+
 // ── 통계 렌더링 ──
 var statTableMode = {}; // 섹션별 토글 상태
 
@@ -893,9 +913,12 @@ function makeVillageTableView() {
           var dot = cnt>0
             ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#2050c8;margin-right:5px;vertical-align:middle;"></span>'
             : '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#e0e4f0;margin-right:5px;vertical-align:middle;"></span>';
+          var pastor = MOKSANG_PASTOR[mk] || '';
           html += '<td rowspan="'+rows.length+'" style="padding:7px 12px;font-size:12px;vertical-align:middle;'
             +'border-bottom:1px solid rgba(0,0,20,0.05);white-space:nowrap;border-right:1px solid rgba(32,80,200,0.08);">'
-            +dot+esc(mk)+'</td>';
+            +dot+esc(mk)
+            +(pastor?'<div style="font-size:10px;color:rgba(120,130,160,0.75);margin-top:2px;font-weight:400;">('+esc(pastor)+')</div>':'')
+            +'</td>';
         }
 
         // 신청자명 셀 — 5명 가로 나열
