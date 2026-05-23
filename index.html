@@ -228,10 +228,10 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
 .lkup-card-item span{font-weight:600;color:#1a1e3a;}
 .lkup-msg{text-align:center;padding:20px;font-size:13px;color:rgba(60,70,100,0.6);}
 .lkup-close{display:block;width:100%;margin:8px 0 0;padding:13px;background:#f0f2f8;border:none;border-radius:10px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:600;color:rgba(60,70,100,0.8);cursor:pointer;-webkit-appearance:none;}
-.lkup-card-del{margin-top:8px;padding:7px 14px;background:rgba(200,30,30,0.07);border:1px solid rgba(200,30,30,0.2);border-radius:7px;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:#c00;cursor:pointer;-webkit-appearance:none;width:100%;}
+.lkup-card-del{padding:10px 16px;background:rgba(200,30,30,0.07);border:1px solid rgba(200,30,30,0.2);border-radius:7px;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;color:#c00;cursor:pointer;-webkit-appearance:none;white-space:nowrap;flex-shrink:0;}
 .lkup-card-del:active{background:rgba(200,30,30,0.15);}
-.lkup-card-actions{display:flex;gap:8px;margin-top:8px;}
-.lkup-card-load{flex:1;padding:8px 14px;background:#2050c8;border:none;border-radius:7px;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:#fff;cursor:pointer;-webkit-appearance:none;}
+.lkup-card-actions{display:flex;gap:8px;margin-top:8px;align-items:stretch;}
+.lkup-card-load{flex:1;padding:10px 14px;background:#2050c8;border:none;border-radius:7px;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;color:#fff;cursor:pointer;-webkit-appearance:none;line-height:1.3;white-space:nowrap;}
 </style>
 
 </head>
@@ -324,7 +324,10 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
     <div class="lkup-body">
       <div class="lkup-row">
         <input class="lkup-inp" id="lkupName" placeholder="이름 (예: 홍길동)" type="text" maxlength="20"/>
-        <input class="lkup-inp" id="lkupIds" placeholder="식별번호 (예: A)" type="text" maxlength="5" style="max-width:90px;"/>
+        <input class="lkup-inp" id="lkupIds" placeholder="식별번호" type="text" maxlength="5" style="max-width:80px;"/>
+      </div>
+      <div class="lkup-row">
+        <input class="lkup-inp" id="lkupSsn" placeholder="주민번호 앞 6자리 (예: 800101)" type="tel" maxlength="6" pattern="[0-9]*" inputmode="numeric"/>
         <button class="lkup-search" onclick="doLookup()">조회</button>
       </div>
       <div class="lkup-result" id="lkupResult">
@@ -358,7 +361,7 @@ if(!Element.prototype.closest){Element.prototype.closest=function(s){var el=this
 if(typeof NodeList!=='undefined'&&NodeList.prototype&&!NodeList.prototype.forEach){NodeList.prototype.forEach=Array.prototype.forEach;}
 if(typeof Array.prototype.find==='undefined'){Array.prototype.find=function(predicate){for(var i=0;i<this.length;i++){if(predicate(this[i],i,this))return this[i];}return undefined;};}
 if(typeof Array.prototype.some==='undefined'){Array.prototype.some=function(fn){for(var i=0;i<this.length;i++){if(fn(this[i],i,this))return true;}return false;};}
-var GSURL = 'https://script.google.com/macros/s/AKfycbwJhhM1gMCOjFX9YJoO7nbKR5ofKLQIAz1qK2BsajGXlEtftt2ow7QQEtUnuT53VrtAMg/exec';
+var GSURL = 'https://script.google.com/macros/s/AKfycbyw6tzoEk1S8jOsKXMgaFwPGkcmOiidlJEp-JBLD8pM9IErXcSyt3YFN3qON9gozNDCfA/exec';
 
 // ── 불러오기 ──
 function openLookup(){
@@ -369,6 +372,7 @@ function closeLookup(){
   document.getElementById('lkupOvl').className='lkup-ovl';
   document.getElementById('lkupName').value='';
   document.getElementById('lkupIds').value='';
+  document.getElementById('lkupSsn').value='';
   document.getElementById('lkupResult').innerHTML='<div class="lkup-msg" style="color:rgba(120,130,160,0.5);">이름을 입력하고 조회하세요</div>';
 }
 function closeLookupOvl(e){
@@ -378,11 +382,15 @@ function closeLookupOvl(e){
 function doLookup(){
   var name = (document.getElementById('lkupName').value||'').trim();
   var ids  = (document.getElementById('lkupIds').value||'').trim();
+  var ssn6 = (document.getElementById('lkupSsn').value||'').trim();
   if(!name){ alert('이름을 입력해주세요.'); return; }
+  if(!ssn6||ssn6.length!==6||!/^[0-9]{6}$/.test(ssn6)){
+    alert('주민번호 앞 6자리를 정확히 입력해주세요.\n예) 800101'); return;
+  }
   var res = document.getElementById('lkupResult');
   res.innerHTML='<div class="lkup-msg">🔍 조회 중…</div>';
 
-  var ps='data='+encodeURIComponent(JSON.stringify({action:'lookup',name:name,ids:ids}));
+  var ps='data='+encodeURIComponent(JSON.stringify({action:'lookup',name:name,ids:ids,ssn6:ssn6}));
   fetch(GSURL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:ps})
   .then(function(r){return r.json();})
   .then(function(data){
