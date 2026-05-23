@@ -286,7 +286,7 @@ body{font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif
 
 <script>
 // ★ GAS 배포 URL — Code.gs 배포 후 발급된 URL로 교체하세요
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbzyrDrgBCyIGCNUWzV8J3uerM9Kyy9OMDzgQXA9KumMiG94jlhbXajdJMydaRRG8MVN-g/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbw46lgucXkYbowv-ovxS2f4gTAUNZtETQErdJg5SBMcJbcdQUKmeVHEAkdmc5nDAxep9Q/exec';
 
 // ── 테스트 모드 (true = 서버 없이 가짜 데이터로 확인) ──
 var TEST_MODE = false;
@@ -1027,8 +1027,8 @@ function renderMissing() {
     }).join('');
   }
 
-  // 주민번호: 등록 유무만 확인 (실제 번호는 구글시트에서)
-  var noSsn   = allData.filter(function(d){ return !d.ssn || d.ssn.trim()==='' || d.ssn.trim()==='-'; });
+  // 주민번호: 유무만 확인 (GAS에서 등록시 '●●●●●●-●●●●●●●' 반환, 미등록시 빈값)
+  var noSsn = allData.filter(function(d){ return !d.ssn || d.ssn.trim()==='' || d.ssn.trim()==='-'; });
 
   document.getElementById('missPanel').innerHTML =
     '<div style="padding:8px 0 12px;font-size:11px;font-weight:700;color:rgba(60,70,100,0.6);letter-spacing:1px;">'
