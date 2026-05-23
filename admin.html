@@ -109,7 +109,25 @@ body{font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif
 .stat-panel{display:none;padding:12px 16px 80px;}
 .stat-panel.show{display:block;}
 .stat-section{background:#fff;border-radius:12px;margin-bottom:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,30,0.07);}
-.stat-sec-title{padding:12px 16px;background:linear-gradient(90deg,rgba(32,80,200,0.05),transparent);font-size:12px;font-weight:700;color:#1a3a9e;letter-spacing:1px;border-bottom:1px solid rgba(32,80,200,0.08);}
+.stat-sec-title{padding:11px 14px;background:linear-gradient(90deg,rgba(32,80,200,0.05),transparent);font-size:12px;font-weight:700;color:#1a3a9e;letter-spacing:1px;border-bottom:1px solid rgba(32,80,200,0.08);display:flex;align-items:center;justify-content:space-between;}
+.tgl-wrap{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;-webkit-user-select:none;}
+.tgl-lbl{font-size:10px;font-weight:700;color:rgba(120,130,160,0.7);}
+.tgl-lbl.on{color:#1a3a9e;}
+.tgl-track{width:36px;height:20px;border-radius:10px;background:#ccd4e8;position:relative;transition:background .2s;flex-shrink:0;}
+.tgl-track.on{background:#2050c8;}
+.tgl-knob{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .18s;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
+.tgl-knob.on{left:18px;}
+.stat-table{width:100%;border-collapse:collapse;font-size:12px;}
+.stat-table th{padding:8px 12px;background:#1a3a9e;color:#fff;font-size:11px;font-weight:700;text-align:left;white-space:nowrap;}
+.stat-table th.center{text-align:center;}
+.stat-table td{padding:7px 12px;font-size:12px;vertical-align:middle;border-bottom:1px solid rgba(0,0,20,0.05);}
+.stat-table td.grp{font-weight:700;color:#1a3a9e;border-right:2px solid rgba(32,80,200,0.15);}
+.stat-table td.cnt{text-align:center;font-weight:800;font-size:15px;color:#2050c8;border-left:1px solid rgba(32,80,200,0.1);}
+.nm-badge{display:inline-flex;align-items:center;gap:3px;white-space:nowrap;margin-right:4px;}
+.nm-badge .nm{font-size:12px;font-weight:600;color:#0f1428;}
+.nm-badge .gd{font-size:9px;padding:1px 5px;border-radius:8px;font-weight:700;}
+.nm-badge .gd.f{background:rgba(220,60,120,0.1);color:#9a1060;border:1px solid rgba(220,60,120,0.25);}
+.nm-badge .gd.m{background:rgba(32,80,200,0.08);color:#1a3a9e;border:1px solid rgba(32,80,200,0.2);}
 .stat-item{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid rgba(0,0,20,0.04);}
 .stat-item:last-child{border-bottom:none;}
 .stat-label{flex:2;font-size:13px;color:#1a1e3a;font-weight:500;min-width:0;}
@@ -246,7 +264,7 @@ body{font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif
 
 <script>
 // ★ GAS 배포 URL — Code.gs 배포 후 발급된 URL로 교체하세요
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbwOboMr1J3ucCrTdMa-26STDF9oMZZQAV9aOQxdOfOiGhhOuu5vNj3dR323uZWcEWV8KQ/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbzyrDrgBCyIGCNUWzV8J3uerM9Kyy9OMDzgQXA9KumMiG94jlhbXajdJMydaRRG8MVN-g/exec';
 
 // ── 테스트 모드 (true = 서버 없이 가짜 데이터로 확인) ──
 var TEST_MODE = false;
@@ -560,29 +578,138 @@ var VILLAGE_LEADERS = {
 };
 
 // ── 통계 렌더링 ──
-function renderStats() {
-  function countBy(key){ var m={}; allData.forEach(function(d){ var v=d[key]; if(v) m[v]=(m[v]||0)+1; }); return m; }
-  function makeSection(title, dataMap, subMap) {
-    var items = Object.keys(dataMap).sort(function(a,b){ return dataMap[b]-dataMap[a]; });
-    if (!items.length) return '';
-    var max = dataMap[items[0]] || 1;
-    return '<div class="stat-section"><div class="stat-sec-title">'+title+'</div>'
-      + items.map(function(k){
-          var cnt=dataMap[k], pct=Math.round(cnt/max*100);
-          var sub = subMap ? subMap[k] : null;
-          return '<div class="stat-item">'
-            +'<div class="stat-label">'+esc(k)+(sub?'<span style="font-size:11px;color:#2050c8;font-weight:600;margin-left:6px;background:rgba(32,80,200,0.08);padding:1px 6px;border-radius:10px;">'+esc(sub)+'</span>':'')+'</div>'
-            +'<div class="stat-bar-wrap"><div class="stat-bar-fill" style="width:'+pct+'%"></div></div>'
-            +'<div class="stat-count">'+cnt+'</div></div>';
-        }).join('')+'</div>';
+var statTableMode = {}; // 섹션별 토글 상태
+
+function countBy(key) {
+  var m={};
+  allData.forEach(function(d){ var v=d[key]; if(v) m[v]=(m[v]||0)+1; });
+  return m;
+}
+
+function chunk(arr, size) {
+  var out=[];
+  for(var i=0;i<arr.length;i+=size) out.push(arr.slice(i,i+size));
+  return out;
+}
+
+function makeGraphView(dataMap, subMap) {
+  var items = Object.keys(dataMap).sort(function(a,b){ return dataMap[b]-dataMap[a]; });
+  if(!items.length) return '';
+  var max = dataMap[items[0]] || 1;
+  return items.map(function(k){
+    var cnt=dataMap[k], pct=Math.round(cnt/max*100);
+    var sub = subMap ? subMap[k] : null;
+    return '<div class="stat-item">'
+      +'<div class="stat-label">'+esc(k)+(sub?'<span style="font-size:11px;color:#2050c8;font-weight:600;margin-left:6px;background:rgba(32,80,200,0.08);padding:1px 6px;border-radius:10px;">'+esc(sub)+'</span>':'')+'</div>'
+      +'<div class="stat-bar-wrap"><div class="stat-bar-fill" style="width:'+pct+'%"></div></div>'
+      +'<div class="stat-count">'+cnt+'</div></div>';
+  }).join('');
+}
+
+function makeTableView(key) {
+  // 그룹핑
+  var groups = {};
+  allData.forEach(function(d){
+    var k = d[key] || '(미정)';
+    if(!groups[k]) groups[k]=[];
+    groups[k].push(d);
+  });
+  // 여→남 정렬
+  Object.keys(groups).forEach(function(k){
+    groups[k].sort(function(a,b){
+      var o={여:0,남:1};
+      return (o[a.gender]!==undefined?o[a.gender]:2)-(o[b.gender]!==undefined?o[b.gender]:2);
+    });
+  });
+  // 인원수 내림차순
+  var sorted = Object.keys(groups).sort(function(a,b){ return groups[b].length-groups[a].length; });
+  if(!sorted.length) return '';
+
+  var html = '<div style="overflow-x:auto;"><table class="stat-table">'
+    +'<thead><tr><th>구분</th><th>신청자</th><th class="center">총인원</th></tr></thead><tbody>';
+
+  sorted.forEach(function(grpName, gi){
+    var members = groups[grpName];
+    var rows = chunk(members, 5);
+    var rowBg = gi%2===0 ? '#f7f9ff' : '#fff';
+    var sideBg = gi%2===0 ? 'rgba(32,80,200,0.05)' : 'rgba(32,80,200,0.02)';
+
+    rows.forEach(function(rowMembers, ri){
+      html += '<tr style="background:'+rowBg+';">';
+      // 구분 — 첫 행만 rowSpan
+      if(ri===0){
+        html += '<td rowspan="'+rows.length+'" class="grp" style="background:'+sideBg+';vertical-align:middle;">'+esc(grpName)+'</td>';
+      }
+      // 신청자 — 5명 가로
+      html += '<td>';
+      rowMembers.forEach(function(m){
+        var gClass = m.gender==='여' ? 'f' : 'm';
+        html += '<span class="nm-badge">'
+          +'<span class="nm">'+esc(m.name)+'</span>'
+          +'<span class="gd '+gClass+'">'+esc(m.gender)+'</span>'
+          +'</span>';
+      });
+      html += '</td>';
+      // 총인원 — 첫 행만 rowSpan
+      if(ri===0){
+        html += '<td rowspan="'+rows.length+'" class="cnt" style="background:'+sideBg+';vertical-align:middle;">'+members.length+'</td>';
+      }
+      html += '</tr>';
+    });
+  });
+
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function toggleStatSection(secId, key) {
+  statTableMode[secId] = !statTableMode[secId];
+  var on = statTableMode[secId];
+  // 토글 UI 업데이트
+  var lbl   = document.getElementById('tgl-lbl-'+secId);
+  var track = document.getElementById('tgl-track-'+secId);
+  var knob  = document.getElementById('tgl-knob-'+secId);
+  if(lbl)   { lbl.textContent = on?'테이블':'그래프'; lbl.className = 'tgl-lbl'+(on?' on':''); }
+  if(track) track.className = 'tgl-track'+(on?' on':'');
+  if(knob)  knob.className  = 'tgl-knob'+(on?' on':'');
+  // 내용 업데이트
+  var body = document.getElementById('stat-body-'+secId);
+  if(!body) return;
+  if(on) {
+    body.innerHTML = makeTableView(key);
+  } else {
+    var dataMap = countBy(key);
+    var subMap  = secId==='village' ? VILLAGE_LEADERS : null;
+    body.innerHTML = makeGraphView(dataMap, subMap);
   }
+}
+
+function makeSectionHtml(secId, title, key, subMap) {
+  var dataMap = countBy(key);
+  if(!Object.keys(dataMap).length) return '';
+  var bodyHtml = makeGraphView(dataMap, subMap);
+  return '<div class="stat-section">'
+    +'<div class="stat-sec-title">'
+    +'<span>'+title+'</span>'
+    +'<div class="tgl-wrap" onclick="toggleStatSection(&apos;'+secId+'&apos;,&apos;'+key+'&apos;)">'
+    +'<span class="tgl-lbl" id="tgl-lbl-'+secId+'">그래프</span>'
+    +'<div class="tgl-track" id="tgl-track-'+secId+'">'
+    +'<div class="tgl-knob" id="tgl-knob-'+secId+'"></div>'
+    +'</div></div></div>'
+    +'<div id="stat-body-'+secId+'">'+bodyHtml+'</div>'
+    +'</div>';
+}
+
+function renderStats() {
+  // 토글 상태 초기화 (데이터 재로드 시)
+  statTableMode = {};
   document.getElementById('statPanel').innerHTML =
     '<div style="padding:12px 0 4px;font-size:11px;font-weight:700;color:rgba(60,70,100,0.6);letter-spacing:1px;">총 '+allData.length+'명 등록</div>'
-    + makeSection('마을별',      countBy('village'), VILLAGE_LEADERS)
-    + makeSection('사역팀별',    countBy('mteam'))
-    + makeSection('참여일정별',  countBy('sched'))
-    + makeSection('차량별',      countBy('trans'))
-    + makeSection('숙소별',      countBy('accom'));
+    + makeSectionHtml('mteam',   '사역팀별',   'mteam',   null)
+    + makeSectionHtml('village', '마을별',     'village', VILLAGE_LEADERS)
+    + makeSectionHtml('sched',   '참여일정별', 'sched',   null)
+    + makeSectionHtml('trans',   '차량별',     'trans',   null)
+    + makeSectionHtml('accom',   '숙소별',     'accom',   null);
 }
 
 // ── 탭 전환 ──
@@ -633,3 +760,4 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 </script>
 </body>
 </html>
+
