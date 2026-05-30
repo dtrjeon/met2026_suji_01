@@ -376,7 +376,7 @@ if(!Element.prototype.closest){Element.prototype.closest=function(s){var el=this
 if(typeof NodeList!=='undefined'&&NodeList.prototype&&!NodeList.prototype.forEach){NodeList.prototype.forEach=Array.prototype.forEach;}
 if(typeof Array.prototype.find==='undefined'){Array.prototype.find=function(predicate){for(var i=0;i<this.length;i++){if(predicate(this[i],i,this))return this[i];}return undefined;};}
 if(typeof Array.prototype.some==='undefined'){Array.prototype.some=function(fn){for(var i=0;i<this.length;i++){if(fn(this[i],i,this))return true;}return false;};}
-var GSURL = 'https://script.google.com/macros/s/AKfycbwkz9aQIaPb3XrjvHWXIAju_oEJzsS_h-JUjwXT2TWxdFOk6CizHRYWVDpZVKtNPPPPJw/exec';
+var GSURL = 'https://script.google.com/macros/s/AKfycbzMJwHZpSTzBMVFkMd3tf8XiiTYv_Pd4wlJ_59jlIRgT-x5HTlUAli-C567mc3rHI2Svg/exec';
 
 // ============================================================
 // 불러오기 (기존 신청자 조회)
@@ -884,15 +884,20 @@ function render(){
 
 function buildCard(m,i){
   var isF=isFamily&&i>0;
+  // 가족신청 자녀/부모/기타 → 항상 작성자(본인) 목자 복사
+  // 형제/자매목장에서 자녀인 경우도 포함
   if(isFamily&&i>0&&(m.rel==='자녀'||m.rel==='부모'||m.rel==='기타')&&members[0]&&members[0].pastor){
     m.pastor=members[0].pastor;
   }
   var lt=members[0]?members[0].trans:'';
   var td=isF?(lt==='버스'?'버스':lt==='자차'?'자차(동승)':lt||'대표자 차량 선택 후 자동 적용'):'';
   var isAC=isFamily&&isCouple===true&&i>0&&m.rel==='배우자';
-  // 자녀/부모/기타도 작성자(본인) 목장 자동 적용
+  // 형제/자매목장 자녀 → 작성자 목장 사용
+  var isChildSibling=isFamily&&isCouple===false&&i>0&&m.rel==='자녀';
+  // 자녀/부모/기타 → 작성자(본인) 목장 자동 적용
   var isChild=isFamily&&i>0&&(m.rel==='자녀'||m.rel==='부모'||m.rel==='기타');
   var mp=isAC?( members[0]?members[0].pastor:null )
+        :isChildSibling?( members[0]?members[0].pastor:null )
         :isChild?( members[0]?members[0].pastor:null )
         :m.pastor;
   var preview=m.name||('구성원 '+(i+1));
@@ -1014,8 +1019,10 @@ members.forEach(function(m,i){
 var lbl=isFamily?((i+1)+'번째 ['+m.rel+']'):'신청자';
 var isAC=isFamily&&isCouple===true&&i>0&&m.rel==='배우자';
 var isF=isFamily&&i>0;
+var isChildSibling=isFamily&&isCouple===false&&i>0&&m.rel==='자녀';
 var isChildP=isFamily&&i>0&&(m.rel==='자녀'||m.rel==='부모'||m.rel==='기타');
 var mp=isAC?( members[0]?members[0].pastor:null )
+      :isChildSibling?( members[0]?members[0].pastor:null )
       :isChildP?( members[0]?members[0].pastor:null )
       :m.pastor;
 var tr=isF?members[0].trans:m.trans;
@@ -1049,8 +1056,11 @@ var device=/iphone|ipad/.test(ua)?'iOS':(/android/.test(ua)?'Android':'PC');
 var mdata=members.map(function(m,i){
 var isAC=isFamily&&isCouple===true&&i>0&&m.rel==='배우자';
 var isF=isFamily&&i>0;
+// 형제/자매목장에서 자녀인 경우 → 작성자(본인, members[0])의 목자/마을/목장 사용
+var isChildSibling=isFamily&&isCouple===false&&i>0&&m.rel==='자녀';
 var isChildP=isFamily&&i>0&&(m.rel==='자녀'||m.rel==='부모'||m.rel==='기타');
 var mp=isAC?( members[0]?members[0].pastor:null )
+      :isChildSibling?( members[0]?members[0].pastor:null )
       :isChildP?( members[0]?members[0].pastor:null )
       :m.pastor;
 var tr=isF?members[0].trans:m.trans;
