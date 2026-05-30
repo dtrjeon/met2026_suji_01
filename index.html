@@ -48,13 +48,15 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
 /* 토글 */
 .tgl-btn{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#fff;border:1.5px solid rgba(0,0,20,0.1);border-radius:10px;margin-bottom:10px;min-height:60px;width:100%;text-align:left;font-family:‘Noto Sans KR’,sans-serif;cursor:pointer;-webkit-appearance:none;appearance:none;outline:none;-webkit-tap-highlight-color:rgba(32,80,200,0.1);touch-action:manipulation;-webkit-user-select:none;user-select:none;}
 .tgl-btn.on{border-color:rgba(32,80,200,0.4);background:rgba(32,80,200,0.04);}
-.tgl-info{display:flex;flex-direction:column;gap:3px;pointer-events:none;}
-.tgl-title{font-size:13px;font-weight:700;color:#0f1428;pointer-events:none;}
-.tgl-desc{font-size:11px;color:rgba(40,50,80,0.7);pointer-events:none;}
-.tgl-sw{width:48px;height:28px;border-radius:14px;background:#dde2ef;position:relative;flex-shrink:0;pointer-events:none;}
-.tgl-sw.on{background:#2050c8;}
-.tgl-knob{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,0.25);pointer-events:none;}
-.tgl-knob.on{left:24px;}
+.type-sel{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
+.type-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:12px 6px;background:#fff;border:1.5px solid rgba(0,0,20,0.1);border-radius:10px;cursor:pointer;-webkit-appearance:none;font-family:'Noto Sans KR',sans-serif;touch-action:manipulation;min-height:68px;}
+.type-btn.on{border-color:#2050c8;background:rgba(32,80,200,0.06);}
+.type-btn-ico{font-size:20px;}
+.type-btn-lbl{font-size:11px;font-weight:700;color:#0f1428;}
+.type-btn.on .type-btn-lbl{color:#2050c8;}
+.type-btn-desc{font-size:9px;color:rgba(40,50,80,0.6);text-align:center;line-height:1.3;}
+.group-notice{background:#fff8e1;border:1px solid rgba(245,127,23,0.3);border-radius:8px;padding:10px 12px;font-size:11px;color:#e65100;margin-bottom:8px;display:none;line-height:1.5;}
+.group-notice.show{display:block;}
 
 /* 목장구분 */
 .couple-box{display:none;background:#fff8e6;border:1px solid rgba(200,140,20,0.25);border-radius:10px;padding:13px 16px;margin-bottom:12px;}
@@ -272,7 +274,6 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
     <span style="font-size:11px;font-weight:400;opacity:0.8;">유준규 목사 · 곽미영 사모</span>
   </div>
 
-
 </div>
 
 <div class="con">
@@ -283,14 +284,28 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
   </button>
 
   <div class="sec">
-    <div class="sec-lbl">신청 유형(개인별/가족별)</div>
-    <button type="button" class="tgl-btn" id="tglbtn">
-      <div class="tgl-info">
-        <div class="tgl-title" id="tgltitle">개인 신청</div>
-        <div class="tgl-desc" id="tgldesc">1인 신청</div>
-      </div>
-      <div class="tgl-sw" id="tglsw"><div class="tgl-knob" id="tglknob"></div></div>
-    </button>
+    <div class="sec-lbl">신청 유형</div>
+    <div class="type-sel">
+      <button type="button" class="type-btn on" id="typebtn-individual" onclick="setAppType('individual')">
+        <span class="type-btn-ico">🙋</span>
+        <span class="type-btn-lbl">개인 신청</span>
+        <span class="type-btn-desc">1인 신청</span>
+      </button>
+      <button type="button" class="type-btn" id="typebtn-family" onclick="setAppType('family')">
+        <span class="type-btn-ico">👨‍👩‍👧‍👦</span>
+        <span class="type-btn-lbl">가족 신청</span>
+        <span class="type-btn-desc">가족 전체 신청</span>
+      </button>
+      <button type="button" class="type-btn" id="typebtn-group" onclick="setAppType('group')">
+        <span class="type-btn-ico">📋</span>
+        <span class="type-btn-lbl">단체 신청</span>
+        <span class="type-btn-desc">대표자가 여러명 신청</span>
+      </button>
+    </div>
+    <div class="group-notice" id="groupNotice">
+      ⚠️ <b>단체 신청</b>은 대표자가 다른 사람을 대신 신청하는 방식입니다.<br>
+      전화번호 등 누락된 정보는 추후 개별 확인이 필요할 수 있습니다.
+    </div>
     <div class="couple-box" id="couplebox">
       <div class="couple-lbl">목장 구분</div>
       <div class="couple-row">
@@ -303,7 +318,7 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
   <div class="sec">
     <div class="sec-lbl">구성원</div>
     <div class="members" id="members"></div>
-    <button type="button" class="addbtn" id="addbtn" onclick="onAddMember()" style="display:none;">+ 가족 구성원 추가</button>
+    <button type="button" class="addbtn" id="addbtn" onclick="onAddMember()" style="display:none;">+ 구성원 추가</button>
   </div>
   <button type="button" class="subbtn" id="subbtn">등록하기 (1명)</button>
   <div class="errbox" id="errbox">
@@ -361,9 +376,11 @@ if(!Element.prototype.closest){Element.prototype.closest=function(s){var el=this
 if(typeof NodeList!=='undefined'&&NodeList.prototype&&!NodeList.prototype.forEach){NodeList.prototype.forEach=Array.prototype.forEach;}
 if(typeof Array.prototype.find==='undefined'){Array.prototype.find=function(predicate){for(var i=0;i<this.length;i++){if(predicate(this[i],i,this))return this[i];}return undefined;};}
 if(typeof Array.prototype.some==='undefined'){Array.prototype.some=function(fn){for(var i=0;i<this.length;i++){if(fn(this[i],i,this))return true;}return false;};}
-var GSURL = 'https://script.google.com/macros/s/AKfycbx0Ily4hqSSXBlw1427AHcTE1EW_GIoaT7argtWeBHyP92njX9YHx0JFdtm2iT6QlSkRQ/exec';
+var GSURL = 'https://script.google.com/macros/s/AKfycbwjFjGMiq-M1ibbREKt5UpB0fAYHuVdi3FKhi4DgY65C3mH0qS7KfhpT0wwK9iV9PEE1A/exec';
 
-// ── 불러오기 ──
+// ============================================================
+// 불러오기 (기존 신청자 조회)
+// ============================================================
 function openLookup(){
   document.getElementById('lkupOvl').className='lkup-ovl show';
   document.getElementById('lkupName').focus();
@@ -486,7 +503,7 @@ function applyLookup(i){
   }
 
   // 가족/단체 여부 설정 (개인 단건 불러오기만 지원)
-  isFamily = false;
+  isFamily = false; isGroup = false; appType = 'individual';
   isCouple = null;
 
   // PL에서 목자 찾기
@@ -515,17 +532,9 @@ function applyLookup(i){
   members = [m];
 
   // UI 리셋 후 렌더
-  var tglbtn=document.getElementById('tglbtn');
-  var sw=document.getElementById('tglsw');
-  var kn=document.getElementById('tglknob');
-  var ti=document.getElementById('tgltitle');
-  var td2=document.getElementById('tgldesc');
   var cb=document.getElementById('couplebox');
   var ab=document.getElementById('addbtn');
-  if(tglbtn) tglbtn.className='tgl-btn';
-  if(sw) sw.className='tgl-sw';
-  if(kn) kn.className='tgl-knob';
-  if(ti) ti.textContent='개인 신청';
+  setAppType('individual');
   if(td2) td2.textContent='1인 신청';
   if(cb) cb.className='couple-box';
   if(ab) ab.style.display='none';
@@ -543,7 +552,9 @@ function applyLookup(i){
   window.scrollTo(0,0);
 }
 
-// ── iOS 라디오/체크박스 터치 이벤트 위임 (document 레벨, 1회 등록) ──
+// ============================================================
+// iOS 터치 이벤트 위임
+// ============================================================
 (function(){
   var _rts=0;
   document.addEventListener('touchstart', function(e){
@@ -612,33 +623,36 @@ var SC = ['7/21(화)','7/22(수)','7/21~22(화~수)'];
 var REL = ['본인','배우자','자녀','부모','기타'];
 
 var uid=1;
-// 관리번호/그룹번호는 서버(Code.gs)에서 순차 생성
 function nuid(){return uid++;}
 
-var isFamily=false, isCouple=null, members=[], restData=null;
+var appType='individual', isFamily=false, isGroup=false, isCouple=null, members=[], restData=null;
 
 function nm(rel){
   return {uid:nuid(),rel:rel||'본인',name:'',ids:'',gender:'',ssn:'',phone:'',
     spouse:'',has_spouse:false,pastor:null,mteam:'',sched:'7/21~22(화~수)',trans:'버스',ride:'',accom:'단체(교회준비)',note:'',open:true};
 }
 
-// ---- 토글 ----
-function onToggle(){
-  isFamily=!isFamily;
-  var btn=document.getElementById('tglbtn');
-  var sw=document.getElementById('tglsw');
-  var kn=document.getElementById('tglknob');
-  var ti=document.getElementById('tgltitle');
-  var td=document.getElementById('tgldesc');
-  var cb=document.getElementById('couplebox');
-  var ab=document.getElementById('addbtn');
-  btn.className='tgl-btn'+(isFamily?' on':'');
-  sw.className='tgl-sw'+(isFamily?' on':'');
-  kn.className='tgl-knob'+(isFamily?' on':'');
-  ti.textContent=isFamily?'가족 / 단체 신청':'개인 신청';
-  td.textContent=isFamily?'가족 전체를 한 번에 신청합니다':'1인 신청';
-  cb.className='couple-box'+(isFamily?' show':'');
-  ab.style.display=isFamily?'block':'none';
+// ============================================================
+// 신청 유형 선택 (개인 / 가족 / 단체)
+// ============================================================
+function setAppType(type){
+  appType = type;
+  isFamily = (type === 'family' || type === 'group');
+  isGroup  = (type === 'group');
+
+  // 버튼 활성화
+  ['individual','family','group'].forEach(function(t){
+    document.getElementById('typebtn-'+t).className = 'type-btn' + (t===type?' on':'');
+  });
+
+  var cb = document.getElementById('couplebox');
+  var ab = document.getElementById('addbtn');
+  var gn = document.getElementById('groupNotice');
+
+  cb.className = 'couple-box' + (isFamily?' show':'');
+  ab.style.display = isFamily ? 'block' : 'none';
+  gn.className = 'group-notice' + (isGroup?' show':'');
+
   if(!isFamily){
     isCouple=null;
     document.getElementById('cbtnyes').className='couple-btn';
@@ -647,7 +661,7 @@ function onToggle(){
   } else {
     var m0=members[0]||nm('본인');
     m0.rel='본인';
-    members=[m0,nm('배우자')];
+    if(members.length<2) members=[m0,nm(type==='group'?'구성원':'배우자')];
   }
   render();
 }
@@ -661,12 +675,14 @@ function onCouple(val){
 
 function onAddMember(){
   collect();
-  members.push(nm(members.length===1?'배우자':'자녀'));
+  members.push(nm(isGroup?'구성원':(members.length===1?'배우자':'자녀')));
   render();
   updateBtn();
 }
 
-// ---- 수집 ----
+// ============================================================
+// 폼 데이터 수집
+// ============================================================
 function gv(id){var el=document.getElementById(id);return el?el.value:'';}
 function collect(){
   members.forEach(function(m){
@@ -683,7 +699,9 @@ function collect(){
   });
 }
 
-// ---- 목자검색 ----
+// ============================================================
+// 목자 검색 및 선택
+// ============================================================
 function initSearch(uid){
   var qel=document.getElementById('pq'+uid);
   var cel=document.getElementById('pc'+uid);
@@ -738,22 +756,33 @@ function selP(idx,uid){
   if(cel) cel.style.display='flex';
   if(bel){bel.textContent='v '+p.v+' / '+p.p; bel.style.display='inline-flex';}
   if(lel) lel.style.display='none';
-  // 부부목장: 배우자에 자동복사
+  // 부부목장: 배우자 목장 자동복사
   if(isFamily&&isCouple===true){
     var idx0=members.indexOf(m);
     if(idx0===0){
-      members.forEach(function(x,xi){if(xi>0&&x.rel==='배우자') x.pastor=p;});
+      var needRender=false;
+      members.forEach(function(x,xi){
+        if(xi>0&&x.rel==='배우자'){ x.pastor=p; needRender=true; }
+      });
+      if(needRender){ render(); return; }
     }
   }
   collect();
-  // 배우자 자동복사된 경우 해당 카드 목자 표시 업데이트
   members.forEach(function(x){
-    var qx=document.getElementById('pq'+x.uid);
-    var bx=document.getElementById('pb'+x.uid);
-    var g3=document.querySelectorAll('#card'+x.uid+' .g3 input[readonly]');
-    if(x.pastor && qx && qx.readOnly){
-      if(bx){bx.textContent='v '+x.pastor.v+' / '+x.pastor.p; bx.style.display='inline-flex';}
-      if(g3.length>=3){g3[0].value=x.pastor.n;g3[1].value=x.pastor.v;g3[2].value=x.pastor.p;}
+    if(!x.pastor) return;
+    var qx = document.getElementById('pq'+x.uid);
+    var bx = document.getElementById('pb'+x.uid);
+    var g3 = document.querySelectorAll('#card'+x.uid+' .g3 input[readonly]');
+    // 일반 목자 선택 카드 (qx 있는 경우)
+    if(qx){
+      qx.value = x.pastor.n; qx.readOnly = true;
+      if(bx){ bx.textContent='v '+x.pastor.v+' / '+x.pastor.p; bx.style.display='inline-flex'; }
+    }
+    // 자동적용 카드 (isAC/isChild — qx 없고 g3만 있는 경우)
+    if(g3.length>=3){
+      g3[0].value=x.pastor.n;
+      g3[1].value=x.pastor.v;
+      g3[2].value=x.pastor.p;
     }
   });
 }
@@ -826,7 +855,9 @@ function fmtSsn(el, uid){
   }
 }
 
-// ---- 렌더링 ----
+// ============================================================
+// 구성원 카드 렌더링
+// ============================================================
 function render(){
   var con=document.getElementById('members');
   con.innerHTML=members.map(function(m,i){return buildCard(m,i);}).join('');
@@ -853,10 +884,17 @@ function render(){
 
 function buildCard(m,i){
   var isF=isFamily&&i>0;
+  if(isFamily&&i>0&&(m.rel==='자녀'||m.rel==='부모'||m.rel==='기타')&&members[0]&&members[0].pastor){
+    m.pastor=members[0].pastor;
+  }
   var lt=members[0]?members[0].trans:'';
   var td=isF?(lt==='버스'?'버스':lt==='자차'?'자차(동승)':lt||'대표자 차량 선택 후 자동 적용'):'';
   var isAC=isFamily&&isCouple===true&&i>0&&m.rel==='배우자';
-  var mp=isAC?(members[0]?members[0].pastor:null):m.pastor;
+  // 자녀/부모/기타도 작성자(본인) 목장 자동 적용
+  var isChild=isFamily&&i>0&&(m.rel==='자녀'||m.rel==='부모'||m.rel==='기타');
+  var mp=isAC?( members[0]?members[0].pastor:null )
+        :isChild?( members[0]?members[0].pastor:null )
+        :m.pastor;
   var preview=m.name||('구성원 '+(i+1));
   var tags=[isFamily?m.rel:null,m.gender,m.sched,isF?td:m.trans].filter(Boolean);
 
@@ -872,6 +910,14 @@ function buildCard(m,i){
       +'<div class="fld"><div class="lbl">목자명</div><input type="text" readonly value="'+(mp?mp.n:'')+'"/></div>'
       +'<div class="fld"><div class="lbl">마을</div><input type="text" readonly value="'+(mp?mp.v:'')+'"/></div>'
       +'<div class="fld"><div class="lbl">목장</div><input type="text" readonly value="'+(mp?mp.p:'')+'"/></div>'
+      +'</div>';
+  } else if(isChild){
+    pastorH='<div class="sub">목자 / 마을 / 목장</div>'
+      +'<div class="acopy" style="background:rgba(230,120,0,0.08);border-color:rgba(230,120,0,0.25);color:#b85c00;">작성자 목장 자동 적용</div>'
+      +'<div class="g3" style="margin-top:8px;">'
+      +'<div class="fld"><div class="lbl">목자명</div><input type="text" readonly value="'+(mp?mp.n:'미입력')+'"/></div>'
+      +'<div class="fld"><div class="lbl">마을</div><input type="text" readonly value="'+(mp?mp.v:'미입력')+'"/></div>'
+      +'<div class="fld"><div class="lbl">목장</div><input type="text" readonly value="'+(mp?mp.p:'미입력')+'"/></div>'
       +'</div>';
   } else {
     pastorH='<div class="sub">목자 / 마을 / 목장 <span class="req">*</span></div>'
@@ -952,7 +998,8 @@ function buildCard(m,i){
 
 function updateBtn(){
 var cnt=members.length;
-document.getElementById('subbtn').textContent='등록하기 '+(isFamily&&cnt>1?'(가족 '+cnt+'명)':'(1명)');
+var typeLabel = appType==='group'?'단체':appType==='family'?'가족':'';
+document.getElementById('subbtn').textContent='등록하기 '+(isFamily&&cnt>1?'('+typeLabel+' '+cnt+'명, 작성자 포함)':'(1명)');
 }
 
 // –– 제출 payload를 전역에 보관 ––
@@ -967,13 +1014,20 @@ members.forEach(function(m,i){
 var lbl=isFamily?((i+1)+'번째 ['+m.rel+']'):'신청자';
 var isAC=isFamily&&isCouple===true&&i>0&&m.rel==='배우자';
 var isF=isFamily&&i>0;
-var mp=isAC?(members[0]?members[0].pastor:null):m.pastor;
+var isChildP=isFamily&&i>0&&(m.rel==='자녀'||m.rel==='부모'||m.rel==='기타');
+var mp=isAC?( members[0]?members[0].pastor:null )
+      :isChildP?( members[0]?members[0].pastor:null )
+      :m.pastor;
 var tr=isF?members[0].trans:m.trans;
 var needPastor=['본인','배우자'].indexOf(m.rel)>=0;
+// 자녀/부모/기타는 작성자 목장 자동 적용이므로 별도 선택 불필요
+// 단, 작성자(본인) 목장이 없는 경우 경고
+var isAutoChild=isFamily&&i>0&&(m.rel==='자녀'||m.rel==='부모'||m.rel==='기타');
+if(isAutoChild && !(members[0]&&members[0].pastor)) errs.push(lbl+' : 작성자(본인)의 목자를 먼저 선택해주세요');
 if(needPastor&&!mp) errs.push(lbl+' : 목자를 선택해주세요');
 if(!m.name) errs.push(lbl+' : 이름을 입력해주세요');
 if(!m.gender) errs.push(lbl+' : 성별을 선택해주세요');
-if(!m.phone) errs.push(lbl+' : 전화번호를 입력해주세요');
+if(!m.phone && !(isGroup&&i>0)) errs.push(lbl+' : 전화번호를 입력해주세요');
 if(!m.mteam) errs.push(lbl+' : 사역팀을 선택해주세요');
 if(!m.sched) errs.push(lbl+' : 참여 일정을 선택해주세요');
 if(!tr) errs.push(lbl+' : 차량을 선택해주세요');
@@ -995,7 +1049,10 @@ var device=/iphone|ipad/.test(ua)?'iOS':(/android/.test(ua)?'Android':'PC');
 var mdata=members.map(function(m,i){
 var isAC=isFamily&&isCouple===true&&i>0&&m.rel==='배우자';
 var isF=isFamily&&i>0;
-var mp=isAC?(members[0]?members[0].pastor:null):m.pastor;
+var isChildP=isFamily&&i>0&&(m.rel==='자녀'||m.rel==='부모'||m.rel==='기타');
+var mp=isAC?( members[0]?members[0].pastor:null )
+      :isChildP?( members[0]?members[0].pastor:null )
+      :m.pastor;
 var tr=isF?members[0].trans:m.trans;
 return {name:m.name,ids:m.ids,gender:m.gender,phone:m.phone,ssn:m.ssn,
 rel:m.rel,spouse:m.spouse||'',ride:m.ride||'',mteam:m.mteam,
@@ -1004,19 +1061,23 @@ pn:mp?mp.n:'',pv:mp?mp.v:'',pp:mp?mp.p:''};
 });
 
 _cfmMdata=mdata;
-_cfmPayload={isFamily:isFamily&&members.length>1,isCouple:isCouple,mdata:mdata,device:device,emailTo:'0691kys@jiguchon.org,dtrjeon@gmail.com'};
+// 단체신청 시 각 구성원 note에 [단체신청] 태그 추가
+if(isGroup){ mdata.forEach(function(m){ if(m.note.indexOf('[단체신청]')<0) m.note='[단체신청] '+m.note; }); }
+_cfmPayload={isFamily:isFamily&&members.length>1,isGroup:isGroup,isCouple:isCouple,appType:appType,mdata:mdata,device:device,emailTo:'0691kys@jiguchon.org,dtrjeon@gmail.com'};
 
 // 확인 화면 구성
 var body=document.getElementById('cfm-body');
-var typeText=(isFamily&&members.length>1?'가족 '+members.length+'명':'개인 신청')
-  +(isCouple===true?' - 부부목장':isCouple===false?' - 형제/자매목장':'');
+var typeLabel2 = appType==='group'?'단체':appType==='family'?'가족':'개인';
+var typeText=(isFamily&&members.length>1?typeLabel2+' '+members.length+'명':'개인 신청')
+  +(isCouple===true?' - 부부목장':isCouple===false?' - 형제/자매목장':'')
+  +(isGroup?' ⚠️누락확인필요':'');
 var html='<div class="cfm-sec">'
   +'<div class="cfm-sec-lbl">신청 정보</div>'
   +'<div class="cfm-typebadge">'+typeText+'</div>'
   +'</div>';
 
 mdata.forEach(function(m,i){
-  html+='<div class="cfm-sec"><div class="cfm-sec-lbl">'+(isFamily?'구성원 '+(i+1):'신청자')+'</div>'
+  html+='<div class="cfm-sec"><div class="cfm-sec-lbl">'+(isFamily?(isGroup?'단체구성원 ':'구성원 ')+(i+1):'신청자')+'</div>'
     +'<div class="cfm-member">'
     +'<div class="cfm-mhd">'
     +'<div class="cfm-mnum">'+(i+1)+'</div>'
@@ -1080,7 +1141,10 @@ function onCfmBack(){
 }
 
 // –– 완료 및 제출하기: 실제 전송 ––
-// ── 테스트 모드 (true = 서버 전송 없이 완료 화면 확인) ──
+// ============================================================
+// 제출 처리
+// ============================================================
+// 테스트 모드: true = 서버 전송 없이 완료 화면 확인
 var TEST_MODE = false;
 
 function onCfmSubmit(){
@@ -1131,8 +1195,6 @@ fetch(GSURL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlen
 });
 }
 
-
-
 function showDone(rnos, gno){
 var isGrp=_cfmPayload.isFamily&&_cfmMdata.length>1;
 document.getElementById('doneno').textContent=
@@ -1175,25 +1237,23 @@ function doFinish(){
 function doReset(){
 document.getElementById('doneovl').className='doneovl';
 cfmHide();
-isFamily=false; isCouple=null;
-document.getElementById('tglbtn').className='tgl-btn';
-document.getElementById('tglsw').className='tgl-sw';
-document.getElementById('tglknob').className='tgl-knob';
-document.getElementById('tgltitle').textContent='개인 신청';
-document.getElementById('tgldesc').textContent='1인 신청';
+isCouple=null;
 document.getElementById('couplebox').className='couple-box';
 document.getElementById('cbtnyes').className='couple-btn';
 document.getElementById('cbtnno').className='couple-btn';
 document.getElementById('addbtn').style.display='none';
 members=[nm('본인')];
+setAppType('individual');
 render(); clearSave();
 }
 
-// –– 임시저장 ––
+// ============================================================
+// 임시저장
+// ============================================================
 function doSave(){
 collect();
 try{
-var st={isFamily:isFamily,isCouple:isCouple,
+var st={isFamily:isFamily,isGroup:isGroup,appType:appType,isCouple:isCouple,
 members:members.map(function(m){
 return {uid:m.uid,rel:m.rel,name:m.name,ids:m.ids,gender:m.gender,ssn:m.ssn,
 phone:m.phone,spouse:m.spouse,has_spouse:m.has_spouse,mteam:m.mteam,
@@ -1216,14 +1276,8 @@ document.getElementById('savestat').textContent='작성 중';
 function doRestore(){
 document.getElementById('restovl').className='restovl';
 if(!restData) return;
-isFamily=restData.isFamily; isCouple=restData.isCouple;
-document.getElementById('tglbtn').className='tgl-btn'+(isFamily?' on':'');
-document.getElementById('tglsw').className='tgl-sw'+(isFamily?' on':'');
-document.getElementById('tglknob').className='tgl-knob'+(isFamily?' on':'');
-document.getElementById('tgltitle').textContent=isFamily?'가족 / 단체 신청':'개인 신청';
-document.getElementById('tgldesc').textContent=isFamily?'가족 전체를 한 번에 신청합니다':'1인 신청';
-document.getElementById('couplebox').className='couple-box'+(isFamily?' show':'');
-document.getElementById('addbtn').style.display=isFamily?'block':'none';
+isCouple=restData.isCouple;
+setAppType(restData.appType||( restData.isFamily?'family':'individual' ));
 document.getElementById('cbtnyes').className='couple-btn'+(isCouple===true?' on':'');
 document.getElementById('cbtnno').className='couple-btn'+(isCouple===false?' on':'');
 members=restData.members.map(function(m){
@@ -1291,29 +1345,6 @@ if(members.some(function(m){return m.name;})) doSave();
 // –– 시작 ––
 members=[nm('본인')];
 render();
-
-// 토글버튼 이벤트 - iOS Safari 완전 호환
-(function(){
-  var tglbtn=document.getElementById('tglbtn');
-  var _ts=0;
-  // touchstart에서 좌표 기록, touchend에서 드래그 아닌 탭만 처리
-  tglbtn.addEventListener('touchstart', function(e){
-    _ts=Date.now();
-  }, {passive:true});
-  tglbtn.addEventListener('touchend', function(e){
-    // 300ms 이내 터치만 탭으로 인정 (스크롤 중 터치 무시)
-    if(Date.now()-_ts<300){
-      e.preventDefault();
-      onToggle();
-    }
-  }, {passive:false});
-  // 마우스 클릭 (데스크탑/안드로이드 폴백)
-  tglbtn.addEventListener('click', function(e){
-    // touchend 후 click은 무시 (이중발화 방지)
-    if(Date.now()-_ts<600) return;
-    onToggle();
-  });
-})();
 
 // 목장구분 버튼 이벤트 - iOS Safari 완전 호환
 (function(){
