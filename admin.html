@@ -322,6 +322,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
 @media(max-width:360px){.detail-grid{grid-template-columns:1fr;}.detail-row.full{grid-column:1;}}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -446,7 +447,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   <div class="date-sheet">
     <div class="date-sheet-title">📅 납입일 등록</div>
     <div class="date-sheet-name" id="dateSheetName"></div>
-    <input type="text" class="date-sheet-input" id="dateSheetInput" placeholder="예) 2026-06-15" inputmode="numeric" maxlength="10"/>
+    <input type="text" class="date-sheet-input" id="dateSheetInput" placeholder="예) 6/15" inputmode="numeric" maxlength="5"/>
     <div class="date-sheet-btns">
       <button class="date-sheet-clear" onclick="confirmClearDate()">삭제</button>
       <button class="date-sheet-cancel" onclick="closeDateSheet()">취소</button>
@@ -1629,6 +1630,93 @@ function getFee(d){
 }
 function fmtWon(n){ return n.toLocaleString('ko-KR')+'원'; }
 
+// ── 납부 엑셀 내보내기 ──
+function exportPayExcel() {
+  var headers = ['관리번호','그룹번호','이름','성별','관계','마을','목장','사역팀','일정','차량','납부상태','납부금액','납입일','비고'];
+  var rows = [];
+
+  allData.forEach(function(d) {
+    var pay  = payData[d.rno] || {};
+    var st   = pay.status || 'unpaid';
+    var stKo = st === 'paid' ? '납부' : st === 'exempt' ? '면제' : '미납';
+    var amt  = st === 'paid' ? getFee(d) : (st === 'exempt' ? 0 : '');
+    var date = pay.date ? pay.date.slice(5).replace('-', '/').replace(/^0(\d)/, '$1') : '';
+    rows.push({
+      '관리번호': d.rno,
+      '그룹번호': d.gno,
+      '이름':     d.name,
+      '성별':     d.gender,
+      '관계':     d.rel,
+      '마을':     d.village || '',
+      '목장':     d.moksang || '',
+      '사역팀':   d.mteam   || '',
+      '일정':     d.sched   || '',
+      '차량':     d.trans   || '',
+      '납부상태': stKo,
+      '납부금액': amt !== '' ? amt : '',
+      '납입일':   date,
+      '비고':     d.note    || ''
+    });
+  });
+
+  var ws = XLSX.utils.json_to_sheet(rows, { header: headers });
+
+  // 열 너비 설정
+  ws['!cols'] = [
+    {wch:16},{wch:14},{wch:10},{wch:6},{wch:8},
+    {wch:10},{wch:16},{wch:12},{wch:16},{wch:8},
+    {wch:8},{wch:10},{wch:8},{wch:12}
+  ];
+
+  // 헤더 행 스타일 (배경색·굵게)
+  var range = XLSX.utils.decode_range(ws['!ref']);
+  for (var C = range.s.c; C <= range.e.c; C++) {
+    var hdr = XLSX.utils.encode_cell({ r: 0, c: C });
+    if (!ws[hdr]) continue;
+    ws[hdr].s = {
+      fill: { fgColor: { rgb: '1A3AB0' } },
+      font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 11 },
+      alignment: { horizontal: 'center', vertical: 'center' }
+    };
+  }
+
+  // 납부상태 셀 색상
+  for (var R = 1; R <= range.e.r; R++) {
+    var stCell = XLSX.utils.encode_cell({ r: R, c: 10 }); // 납부상태 열
+    if (ws[stCell]) {
+      var v = ws[stCell].v;
+      var rgb = v === '납부' ? 'C8E6C9' : v === '면제' ? 'E1BEE7' : 'BBDEFB';
+      ws[stCell].s = { fill: { fgColor: { rgb: rgb } }, alignment: { horizontal: 'center' } };
+    }
+    // 금액 오른쪽 정렬
+    var amtCell = XLSX.utils.encode_cell({ r: R, c: 11 });
+    if (ws[amtCell] && ws[amtCell].v !== '') {
+      ws[amtCell].s = { alignment: { horizontal: 'right' } };
+      ws[amtCell].t = 'n';
+    }
+  }
+
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '납부현황');
+
+  // 마을별 시트 추가
+  var villages = [];
+  allData.forEach(function(d){ if(d.village && villages.indexOf(d.village)<0) villages.push(d.village); });
+  villages.sort().forEach(function(v) {
+    var vRows = rows.filter(function(r){ return r['마을'] === v; });
+    if (!vRows.length) return;
+    var vws = XLSX.utils.json_to_sheet(vRows, { header: headers });
+    vws['!cols'] = ws['!cols'];
+    XLSX.utils.book_append_sheet(wb, vws, v);
+  });
+
+  var now = new Date();
+  var ts  = now.getFullYear()
+    + String(now.getMonth()+1).padStart(2,'0')
+    + String(now.getDate()).padStart(2,'0');
+  XLSX.writeFile(wb, 'MET2026_납부현황_' + ts + '.xlsx');
+}
+
 var acctFilter = { status:'all', village:'', search:'', groupType:'all' };
 
 // gno가 2026-G로 시작하면 가족, 2026-A로 시작하면 개인
@@ -1703,6 +1791,9 @@ function renderAcct(){
   var _paidYouth=allData.filter(function(d){return isYouth(d)&&(payData[d.rno]||{}).status==='paid';}).length;
   var _unpaidAdult=allData.filter(function(d){return !isYouth(d)&&(!(payData[d.rno])||!(payData[d.rno].status)||payData[d.rno].status==='unpaid');}).length;
   var _unpaidYouth=allData.filter(function(d){return isYouth(d)&&(!(payData[d.rno])||!(payData[d.rno].status)||payData[d.rno].status==='unpaid');}).length;
+  html+='<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">'
+    +'<button onclick="exportPayExcel()" style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:linear-gradient(135deg,#1d6f42,#2e7d32);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(46,125,50,0.3);">📥 엑셀 저장</button>'
+    +'</div>';
   html+='<div class="acct-summary">'
     +'<div class="acct-card"><div class="acct-card-label">전체</div>'
     +'<div class="acct-card-val">'+total+'명</div>'
@@ -1835,7 +1926,7 @@ function renderAcct(){
           +'<div style="display:flex;align-items:center;gap:6px;">'
           +'<div class="pay-member-amt">'+fmtWon(fee)+'</div>'
           +(payDate
-            ? '<span class="pay-date-tag" onclick="openDateSheet(&apos;'+esc(m.rno)+'&apos;,&apos;'+esc(m.name)+'&apos;,event)">'+payDate.slice(5).replace('-','/')+'</span>'
+            ? '<span class="pay-date-tag" onclick="openDateSheet(&apos;'+esc(m.rno)+'&apos;,&apos;'+esc(m.name)+'&apos;,event)">'+payDate.slice(5).replace(/^0(\d)/,'$1').replace('-','/')+'</span>'
             : '<span class="pay-date-tag empty" onclick="openDateSheet(&apos;'+esc(m.rno)+'&apos;,&apos;'+esc(m.name)+'&apos;,event)">날짜</span>'
           )
           +'</div>'
@@ -1898,7 +1989,8 @@ function openDateSheet(rno, name, e) {
   _dateSheetRno = rno;
   document.getElementById('dateSheetName').textContent = name + ' 님';
   var cur = (payData[rno]||{}).date || '';
-  document.getElementById('dateSheetInput').value = cur;
+  // 저장값이 YYYY-MM-DD 형태면 MM-DD만 표시
+  document.getElementById('dateSheetInput').value = cur.length === 10 ? cur.slice(5) : cur;
   document.getElementById('dateSheetOvl').className = 'date-sheet-ovl show';
   setTimeout(function(){ document.getElementById('dateSheetInput').focus(); }, 120);
 }
@@ -1909,12 +2001,15 @@ function closeDateSheet() {
 function applyDateSheet() {
   var val = document.getElementById('dateSheetInput').value.trim();
   if(!val){ setPayDate(_dateSheetRno,''); closeDateSheet(); return; }
-  // YYYY-MM-DD 형식 검증
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(val)){
-    alert('날짜 형식이 올바르지 않습니다.\n예) 2026-06-15');
+  // MM/DD 또는 MM-DD 형식 허용
+  var normalized = val.replace('/','-');
+  if(!/^\d{1,2}-\d{2}$/.test(normalized)){
+    alert('날짜 형식이 올바르지 않습니다.\n예) 6/15');
     return;
   }
-  setPayDate(_dateSheetRno, val);
+  var parts = normalized.split('-');
+  var mm = parts[0].padStart(2,'0'), dd = parts[1].padStart(2,'0');
+  setPayDate(_dateSheetRno, '2026-' + mm + '-' + dd);
   closeDateSheet();
 }
 function confirmClearDate() {
@@ -1927,9 +2022,10 @@ function confirmClearDate() {
 (function(){
   document.addEventListener('input', function(e){
     if(e.target.id !== 'dateSheetInput') return;
-    var v = e.target.value.replace(/[^0-9]/g,'');
-    if(v.length >= 5) v = v.slice(0,4)+'-'+v.slice(4);
-    if(v.length >= 8) v = v.slice(0,7)+'-'+v.slice(7,9);
+    var v = e.target.value.replace(/[^0-9\/]/g,'');
+    var d = v.replace(/[^0-9]/g,'');
+    if(d.length >= 3) v = d.slice(0,2)+'/'+d.slice(2,4);
+    else v = d;
     e.target.value = v;
   });
   document.addEventListener('keydown', function(e){
