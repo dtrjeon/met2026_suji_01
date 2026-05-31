@@ -246,12 +246,12 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
 .lkup-card-load{flex:1;padding:10px 14px;background:#2050c8;border:none;border-radius:7px;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;color:#fff;cursor:pointer;-webkit-appearance:none;line-height:1.3;white-space:nowrap;}
 
 /* ── 스플래시 화면 ── */
-#splashOvl{position:fixed;inset:0;background:linear-gradient(160deg,#0d1b4b 0%,#1a3ab0 60%,#2050c8 100%);z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;transition:opacity .6s;}
+#splashOvl{position:fixed;inset:0;background:linear-gradient(160deg,#0d1b4b 0%,#1a3ab0 60%,#2050c8 100%);z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:28px 20px 24px;overflow-y:auto;-webkit-overflow-scrolling:touch;transition:opacity .6s;}
 #splashOvl.hide{opacity:0;pointer-events:none;}
 .sp-eyebrow{font-size:10px;letter-spacing:6px;color:rgba(255,255,255,0.45);margin-bottom:10px;}
 .sp-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(44px,12vw,72px);letter-spacing:6px;color:#fff;line-height:1;margin-bottom:4px;}
 .sp-title span{color:#7eb3ff;}
-.sp-sub{font-size:12px;color:rgba(255,255,255,0.65);letter-spacing:2px;margin-bottom:36px;}
+.sp-sub{font-size:12px;color:rgba(255,255,255,0.65);letter-spacing:2px;margin-bottom:20px;}
 .sp-bus-box{width:100%;max-width:360px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);border-radius:16px;padding:24px 24px 20px;}
 .sp-bus-title{font-size:11px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.55);margin-bottom:16px;text-align:center;}
 .sp-bus-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
@@ -268,6 +268,22 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
 .sp-skip:active{background:rgba(255,255,255,0.22);}
 .sp-loading{text-align:center;font-size:12px;color:rgba(255,255,255,0.45);margin:8px 0 20px;min-height:20px;}
 @keyframes spPulse{0%,100%{opacity:.4;}50%{opacity:1;}}
+/* ── 스플래시 좌석맵 ── */
+.sp-seats-wrap{display:flex;gap:10px;margin-bottom:14px;}
+.sp-bus-col{flex:1;display:flex;flex-direction:column;gap:0;}
+.sp-bus-col-hd{text-align:center;font-size:10px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.5);margin-bottom:5px;}
+.sp-bus-col-hd b{color:rgba(126,179,255,0.9);font-size:12px;}
+.sp-seat-grid{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 5px;}
+.sp-seat-row{display:flex;justify-content:center;align-items:center;gap:2px;margin-bottom:2px;}
+.sp-seat-aisle{width:6px;flex-shrink:0;}
+.sp-seat{width:11px;height:13px;border-radius:2px;flex-shrink:0;transition:background .4s;}
+.sp-seat.empty{background:rgba(255,255,255,0.13);border:1px solid rgba(255,255,255,0.18);}
+.sp-seat.filled{background:#7eb3ff;border:1px solid rgba(126,179,255,0.6);box-shadow:0 0 3px rgba(126,179,255,0.4);}
+.sp-seat.driver{background:#fbbf24;border:1px solid rgba(251,191,36,0.5);}
+.sp-seat-back-row{display:flex;justify-content:center;gap:2px;margin-top:3px;border-top:1px dashed rgba(255,255,255,0.12);padding-top:3px;}
+.sp-seat-legend{display:flex;gap:8px;justify-content:center;margin-top:6px;margin-bottom:10px;}
+.sp-seat-legend-item{display:flex;align-items:center;gap:3px;font-size:9px;color:rgba(255,255,255,0.5);}
+.sp-seat-legend-dot{width:9px;height:9px;border-radius:1px;}
 </style>
 
 </head>
@@ -284,6 +300,22 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
     <div class="sp-loading" id="spLoading" style="animation:spPulse 1.2s infinite;">데이터 불러오는 중…</div>
 
     <div id="spBusData" style="display:none;">
+      <!-- 호차별 좌석맵 -->
+      <div class="sp-seats-wrap">
+        <div class="sp-bus-col">
+          <div class="sp-bus-col-hd">1호차 &nbsp;<b id="spBus1Cnt">0</b>/39석</div>
+          <div class="sp-seat-grid" id="spGrid1"></div>
+        </div>
+        <div class="sp-bus-col">
+          <div class="sp-bus-col-hd">2호차 &nbsp;<b id="spBus2Cnt">0</b>/39석</div>
+          <div class="sp-seat-grid" id="spGrid2"></div>
+        </div>
+      </div>
+      <div class="sp-seat-legend">
+        <div class="sp-seat-legend-item"><div class="sp-seat-legend-dot" style="background:#7eb3ff;"></div>신청완료</div>
+        <div class="sp-seat-legend-item"><div class="sp-seat-legend-dot" style="background:rgba(255,255,255,0.13);border:1px solid rgba(255,255,255,0.18);"></div>잔여</div>
+      </div>
+      <!-- 요약 텍스트 -->
       <div class="sp-bus-row">
         <span class="sp-bus-lbl">🚌 버스 탑승</span>
         <span class="sp-bus-cnt"><span id="spBusCnt">0</span>명</span>
@@ -475,6 +507,55 @@ var GSURL = 'https://script.google.com/macros/s/AKfycbzBads0B_ZE0MKexDIBrlSANdZR
     if(remaining <= 0) splashDone();
   }
 
+  // ── 좌석맵 렌더링 (뒤에서부터 채움, 총 39석 = 운전석 제외) ──
+  // 배치: row1 L[driver,2] R[3], row2~9 L[2석] R[2석], back[5석] → 운전석 제외 39석
+  var BUS_ROWS = [
+    {left:[null,2], right:[3]},      // row1: null=운전석
+    {left:[4,5],   right:[6,7]},
+    {left:[8,9],   right:[10,11]},
+    {left:[12,13], right:[14,15]},
+    {left:[16,17], right:[18,19]},
+    {left:[20,21], right:[22,23]},
+    {left:[24,25], right:[26,27]},
+    {left:[28,29], right:[30,31]},
+    {left:[32,33], right:[34,35]},
+  ];
+  var BUS_BACK = [36,37,38,39,40];
+  // 뒷좌석부터 채울 순서: 40→1 (운전석=1 제외, 실제 1번은 없으므로 2번부터 40번)
+  var SEAT_ORDER = [];
+  for(var s=40;s>=2;s--) SEAT_ORDER.push(s);  // 39석
+
+  function renderBusGrid(containerId, filled){
+    var grid = document.getElementById(containerId);
+    if(!grid) return;
+    // filled: 몇 번째 좌석까지 채울지 (뒤에서부터 filled개)
+    var filledSet = {};
+    for(var i=0;i<filled && i<SEAT_ORDER.length;i++) filledSet[SEAT_ORDER[i]]=true;
+
+    var html = '';
+    BUS_ROWS.forEach(function(r){
+      html += '<div class="sp-seat-row">';
+      // 왼쪽
+      r.left.forEach(function(n){
+        if(n===null) html += '<div class="sp-seat driver" title="운전석"></div>';
+        else html += '<div class="sp-seat '+(filledSet[n]?'filled':'empty')+'" title="'+n+'번"></div>';
+      });
+      html += '<div class="sp-seat-aisle"></div>';
+      // 오른쪽
+      r.right.forEach(function(n){
+        html += '<div class="sp-seat '+(filledSet[n]?'filled':'empty')+'" title="'+n+'번"></div>';
+      });
+      html += '</div>';
+    });
+    // 뒷줄
+    html += '<div class="sp-seat-back-row">';
+    BUS_BACK.forEach(function(n){
+      html += '<div class="sp-seat '+(filledSet[n]?'filled':'empty')+'" title="'+n+'번"></div>';
+    });
+    html += '</div>';
+    grid.innerHTML = html;
+  }
+
   // GAS에서 버스 현황 가져오기
   fetch(GSURL + '?action=busstat', {method:'GET', mode:'cors'})
     .then(function(r){ return r.json(); })
@@ -483,6 +564,17 @@ var GSURL = 'https://script.google.com/macros/s/AKfycbzBads0B_ZE0MKexDIBrlSANdZR
       var busData = document.getElementById('spBusData');
       if(loading) loading.style.display = 'none';
       if(data.result === 'ok' && busData){
+        var bus1 = data.bus1 || 0;
+        var bus2 = data.bus2 || 0;
+        // 호차 미배정분은 bus1에 균등 배분 (bus1+bus2 합계가 data.bus보다 적을 경우)
+        var unassigned = (data.bus || 0) - bus1 - bus2;
+        if(unassigned > 0) bus1 += unassigned; // 미배정은 1호차로 표시
+
+        document.getElementById('spBus1Cnt').textContent = bus1;
+        document.getElementById('spBus2Cnt').textContent = bus2;
+        renderBusGrid('spGrid1', bus1);
+        renderBusGrid('spGrid2', bus2);
+
         document.getElementById('spBusCnt').textContent   = data.bus   || 0;
         document.getElementById('spCarCnt').textContent   = data.car   || 0;
         document.getElementById('spTotalCnt').textContent = data.total || 0;
