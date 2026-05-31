@@ -641,10 +641,11 @@ var GSURL = 'https://script.google.com/macros/s/AKfycbzBads0B_ZE0MKexDIBrlSANdZR
     var busData = document.getElementById('spBusData');
     if(loading) loading.style.display = 'none';
     if(data && data.result === 'ok' && busData){
-      var bus1 = data.bus1 || 0;
-      var bus2 = data.bus2 || 0;
-      var unassigned = (data.bus || 0) - bus1 - bus2;
-      if(unassigned > 0) bus1 += unassigned;
+      // 총 버스 인원을 1호차 40석부터 채우고 나머지를 2호차로 배분
+      var BUS_CAPACITY = 40;
+      var totalBus = data.bus || 0;
+      var bus1 = Math.min(totalBus, BUS_CAPACITY);
+      var bus2 = Math.max(totalBus - BUS_CAPACITY, 0);
 
       document.getElementById('spBus1Cnt').textContent = bus1;
       document.getElementById('spBus2Cnt').textContent = bus2;
