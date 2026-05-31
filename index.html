@@ -1073,7 +1073,8 @@ pn:mp?mp.n:'',pv:mp?mp.v:'',pp:mp?mp.p:''};
 _cfmMdata=mdata;
 // 단체신청 시 각 구성원 note에 [단체신청] 태그 추가
 if(isGroup){ mdata.forEach(function(m){ if(m.note.indexOf('[단체신청]')<0) m.note='[단체신청] '+m.note; }); }
-_cfmPayload={isFamily:isFamily&&members.length>1,isGroup:isGroup,isCouple:isCouple,appType:appType,mdata:mdata,device:device,emailTo:'0691kys@jiguchon.org,dtrjeon@gmail.com'};
+var _applyTypeLabel = appType==='group'?'단체':appType==='family'?'가족':'개인';
+_cfmPayload={isFamily:isFamily&&members.length>1,isGroup:isGroup,isCouple:isCouple,appType:appType,applyType:_applyTypeLabel,mdata:mdata,device:device,emailTo:'0691kys@jiguchon.org,dtrjeon@gmail.com'};
 
 // 확인 화면 구성
 var body=document.getElementById('cfm-body');

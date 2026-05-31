@@ -463,6 +463,7 @@ var GAS_URL = 'https://script.google.com/macros/s/AKfycbzMJwHZpSTzBMVFkMd3tf8Xii
 // ── 테스트 모드 (true = 서버 없이 가짜 데이터로 확인) ──
 var TEST_MODE = false;
 
+
 // ── 사용자 권한 테이블 ──
 // role: 'full' = 전체, 'acct' = 회계만, 'admin' = 행정만
 // detailPopup: true = 명단 팝업 허용, false = 팝업 차단
@@ -1519,7 +1520,7 @@ function confirmDeleteDup() {
   var btn = document.getElementById('dupDelBtn');
   if(btn){ btn.disabled=true; btn.textContent='삭제 중...'; }
   var ps = 'data='+encodeURIComponent(JSON.stringify({
-    action: 'deleteRows', rnos: rnos, pw: ADMIN_PW
+    action: 'deleteRows', rnos: rnos, pw: _pw
   }));
   fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:ps})
     .then(function(r){ return r.json(); })
