@@ -360,6 +360,11 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
         <input class="lkup-inp" id="lkupSsn" placeholder="주민번호 앞 6자리 (예: 800101)" type="tel" maxlength="6" pattern="[0-9]*" inputmode="numeric"/>
         <button type="button" class="lkup-search" onclick="doLookup()">조회</button>
       </div>
+      <!-- 주민번호 재입력 안내 -->
+      <div style="display:flex;align-items:flex-start;gap:7px;background:rgba(245,127,23,0.07);border:1px solid rgba(245,127,23,0.25);border-radius:8px;padding:9px 12px;margin-bottom:4px;">
+        <span style="font-size:14px;flex-shrink:0;">🔒</span>
+        <span style="font-size:11px;color:#b85c00;line-height:1.6;">불러오기 시 <b>주민등록번호는 개인정보보호</b> 문제로 복원되지 않습니다.<br>불러온 후 직접 재입력해 주세요.</span>
+      </div>
       <div class="lkup-result" id="lkupResult">
         <div class="lkup-msg" style="color:rgba(120,130,160,0.5);">이름을 입력하고 조회하세요</div>
       </div>
@@ -620,14 +625,33 @@ function applyLookup(i){
 }
 
 // ============================================================
-// iOS 터치 이벤트 위임
+// 스크롤 중 버튼/라디오 터치 방지
+// touchstart → touchend 사이 이동거리가 10px 초과면 스크롤로 판단, 클릭 무시
 // ============================================================
 (function(){
+  var _startX=0, _startY=0, _scrolling=false;
+  var THRESHOLD = 10; // 이동 허용 픽셀
+
+  document.addEventListener('touchstart', function(e){
+    _startX = e.touches[0].clientX;
+    _startY = e.touches[0].clientY;
+    _scrolling = false;
+  }, {passive:true});
+
+  document.addEventListener('touchmove', function(e){
+    var dx = Math.abs(e.touches[0].clientX - _startX);
+    var dy = Math.abs(e.touches[0].clientY - _startY);
+    if(dx > THRESHOLD || dy > THRESHOLD) _scrolling = true;
+  }, {passive:true});
+
+  // 라디오 버튼 터치 처리
   var _rts=0;
   document.addEventListener('touchstart', function(e){
     if(e.target.matches('input[type=radio]')) _rts=Date.now();
   }, {passive:true});
   document.addEventListener('touchend', function(e){
+    // 스크롤 중이면 무시
+    if(_scrolling) { e.preventDefault(); return; }
     var inp=e.target;
     if(!inp.matches('input[type=radio]')) return;
     if(Date.now()-_rts<300){
@@ -637,6 +661,13 @@ function applyLookup(i){
         inp.dispatchEvent(new Event('change',{bubbles:true}));
       }
     }
+  }, {passive:false});
+
+  // type-btn, tgl-btn, couple-btn, cb label 등 버튼류 터치 처리
+  document.addEventListener('touchend', function(e){
+    if(!_scrolling) return;
+    var btn = e.target.closest('.type-btn, .tgl-btn, .couple-btn, .cb label, .rb label, .addbtn, .subbtn, .savebtn');
+    if(btn){ e.preventDefault(); e.stopPropagation(); }
   }, {passive:false});
 })();
 var SAVEKEY = 'MET2026_draft';
@@ -1040,6 +1071,7 @@ function buildCard(m,i){
     +'<div class="fld"><div class="lbl">주민등록번호</div>'
     +'<input type="text" id="m'+m.uid+'_ssn" placeholder="000000-0000000" value="'+m.ssn+'" inputmode="numeric" oninput="fmtSsn(this,\''+m.uid+'\')"/>'
     +'<div class="hint">단체상해보험 가입 목적으로만 사용, 사역 종료 후 즉시 파기</div>'
+    +(m._loadedRno?'<div class="hint" style="color:#b85c00;font-weight:600;">🔒 개인정보보호로 불러오기 불가 — 재입력해 주세요</div>':'')
     +'</div>'
     +'<div class="fld"><div class="lbl">성별 <span class="req">*</span></div><div class="rg">'
     +['남','여'].map(function(g){return'<div class="rb"><input type="radio" id="g'+m.uid+'_'+g+'" name="g'+m.uid+'" value="'+g+'"'+(m.gender===g?' checked':'')+'><label for="g'+m.uid+'_'+g+'">'+g+'</label></div>';}).join('')
