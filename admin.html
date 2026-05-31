@@ -483,6 +483,8 @@ var USERS = [
   { name:'김미라', phone:'8964', role:'admin', detailPopup:false },
   { name:'임수현', phone:'5347', role:'admin', detailPopup:false },
   { name:'유수영', phone:'5128', role:'admin', detailPopup:false },
+  { name:'기재호', phone:'5483', role:'admin', detailPopup:false },
+  { name:'금장숙', phone:'4377', role:'admin', detailPopup:false },
 ];
 
 // 현재 로그인 사용자
@@ -592,7 +594,7 @@ function showApp(res) {
   document.getElementById('pwScreen').className = 'pw-screen hide';
   document.getElementById('app').className = 'app show';
   // 헤더 표시
-  var roleLabel = {full:'전체관리자', acct:'회계담당', admin:'행정담당'}[getUserRole()] || '';
+  var roleLabel = {full:'전체관리자', acct:'회계담당', admin:'마을장'}[getUserRole()] || '';
   document.getElementById('hdTitle').textContent =
     'MET2026 블레싱 삼척' + (TEST_MODE?' 🧪':'');
   if (TEST_MODE) document.getElementById('hdTitle').style.color = '#ffe066';
