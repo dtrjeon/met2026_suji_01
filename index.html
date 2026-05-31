@@ -468,10 +468,27 @@ function doLookup(){
 
   var ps='data='+encodeURIComponent(JSON.stringify({action:'lookup',name:name,ids:ids,ssn6:ssn6}));
   fetch(GSURL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:ps})
-  .then(function(r){return r.json();})
-  .then(function(data){
-    if(data.result!=='ok'){res.innerHTML='<div class="lkup-msg">❌ 조회 실패: '+(data.message||'')+'</div>';return;}
-    if(!data.data||!data.data.length){res.innerHTML='<div class="lkup-msg">등록된 신청서가 없습니다.<br><small style="color:rgba(120,130,160,0.5);">이름·식별번호를 다시 확인해주세요</small></div>';return;}
+  .then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.text();
+  })
+  .then(function(raw){
+    // 디버그: 서버 응답 원문 표시
+    var data;
+    try{ data=JSON.parse(raw); }
+    catch(e){
+      res.innerHTML='<div class="lkup-msg" style="text-align:left;font-size:11px;word-break:break-all;">⚠️ 응답 파싱 오류<br><b>서버 응답:</b><br>'+esc2(raw.substring(0,300))+'</div>';
+      return;
+    }
+    // 디버그: result 값 표시
+    if(data.result!=='ok'){
+      res.innerHTML='<div class="lkup-msg">❌ 조회 실패<br><small>result: '+esc2(data.result||'')+'<br>message: '+esc2(data.message||'없음')+'</small></div>';
+      return;
+    }
+    if(!data.data||!data.data.length){
+      res.innerHTML='<div class="lkup-msg">등록된 신청서가 없습니다.<br><small style="color:rgba(120,130,160,0.5);">이름·식별번호를 다시 확인해주세요</small></div>';
+      return;
+    }
     var html='';
     data.data.forEach(function(d,i){
       html+='<div class="lkup-card" id="lkupc'+i+'">'
@@ -494,7 +511,7 @@ function doLookup(){
     res.innerHTML=html;
     res._lookupData=data.data;
   })
-  .catch(function(){ res.innerHTML='<div class="lkup-msg">❌ 네트워크 오류가 발생했습니다.</div>'; });
+  .catch(function(e){ res.innerHTML='<div class="lkup-msg">❌ 네트워크 오류<br><small>'+esc2(e.message||'')+'</small></div>'; });
 }
 
 function esc2(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -561,19 +578,19 @@ function applyLookup(i){
     if(!confirm('현재 작성 중인 내용이 있습니다.\n불러온 내용으로 덮어쓸까요?')) return;
   }
 
-  // 가족/단체 여부 설정 (개인 단건 불러오기만 지원)
-  isFamily = false; isGroup = false; appType = 'individual';
+  // ① 먼저 UI 타입 리셋 (이 안에서 members=[nm('본인')] 초기화됨)
+  setAppType('individual');
   isCouple = null;
 
-  // PL에서 목자 찾기
+  // ② PL에서 목자 찾기
   var pastor = null;
   if(d.pastor){
     var found = PL.filter(function(p){ return p.n===d.pastor; });
     if(found.length) pastor = found[0];
   }
 
-  // 멤버 데이터 세팅
-  var m = nm('본인');
+  // ③ 초기화된 members[0]에 데이터 덮어쓰기
+  var m = members[0];
   m.name   = d.name   || '';
   m.ids    = d.ids    || '';
   m.gender = d.gender || '';
@@ -586,21 +603,13 @@ function applyLookup(i){
   m.ride   = d.ride   || '';
   m.accom  = d.accom  || '단체(교회준비)';
   m.pastor = pastor;
-  m._loadedRno = d.rno; // 원래 관리번호 참조용
+  m._loadedRno = d.rno;
 
-  members = [m];
-
-  // UI 리셋 후 렌더
-  var cb=document.getElementById('couplebox');
-  var ab=document.getElementById('addbtn');
-  setAppType('individual');
-  if(cb) cb.className='couple-box';
-  if(ab) ab.style.display='none';
-
+  // ④ 렌더링 후 팝업 닫기
   render();
   closeLookup();
 
-  // 알림 배너
+  // ⑤ 완료 배너
   var banner=document.createElement('div');
   banner.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#1a3a9e;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:999;box-shadow:0 4px 16px rgba(0,0,30,0.25);white-space:nowrap;';
   banner.textContent='✅ '+d.rno+' 불러오기 완료 — 수정 후 재제출하세요';
