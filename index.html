@@ -358,12 +358,12 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
       </div>
       <div class="lkup-row">
         <input class="lkup-inp" id="lkupSsn" placeholder="주민번호 앞 6자리 (예: 800101)" type="tel" maxlength="6" pattern="[0-9]*" inputmode="numeric"/>
-        <button class="lkup-search" onclick="doLookup()">조회</button>
+        <button type="button" class="lkup-search" onclick="doLookup()">조회</button>
       </div>
       <div class="lkup-result" id="lkupResult">
         <div class="lkup-msg" style="color:rgba(120,130,160,0.5);">이름을 입력하고 조회하세요</div>
       </div>
-      <button class="lkup-close" onclick="closeLookup()">닫기</button>
+      <button type="button" class="lkup-close" onclick="closeLookup()">닫기</button>
     </div>
   </div>
 </div>
@@ -605,9 +605,9 @@ function applyLookup(i){
   m.pastor = pastor;
   m._loadedRno = d.rno;
 
-  // ④ 렌더링 후 팝업 닫기
-  render();
+  // ④ 팝업 먼저 닫기 후 렌더링
   closeLookup();
+  render();
 
   // ⑤ 완료 배너
   var banner=document.createElement('div');
