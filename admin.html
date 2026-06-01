@@ -461,7 +461,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbzMJwHZpSTzBMVFkMd3tf8XiiTYv_Pd4wlJ_59jlIRgT-x5HTlUAli-C567mc3rHI2Svg/exec';
 
 // ── 테스트 모드 (true = 서버 없이 가짜 데이터로 확인) ──
-var TEST_MODE = false;
+var TEST_MODE = true;
 
 
 // ── 사용자 권한 테이블 ──
@@ -746,6 +746,13 @@ function applyFilter() {
     return true;
   });
 
+  // 최근 등록순 (rno 내림차순) 정렬
+  filtered.sort(function(a, b){
+    var ra = parseInt((a.rno||'').replace(/\D/g,''), 10) || 0;
+    var rb = parseInt((b.rno||'').replace(/\D/g,''), 10) || 0;
+    return rb - ra;
+  });
+
   document.getElementById('resultBar').innerHTML =
     '<strong>' + filtered.length + '</strong>명 표시 중' +
     (filtered.length < allData.length ? ' (전체 ' + allData.length + '명)' : '');
@@ -781,6 +788,7 @@ function renderList() {
     wrap.innerHTML = '<div class="empty"><div class="empty-ico">🔍</div><div class="empty-txt">해당하는 신청자가 없습니다</div></div>';
     return;
   }
+  var total = filtered.length;
   wrap.innerHTML = filtered.map(function(d, i) {
     var isFamily = d.type === '가족' || d.type === '가족/단체' || isGnoFamily(d.gno);
     var isGroup  = d.type === '단체' || isGnoGroup(d.gno);
@@ -801,7 +809,7 @@ function renderList() {
                   : 'linear-gradient(135deg,#2050c8,#1a3a9e)'));
     return '<div class="card" onclick="openDetail(' + i + ')">'
       + '<div class="card-top">'
-      + '<div class="card-num" style="background:'+numBg+'">' + (youth?'🎒':'')+(i+1) + '</div>'
+      + '<div class="card-num" style="background:'+numBg+'">' + (youth?'🎒':'')+(total-i) + '</div>'
       + '<div class="card-info">'
       + '<div class="card-name">'
       + (youth?'<span style="margin-right:3px;">🎒</span>':'')
@@ -1552,14 +1560,45 @@ function openMissDetail(rno) {
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ── 청소년 판별 (비고란에 초/중/고 학년 기재된 경우) ──
+// ── 주민등록번호로 학년 추정 (중3 이하만) ──
+function gradeFromSsn(ssn) {
+  if (!ssn) return '';
+  var s = ssn.replace(/[^0-9]/g, '');
+  if (s.length < 7) return '';
+  var yy = parseInt(s.slice(0, 2), 10);
+  var g7 = parseInt(s[6], 10);
+  // 7번째 자리: 3,4 = 2000년대생 / 1,2 = 1900년대생
+  var birthYear;
+  if (g7 === 3 || g7 === 4) birthYear = 2000 + yy;
+  else if (g7 === 1 || g7 === 2) birthYear = 1900 + yy;
+  else return '';
+  // 학년 = 현재연도 - 출생연도 - 6
+  // 예) 2019년생 → 2026-2019-6=1 → 초1, 2011년생 → 2026-2011-6=9 → 중3
+  var curYear = new Date().getFullYear();
+  var schoolYear = curYear - birthYear - 6;
+  if (schoolYear < 1) return '유치'; // 미취학
+  if (schoolYear <= 6) return '초' + schoolYear;
+  if (schoolYear === 7) return '중1';
+  if (schoolYear === 8) return '중2';
+  if (schoolYear === 9) return '중3';
+  return ''; // 고등학생 이상은 표시 안 함
+}
 function isYouth(d) {
-  if (!d.note) return false;
-  return /[초중고][0-9]/.test(d.note) || /유치|유아|어린이/.test(d.note);
+  // note 필드 우선
+  if (d.note && (/[초중고][0-9]/.test(d.note) || /유치|유아|어린이/.test(d.note))) return true;
+  // ssn으로 추정
+  if (gradeFromSsn(d.ssn)) return true;
+  return false;
 }
 function youthGrade(d) {
-  if (!d.note) return '';
-  var m = d.note.match(/([초중고][0-9]|유치|유아|어린이)/);
-  return m ? m[0] : '';
+  // note 필드 우선
+  if (d.note) {
+    var m = d.note.match(/([초중고][0-9]|유치|유아|어린이)/);
+    if (m) return m[0];
+  }
+  // ssn으로 추정
+  var g = gradeFromSsn(d.ssn);
+  return g;
 }
 
 // ── iOS 상세 스와이프 닫기 ──
