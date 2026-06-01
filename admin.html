@@ -461,7 +461,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbzMJwHZpSTzBMVFkMd3tf8XiiTYv_Pd4wlJ_59jlIRgT-x5HTlUAli-C567mc3rHI2Svg/exec';
 
 // ── 테스트 모드 (true = 서버 없이 가짜 데이터로 확인) ──
-var TEST_MODE = false;
+var TEST_MODE = true;
 
 
 // ── 사용자 권한 테이블 ──
@@ -1014,11 +1014,28 @@ function makeTableView(key) {
     if(!groups[k]) groups[k]=[];
     groups[k].push(d);
   });
-  // 여→남 정렬
+  // 학년 숫자 변환 함수 (유치=-1, 초1=1~초6=6, 중1=7~중3=9)
+  function gradeOrder(d) {
+    var g = youthGrade(d);
+    if (!g) return 0;
+    if (g === '유치') return -1;
+    var m = g.match(/([초중고])([0-9])/);
+    if (!m) return 0;
+    var base = {초:0, 중:6, 고:9}[m[1]] || 0;
+    return base + parseInt(m[2], 10);
+  }
+  // 성인(남→여) 먼저, 그 다음 어린이(고학년→저학년)
   Object.keys(groups).forEach(function(k){
     groups[k].sort(function(a,b){
-      var o={여:0,남:1};
-      return (o[a.gender]!==undefined?o[a.gender]:2)-(o[b.gender]!==undefined?o[b.gender]:2);
+      var aKid = isYouth(a), bKid = isYouth(b);
+      if (!aKid && bKid) return -1;
+      if (aKid && !bKid) return 1;
+      if (!aKid && !bKid) {
+        var o={남:0,여:1};
+        return (o[a.gender]!==undefined?o[a.gender]:2)-(o[b.gender]!==undefined?o[b.gender]:2);
+      }
+      // 둘 다 어린이: 고학년→저학년
+      return gradeOrder(b) - gradeOrder(a);
     });
   });
   // 인원수 내림차순
