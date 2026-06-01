@@ -746,11 +746,13 @@ function applyFilter() {
     return true;
   });
 
-  // 최근 등록순 (rno 내림차순) 정렬
+  // 최근 등록순 (submitAt 내림차순) 정렬
   filtered.sort(function(a, b){
-    var ra = parseInt((a.rno||'').replace(/\D/g,''), 10) || 0;
-    var rb = parseInt((b.rno||'').replace(/\D/g,''), 10) || 0;
-    return rb - ra;
+    var da = a.submitAt || '';
+    var db = b.submitAt || '';
+    if (db > da) return 1;
+    if (db < da) return -1;
+    return 0;
   });
 
   document.getElementById('resultBar').innerHTML =
