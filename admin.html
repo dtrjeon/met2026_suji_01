@@ -458,7 +458,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
 <script>
 // ★ GAS 배포 URL — Code.gs 배포 후 발급된 URL로 교체하세요
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbzMJwHZpSTzBMVFkMd3tf8XiiTYv_Pd4wlJ_59jlIRgT-x5HTlUAli-C567mc3rHI2Svg/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbzvO5lEtq4xEmSrOy3oAR84M8_-hdG8SOm8xoWWCR65PRA2muH6BDvtgQjodnO9PfRq0g/exec';
 
 // ── 테스트 모드 (true = 서버 없이 가짜 데이터로 확인) ──
 var TEST_MODE =  false;
@@ -1682,7 +1682,22 @@ function loadPayDataFromServer(serverPayData) {
 function savePayData(rno) {
   if (!rno || !payData[rno]) return;
   var d = payData[rno];
-  var rows = [{ rno: rno, status: d.status||'unpaid', amount: d.amount||0, date: d.date||'', memo: d.memo||'' }];
+  // allData에서 이름과 계산 금액 조회
+  var member = null;
+  for (var i = 0; i < allData.length; i++) {
+    if (allData[i].rno === rno) { member = allData[i]; break; }
+  }
+  var memberName = member ? (member.name || '') : '';
+  var amountCalc = member ? getFee(member) : 100000;
+  var rows = [{
+    rno         : rno,
+    status      : d.status || 'unpaid',
+    amount      : d.amount || 0,
+    date        : d.date   || '',
+    memo        : d.memo   || '',
+    name        : memberName,
+    amount_calc : amountCalc
+  }];
   fetch(GAS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
