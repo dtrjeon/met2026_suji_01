@@ -208,6 +208,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .editlog-diff .after{color:var(--green);font-weight:700;}
 .editlog-meta{font-size:10px;color:var(--text3);margin-top:6px;}
 .editlog-empty{text-align:center;padding:40px 20px;font-size:13px;color:var(--text3);}
+.editlog-card.self{border-left:3px solid var(--primary);background:linear-gradient(to right,rgba(26,58,176,0.04),var(--card));}
+.editlog-self-badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;color:var(--primary);background:rgba(26,58,176,0.1);border:1px solid rgba(26,58,176,0.25);border-radius:10px;padding:1px 7px;margin-left:6px;letter-spacing:.3px;vertical-align:middle;}
 
 /* 명단 수정 화면 (풀스크린) */
 .edit-ovl{position:fixed;inset:0;background:var(--bg);z-index:300;display:none;flex-direction:column;}
@@ -2450,12 +2452,18 @@ function renderEditLog(logs) {
     panel.innerHTML = '<div class="editlog-empty">📝 수정 내역이 없습니다.</div>';
     return;
   }
-  var html = '<div style="padding:4px 0 10px;font-size:11px;font-weight:700;color:rgba(60,70,100,0.6);letter-spacing:1px;">총 '+logs.length+'건의 수정 내역 (최신순)</div>';
+  var myName = currentUser ? currentUser.name : '';
+  var selfCount = logs.filter(function(l){ return (l.editorName || (l.editor ? l.editor.split(':')[0] : '')) === myName; }).length;
+  var html = '<div style="padding:4px 0 10px;font-size:11px;font-weight:700;color:rgba(60,70,100,0.6);letter-spacing:1px;">'
+    + '총 '+logs.length+'건의 수정 내역 (최신순)'
+    + (selfCount > 0 ? ' · <span style="color:var(--primary);">내 수정 '+selfCount+'건</span>' : '')
+    + '</div>';
   logs.forEach(function(log){
-    var editorName = log.editor ? log.editor.split(':')[0] : '-';
-    html += '<div class="editlog-card">'
+    var editorName = log.editorName || (log.editor ? log.editor.split(':')[0] : '-');
+    var isSelf = myName && (editorName === myName);
+    html += '<div class="editlog-card'+(isSelf?' self':'')+'">'
       + '<div class="editlog-top">'
-      + '<div class="editlog-name">'+esc(log.name||'-')+'</div>'
+      + '<div class="editlog-name">'+esc(log.name||'-')+(isSelf?'<span class="editlog-self-badge">👤 내 수정</span>':'')+'</div>'
       + '<div class="editlog-rno">'+esc(log.rno||'')+'</div>'
       + '</div>'
       + '<div><span class="editlog-field">'+esc(log.field||'')+'</span></div>'
