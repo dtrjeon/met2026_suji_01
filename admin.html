@@ -2453,13 +2453,13 @@ function renderEditLog(logs) {
     return;
   }
   var myName = currentUser ? currentUser.name : '';
-  var selfCount = logs.filter(function(l){ return (l.editorName || (l.editor ? l.editor.split(':')[0] : '')) === myName; }).length;
+  var selfCount = logs.filter(function(l){ return (l.editor ? l.editor.split(':')[0] : '') === myName; }).length;
   var html = '<div style="padding:4px 0 10px;font-size:11px;font-weight:700;color:rgba(60,70,100,0.6);letter-spacing:1px;">'
     + '총 '+logs.length+'건의 수정 내역 (최신순)'
     + (selfCount > 0 ? ' · <span style="color:var(--primary);">내 수정 '+selfCount+'건</span>' : '')
     + '</div>';
   logs.forEach(function(log){
-    var editorName = log.editorName || (log.editor ? log.editor.split(':')[0] : '-');
+    var editorName = log.editor ? log.editor.split(':')[0] : '-';
     var isSelf = myName && (editorName === myName);
     html += '<div class="editlog-card'+(isSelf?' self':'')+'">'
       + '<div class="editlog-top">'
