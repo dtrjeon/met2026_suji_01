@@ -408,6 +408,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
         </div>
         <div class="hd-right">
           <div class="hd-count" id="totalCount" style="display:flex;align-items:center;gap:5px;"><span id="cntTotal">— 명</span><span id="cntSub" style="font-size:9px;opacity:0.7;display:none;white-space:nowrap;"></span></div>
+          <span id="hdSuperLock" onclick="goSuperAdmin()" style="display:none;cursor:pointer;font-size:14px;line-height:1;" title="슈퍼 관리자">🔒</span>
           <span id="hdLoggedIn" style="font-size:9px;color:rgba(255,255,255,0.6);white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis;display:inline-block;"></span>
           <button class="hd-logout" onclick="logout()">로그아웃</button>
         </div>
@@ -624,6 +625,7 @@ function tryLogin() {
   if (TEST_MODE) {
     _pw = 'test';
     sessionStorage.setItem('admin_user', JSON.stringify({name:user.name, phone:user.phone}));
+    if (user.role === 'super') sessionStorage.setItem('super_user', JSON.stringify({name:user.name, phone:user.phone}));
     showApp({ result:'ok', data: TEST_DATA, updated: '테스트 데이터' });
     return;
   }
@@ -641,6 +643,7 @@ function tryLogin() {
       } else if (res.result === 'ok') {
         _pw = name + ':' + phone;
         sessionStorage.setItem('admin_user', JSON.stringify({name:user.name, phone:user.phone}));
+        if (user.role === 'super') sessionStorage.setItem('super_user', JSON.stringify({name:user.name, phone:user.phone}));
         showApp(res);
       } else {
         setErr('오류: ' + (res.message || '알 수 없는 오류'));
@@ -654,6 +657,10 @@ function tryLogin() {
 }
 
 function setErr(msg){ document.getElementById('pwErr').textContent = msg; }
+
+function goSuperAdmin(){
+  location.href = 'super-admin.html';
+}
 
 function togglePwEye(){
   var inp = document.getElementById('pwPhone');
@@ -672,6 +679,8 @@ function showApp(res) {
   if (TEST_MODE) document.getElementById('hdTitle').style.color = '#ffe066';
   // 로그인 사용자 표시
   document.getElementById('hdLoggedIn').textContent = currentUser.name + ' (' + roleLabel + ')';
+  // 슈퍼 관리자 자물쇠 아이콘
+  document.getElementById('hdSuperLock').style.display = canEdit() ? 'inline-block' : 'none';
   // 탭 권한 적용
   applyTabPermissions();
   processData(res);
@@ -690,6 +699,7 @@ function applyTabPermissions() {
 
 function logout() {
   sessionStorage.removeItem('admin_user');
+  sessionStorage.removeItem('super_user');
   currentUser = null;
   _pw = '';
   allData = []; filtered = [];
