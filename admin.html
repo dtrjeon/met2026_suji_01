@@ -604,6 +604,7 @@ var TEST_DATA = [
 var allData  = [];
 var filtered = [];
 var _pw      = '';
+var _scrollY = 0;
 
 // ── 로그인 ──
 function tryLogin() {
@@ -965,11 +966,23 @@ function openDetail(idx) {
   document.getElementById('detailEditBtn').style.display = canEdit() ? 'block' : 'none';
   document.getElementById('detailOvl').className = 'detail-ovl show';
   document.getElementById('detailSheet').scrollTop = 0;
+  _scrollY = window.scrollY;
+  document.body.style.position = 'fixed';
+  document.body.style.top = (-_scrollY) + 'px';
+  document.body.style.left = '0';
+  document.body.style.right = '0';
+  document.body.style.width = '100%';
 }
 
 function closeDetail(e) {
   if (!e || e.target === document.getElementById('detailOvl')) {
     document.getElementById('detailOvl').className = 'detail-ovl';
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+    window.scrollTo(0, _scrollY);
   }
 }
 
