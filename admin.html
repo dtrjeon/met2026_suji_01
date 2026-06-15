@@ -466,6 +466,15 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   <div class="stat-panel" id="statPanel"></div>
 
   <!-- 누락자 패널 -->
+  <div class="miss-search-wrap" id="missSearchWrap" style="display:none;padding:8px 16px 6px;background:#fff;border-bottom:1px solid var(--border);">
+    <div class="search-box">
+      <span class="search-ico">🔍</span>
+      <input type="text" id="missSearchInput" placeholder="이름, 관리번호, 목장, 사역팀 검색…"
+        oninput="onMissSearch(this)" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <span class="search-clr" id="missSearchClr" onclick="clearMissSearch()">✕</span>
+    </div>
+  </div>
+  <div id="missSearchResults"></div>
   <div class="miss-panel" id="missPanel"></div>
 
   <!-- 회계 패널 -->
@@ -1470,6 +1479,7 @@ function switchTab(tab) {
   document.getElementById('listWrap').style.display    = tab==='list'?'block':'none';
   document.getElementById('statPanel').className       = 'stat-panel'+(tab==='stat'?' show':'');
   document.getElementById('missPanel').className       = 'miss-panel'+(tab==='miss'?' show':'');
+  document.getElementById('missSearchWrap').style.display = tab==='miss'?'block':'none';
   document.getElementById('acctPanel').className       = 'acct-panel'+(tab==='acct'?' show':'');
   var editlogPanel = document.getElementById('editlogPanel');
   if(editlogPanel) editlogPanel.className = 'editlog-panel'+(tab==='editlog'?' show':'');
@@ -1486,6 +1496,12 @@ function switchTab(tab) {
 // ── 누락자 렌더링 ──
 function renderMissing() {
   dupSelected = {};
+  var msi = document.getElementById('missSearchInput');
+  if(msi) msi.value = '';
+  var msc = document.getElementById('missSearchClr');
+  if(msc) msc.style.display = 'none';
+  var msr = document.getElementById('missSearchResults');
+  if(msr) msr.innerHTML = '';
   var noPhone = allData.filter(function(d){ return !d.phone || d.phone.trim()===''; });
   var noSsn   = allData.filter(function(d){ return !d.ssn  || d.ssn.trim()===''  || d.ssn.trim()==='-'; });
   var ssnIssues = allData.filter(function(d){ return d.ssnIssue && d.ssnIssue.trim()!==''; });
@@ -1700,6 +1716,150 @@ function confirmDeleteDup() {
       if(btn){ btn.disabled=false; btn.textContent='선택 항목 삭제'; }
     });
 }
+// ── 확인필요 탭: 검색 후 삭제 ──
+var missSearchSelected = {};
+
+function onMissSearch(input) {
+  var kw = (input.value||'').trim();
+  var clr = document.getElementById('missSearchClr');
+  if(clr) clr.style.display = kw ? 'block' : 'none';
+
+  var resultsEl = document.getElementById('missSearchResults');
+  var panelEl   = document.getElementById('missPanel');
+
+  if(!kw) {
+    resultsEl.innerHTML = '';
+    panelEl.style.display = '';
+    missSearchSelected = {};
+    return;
+  }
+
+  // 검색 중에는 기존 확인필요 목록 숨김
+  panelEl.style.display = 'none';
+
+  var kwLower = kw.toLowerCase();
+  var matched = allData.filter(function(d){
+    return (d.name||'').toLowerCase().indexOf(kwLower) >= 0
+        || (d.rno||'').toLowerCase().indexOf(kwLower) >= 0
+        || (d.moksang||'').toLowerCase().indexOf(kwLower) >= 0
+        || (d.mteam||'').toLowerCase().indexOf(kwLower) >= 0
+        || (d.pastor||'').toLowerCase().indexOf(kwLower) >= 0
+        || (d.village||'').toLowerCase().indexOf(kwLower) >= 0;
+  });
+
+  // 검색 변경 시 선택 초기화
+  missSearchSelected = {};
+
+  if(!matched.length){
+    resultsEl.innerHTML =
+      '<div class="miss-section">'
+      +'<div class="miss-sec-title">🔍 검색 결과 <span class="miss-count">0명</span></div>'
+      +'<div class="miss-empty">검색 결과가 없습니다.</div>'
+      +'</div>';
+    return;
+  }
+
+  var canDel = canEdit();
+  var cards = matched.map(function(d, i){
+    var youth = isYouth(d);
+    var grade = youthGrade(d);
+    var chkHtml = canDel
+      ? '<div class="dup-chk" id="mschk-'+esc(d.rno)+'" onclick="event.stopPropagation();toggleMissSearchChk(\''+esc(d.rno)+'\')" style="margin-right:10px;"></div>'
+      : '';
+    return '<div class="miss-card" id="msrow-'+esc(d.rno)+'" onclick="openMissDetail(\''+esc(d.rno)+'\')" style="display:flex;align-items:center;">'
+      + chkHtml
+      +'<div class="miss-num" style="background:linear-gradient(135deg,#2a5cd8,#1a3ab0);">'+(youth?'🎒':'')+(i+1)+'</div>'
+      +'<div class="miss-info">'
+      +'<div class="miss-name">'
+      +esc(d.name)
+      +(grade?'<span style="font-size:10px;padding:1px 6px;border-radius:4px;background:rgba(255,140,0,0.12);color:#b85c00;border:1px solid rgba(255,140,0,0.25);font-weight:700;margin-left:5px;">'+esc(grade)+'</span>':'')
+      +(d.gender?' ('+esc(d.gender)+')':'')+(d.ids?' · '+esc(d.ids):'')+'</div>'
+      +'<div class="miss-sub">'+esc(d.pastor||'-')+' / '+esc(d.moksang||'-')+' · '+esc(d.mteam||'-')+'</div>'
+      +'</div>'
+      +'<div class="miss-rno">'+esc(d.rno)+'</div>'
+      +'</div>';
+  }).join('');
+
+  resultsEl.innerHTML =
+    '<div class="miss-section">'
+    +'<div class="miss-sec-title">🔍 검색 결과 <span class="miss-count">'+matched.length+'명</span></div>'
+    +cards
+    +'</div>'
+    + (canDel
+      ? '<div class="dup-del-bar" id="missSearchDelBar">'
+        +'<button class="dup-cancel-btn" onclick="clearMissSearchSel()">취소</button>'
+        +'<button class="dup-del-btn" id="missSearchDelBtn" onclick="confirmDeleteMissSearch()">선택 항목 삭제</button>'
+        +'</div>'
+      : '');
+}
+
+function clearMissSearch() {
+  var input = document.getElementById('missSearchInput');
+  input.value = '';
+  onMissSearch(input);
+}
+
+function toggleMissSearchChk(rno) {
+  missSearchSelected[rno] = !missSearchSelected[rno];
+  var chk = document.getElementById('mschk-'+rno);
+  var row = document.getElementById('msrow-'+rno);
+  if(chk){
+    chk.className = 'dup-chk'+(missSearchSelected[rno]?' checked':'');
+    chk.innerHTML = missSearchSelected[rno]
+      ? '<svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+      : '';
+  }
+  if(row) row.style.background = missSearchSelected[rno] ? 'rgba(32,80,200,0.06)' : '';
+  var selCount = Object.keys(missSearchSelected).filter(function(k){ return missSearchSelected[k]; }).length;
+  var bar = document.getElementById('missSearchDelBar');
+  var btn = document.getElementById('missSearchDelBtn');
+  if(bar) bar.className = 'dup-del-bar'+(selCount>0?' show':'');
+  if(btn) btn.textContent = selCount+'건 삭제하기';
+}
+
+function clearMissSearchSel() {
+  Object.keys(missSearchSelected).forEach(function(rno){
+    missSearchSelected[rno] = false;
+    var chk = document.getElementById('mschk-'+rno);
+    var row = document.getElementById('msrow-'+rno);
+    if(chk){ chk.className='dup-chk'; chk.innerHTML=''; }
+    if(row) row.style.background='';
+  });
+  var bar = document.getElementById('missSearchDelBar');
+  if(bar) bar.className = 'dup-del-bar';
+}
+
+function confirmDeleteMissSearch() {
+  var rnos = Object.keys(missSearchSelected).filter(function(k){ return missSearchSelected[k]; });
+  if(!rnos.length) return;
+  if(!confirm(rnos.length+'건을 구글시트에서 삭제합니다.\n이 작업은 되돌릴 수 없습니다.')) return;
+  var btn = document.getElementById('missSearchDelBtn');
+  if(btn){ btn.disabled=true; btn.textContent='삭제 중...'; }
+  var ps = 'data='+encodeURIComponent(JSON.stringify({
+    action: 'deleteRows', rnos: rnos, pw: _pw
+  }));
+  fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:ps})
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data.result==='ok'){
+        alert('✅ '+data.deleted+'건이 삭제되었습니다.');
+        missSearchSelected={};
+        document.getElementById('missSearchInput').value = '';
+        document.getElementById('missSearchResults').innerHTML = '';
+        document.getElementById('missSearchClr').style.display = 'none';
+        document.getElementById('missPanel').style.display = '';
+        loadData();
+      } else {
+        alert('❌ 삭제 실패: '+(data.message||''));
+        if(btn){ btn.disabled=false; btn.textContent='선택 항목 삭제'; }
+      }
+    })
+    .catch(function(){
+      alert('❌ 네트워크 오류가 발생했습니다.');
+      if(btn){ btn.disabled=false; btn.textContent='선택 항목 삭제'; }
+    });
+}
+
 function openMissDetail(rno) {
   var idx = filtered.findIndex ? filtered.findIndex(function(d){ return d.rno===rno; }) : -1;
   if(idx < 0) {
