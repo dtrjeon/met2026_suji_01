@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>MET2026 시스템 매뉴얼</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#f4f6fb;--surface:#fff;--card:#fff;--border:#e2e8f0;
+  --primary:#1a3ab0;--primary-dim:#eef2ff;--primary-mid:#4a7cff;
+  --green:#16a34a;--green-dim:#f0fdf4;
+  --red:#dc2626;--red-dim:#fef2f2;
+  --yellow:#d97706;--yellow-dim:#fffbeb;
+  --orange:#ea580c;
+  --text:#1e293b;--text2:#475569;--text3:#94a3b8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.65;-webkit-text-size-adjust:100%;}
+
+/* ── 헤더 ── */
+.hd{background:linear-gradient(135deg,#0f1f5c,#1a3ab0,#2d5ce8);color:#fff;padding:28px 16px 22px;text-align:center;position:relative;overflow:hidden;}
+.hd::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");}
+.hd-tag{display:inline-block;font-size:9px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;padding:3px 12px;margin-bottom:10px;}
+.hd-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;margin-bottom:4px;}
+.hd-sub{font-size:11px;color:rgba(255,255,255,0.75);letter-spacing:.3px;}
+.hd-ver{display:inline-block;margin-top:10px;font-size:9px;color:rgba(255,255,255,0.5);background:rgba(0,0,0,0.2);border-radius:20px;padding:2px 10px;}
+
+/* ── TOC ── */
+.toc{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,0.06);}
+.toc-title{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--text3);margin-bottom:7px;}
+.toc-links{display:flex;flex-wrap:nowrap;gap:5px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px;}
+.toc-links::-webkit-scrollbar{display:none;}
+.toc-link{font-size:10px;font-weight:600;color:var(--primary);background:var(--primary-dim);border:1px solid rgba(26,58,176,0.15);border-radius:5px;padding:3px 9px;text-decoration:none;white-space:nowrap;touch-action:manipulation;flex-shrink:0;}
+.toc-link:active{background:#dde5ff;}
+
+/* ── 컨테이너 ── */
+.wrap{padding:0 12px 48px;}
+
+/* ── 섹션 ── */
+.sec{margin-top:24px;}
+.sec-hd{display:flex;align-items:center;gap:8px;padding:10px 12px;background:linear-gradient(90deg,var(--primary-dim),transparent);border-left:3px solid var(--primary);border-radius:0 8px 8px 0;margin-bottom:12px;}
+.sec-ico{font-size:18px;}
+.sec-num{font-family:'Bebas Neue',sans-serif;font-size:22px;color:rgba(26,58,176,0.2);line-height:1;}
+.sec-name{font-size:14px;font-weight:900;color:var(--primary);letter-spacing:.3px;}
+
+/* ── 카드 ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.05);}
+.card-title{font-size:11px;font-weight:700;color:var(--primary);letter-spacing:.3px;margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+
+/* ── 권한 배지 ── */
+.role{display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;letter-spacing:.3px;}
+.role-super{background:rgba(26,58,176,0.12);color:var(--primary);border:1px solid rgba(26,58,176,0.25);}
+.role-full{background:rgba(22,163,74,0.1);color:var(--green);border:1px solid rgba(22,163,74,0.25);}
+.role-admin{background:#f1f5f9;color:var(--text2);border:1px solid var(--border);}
+
+/* ── 테이블 ── */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:4px;}
+.tbl{width:100%;border-collapse:collapse;font-size:11px;min-width:320px;}
+.tbl th{background:var(--primary-dim);color:var(--primary);font-weight:700;padding:6px 8px;text-align:left;border-bottom:2px solid rgba(26,58,176,0.15);white-space:nowrap;}
+.tbl td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;}
+.tbl tr:last-child td{border-bottom:none;}
+
+/* ── 탭 설명 카드 ── */
+.tab-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,0.05);}
+.tab-card-hd{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.tab-ico-lg{font-size:18px;line-height:1;}
+.tab-name{font-size:13px;font-weight:700;}
+.tab-roles{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;}
+.tab-desc{font-size:11px;color:var(--text2);line-height:1.6;}
+.tab-detail{margin-top:8px;padding:9px;background:var(--bg);border-radius:6px;font-size:11px;color:var(--text2);line-height:1.7;}
+.tab-detail li{margin-left:12px;margin-bottom:2px;}
+
+/* ── 흐름도 ── */
+.flow{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin:8px 0;}
+.flow-step{background:var(--primary-dim);border:1px solid rgba(26,58,176,0.2);border-radius:5px;padding:5px 10px;font-size:10px;font-weight:700;color:var(--primary);}
+.flow-arrow{color:var(--text3);font-size:12px;font-weight:700;}
+
+/* ── 콜아웃 ── */
+.callout{display:flex;gap:8px;padding:10px 12px;border-radius:8px;margin:8px 0;font-size:11px;line-height:1.6;}
+.callout-ico{font-size:14px;flex-shrink:0;margin-top:1px;}
+.callout.warn{background:var(--yellow-dim);border:1px solid rgba(217,119,6,0.25);}
+.callout.warn .callout-ico{color:var(--yellow);}
+.callout.info{background:var(--primary-dim);border:1px solid rgba(26,58,176,0.15);}
+.callout.info .callout-ico{color:var(--primary);}
+.callout.ok{background:var(--green-dim);border:1px solid rgba(22,163,74,0.2);}
+.callout.ok .callout-ico{color:var(--green);}
+.callout.err{background:var(--red-dim);border:1px solid rgba(220,38,38,0.2);}
+.callout.err .callout-ico{color:var(--red);}
+
+/* ── 코드 ── */
+code{font-family:monospace;font-size:10px;background:#f1f5f9;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:var(--primary);}
+
+/* ── 시트 구조 ── */
+.sheet-cols{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0;}
+.col-chip{display:inline-block;padding:3px 7px;border-radius:4px;font-size:10px;font-weight:600;}
+.col-key{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;}
+.col-edit{background:var(--green-dim);color:var(--green);border:1px solid rgba(22,163,74,0.3);}
+.col-sys{background:#f8fafc;color:var(--text3);border:1px solid var(--border);}
+
+/* ── FAQ ── */
+.faq-item{border:1px solid var(--border);border-radius:8px;margin-bottom:6px;overflow:hidden;}
+.faq-q{display:flex;align-items:flex-start;gap:7px;padding:11px 12px;cursor:pointer;font-size:12px;font-weight:700;touch-action:manipulation;user-select:none;}
+.faq-q-ico{color:var(--primary);font-weight:900;font-size:12px;flex-shrink:0;margin-top:1px;}
+.faq-a{display:none;padding:0 12px 11px 28px;font-size:11px;color:var(--text2);line-height:1.7;border-top:1px solid var(--border);background:#fafbff;}
+.faq-a.open{display:block;}
+
+/* ── 구분선 ── */
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0;}
+
+/* ── 하단 ── */
+.footer{text-align:center;padding:24px 16px;color:var(--text3);font-size:10px;line-height:1.8;}
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<div class="hd">
+  <div class="hd-tag">SYSTEM MANUAL</div>
+  <div class="hd-title">MET2026 관리 시스템</div>
+  <div class="hd-sub">블레싱 삼척 신청·관리·정산 통합 매뉴얼</div>
+  <div class="hd-ver">v2.0 · 2026.06 기준</div>
+</div>
+
+<!-- 목차 -->
+<div class="toc">
+  <div class="toc-title">📌 목차</div>
+  <div class="toc-links">
+    <a class="toc-link" href="#s1">1. 시스템 구성</a>
+    <a class="toc-link" href="#s2">2. 권한 체계</a>
+    <a class="toc-link" href="#s3">3. admin.html</a>
+    <a class="toc-link" href="#s4">4. super-admin.html</a>
+    <a class="toc-link" href="#s5">5. 구글시트</a>
+    <a class="toc-link" href="#s6">6. 신청서</a>
+    <a class="toc-link" href="#s7">7. GAS API</a>
+    <a class="toc-link" href="#s8">8. FAQ</a>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ════════════════════════════════ -->
+<!-- 1. 시스템 구성 -->
+<!-- ════════════════════════════════ -->
+<div class="sec" id="s1">
+  <div class="sec-hd">
+    <div class="sec-ico">🗂</div>
+    <div>
+      <div class="sec-num">01</div>
+      <div class="sec-name">시스템 구성</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔗 파일 구성</div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>파일</th><th>역할</th><th>접근 대상</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>index.html</code></td>
+          <td>교인 신청서 (개인/가족/단체)</td>
+          <td>모든 교인</td>
+        </tr>
+        <tr>
+          <td><code>admin.html</code></td>
+          <td>명단·통계·회계·수정 관리</td>
+          <td>등록된 관리자</td>
+        </tr>
+        <tr>
+          <td><code>super-admin.html</code></td>
+          <td>사용자 권한·수정로그·GAS유틸</td>
+          <td>슈퍼바이저만</td>
+        </tr>
+        <tr>
+          <td><code>Code.gs</code></td>
+          <td>Google Apps Script 백엔드</td>
+          <td>서버 (자동 실행)</td>
+        </tr>
+        <tr>
+          <td>Google Sheets</td>
+          <td>데이터 영구 저장소</td>
+          <td>GAS 경유 접근</td>
+        </tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔄 데이터 흐름</div>
+    <div class="flow">
+      <div class="flow-step">교인 신청</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">index.html</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">GAS (POST)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">구글시트 저장</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">알림 이메일</div>
+    </div>
+    <div class="flow">
+      <div class="flow-step">관리자 조회</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">admin.html</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">GAS (GET)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">시트 데이터 반환</div>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <span class="callout-ico">ℹ️</span>
+    <span>모든 HTML 파일은 <strong>GitHub Pages</strong>에 호스팅되며, Google Apps Script(GAS)는 배포 URL을 통해 시트와 통신합니다. HTML ↔ GAS 사이의 인증은 이름+전화번호 끝 4자리 조합으로 이루어집니다.</span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- 2. 권한 체계 -->
+<!-- ════════════════════════════════ -->
+<div class="sec" id="s2">
+  <div class="sec-hd">
+    <div class="sec-ico">🔐</div>
+    <div>
+      <div class="sec-num">02</div>
+      <div class="sec-name">권한 체계</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">👥 역할별 권한</div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead>
+        <tr>
+          <th>역할</th>
+          <th>명단</th>
+          <th>통계</th>
+          <th>확인필요</th>
+          <th>회계</th>
+          <th>수정로그</th>
+          <th>수정권한</th>
+          <th>팝업</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="role role-super">슈퍼바이저</span></td>
+          <td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td>
+        </tr>
+        <tr>
+          <td><span class="role role-full">전체관리자</span></td>
+          <td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>❌</td><td>✅</td><td>✅</td>
+        </tr>
+        <tr>
+          <td><span class="role role-admin">마을장</span></td>
+          <td>✅</td><td>❌</td><td>❌</td><td>❌</td><td>❌</td><td>❌</td><td>설정별</td>
+        </tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔑 로그인 방법</div>
+    <p style="font-size:12px;color:var(--text2);line-height:1.7;">
+      이름과 전화번호 끝 4자리를 입력합니다. 입력값이 <code>USERS</code> 배열과 일치해야 로그인이 허용됩니다.<br>
+      슈퍼바이저 역할만 <code>super-admin.html</code> 접근이 가능하며, 그 외 역할은 <code>admin.html</code>을 사용합니다.
+    </p>
+    <div class="callout warn" style="margin-top:10px;">
+      <span class="callout-ico">⚠️</span>
+      <span>USERS 배열은 <code>admin.html</code>, <code>super-admin.html</code>, <code>Code.gs</code> 세 곳에 각각 선언되어 있습니다. 멤버 변경 시 <strong>세 곳 모두</strong> 수정해야 합니다.</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">👤 현재 등록 사용자</div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>이름</th><th>역할</th><th>상세팝업</th></tr></thead>
+      <tbody>
+        <tr><td>고영수</td><td><span class="role role-super">슈퍼바이저</span></td><td>✅</td></tr>
+        <tr><td>전태룡</td><td><span class="role role-super">슈퍼바이저</span></td><td>✅</td></tr>
+        <tr><td>김영미</td><td><span class="role role-full">전체관리자</span></td><td>✅</td></tr>
+        <tr><td>문동훈</td><td><span class="role role-admin">마을장</span></td><td>✅</td></tr>
+        <tr><td>유원종</td><td><span class="role role-admin">마을장</span></td><td>✅</td></tr>
+        <tr><td>정지원 외 13명</td><td><span class="role role-admin">마을장</span></td><td>❌</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- 3. admin.html -->
+<!-- ════════════════════════════════ -->
+<div class="sec" id="s3">
+  <div class="sec-hd">
+    <div class="sec-ico">📋</div>
+    <div>
+      <div class="sec-num">03</div>
+      <div class="sec-name">admin.html — 관리자 화면</div>
+    </div>
+  </div>
+
+  <div class="tab-card">
+    <div class="tab-card-hd"><div class="tab-ico-lg">📋</div>
+    <div class="tab-content">
+      <div class="tab-name">명단 탭</div>
+      <div class="tab-roles">
+        <span class="role role-super">슈퍼</span>
+        <span class="role role-full">전체</span>
+        <span class="role role-admin">마을장</span>
+      </div>
+      <div class="tab-desc">전체 신청자 명단을 카드 형태로 표시합니다. 마을장은 자신의 마을 신청자만 필터링됩니다.</div>
+      <div class="tab-detail">
+        <ul>
+          <li>상단 통계 바: 총 인원 / 버스1호차 / 버스2호차 / 자가용 / 참석 현황 표시</li>
+          <li>검색: 이름·관리번호·목장·마을 실시간 검색</li>
+          <li>필터: 마을·신청유형·차량·참여일정별 필터</li>
+          <li>카드 탭: 이름 클릭 → 상세 팝업 (detailPopup 권한 시)</li>
+          <li>수정: 슈퍼/전체관리자만 정보 수정 가능</li>
+          <li>삭제: 슈퍼/전체관리자만 행 삭제 가능</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-card">
+    <div class="tab-card-hd"><div class="tab-ico-lg">📊</div>
+    <div class="tab-content">
+      <div class="tab-name">통계 탭</div>
+      <div class="tab-roles">
+        <span class="role role-super">슈퍼</span>
+        <span class="role role-full">전체</span>
+      </div>
+      <div class="tab-desc">마을별·목장별 신청 현황을 차트와 표로 보여줍니다.</div>
+      <div class="tab-detail">
+        <ul>
+          <li>마을별 신청 인원 바 차트</li>
+          <li>신청유형(개인/가족/단체)별 집계</li>
+          <li>참여일정·차량 유형별 분포</li>
+          <li>버스 탑승 현황: 1호차 / 2호차 잔여석</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-card">
+    <div class="tab-card-hd"><div class="tab-ico-lg">🔍</div>
+    <div class="tab-content">
+      <div class="tab-name">확인필요 탭</div>
+      <div class="tab-roles">
+        <span class="role role-super">슈퍼</span>
+        <span class="role role-full">전체</span>
+      </div>
+      <div class="tab-desc">주민번호 누락, 전화번호 이상, 동승운전자 미입력 등 데이터 점검이 필요한 건을 자동으로 추출합니다.</div>
+      <div class="tab-detail">
+        <ul>
+          <li>주민등록번호 6자리 미입력</li>
+          <li>전화번호 형식 오류</li>
+          <li>버스 선택 + 동승운전자 미입력</li>
+          <li>참여일정·숙소 미입력</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-card">
+    <div class="tab-card-hd"><div class="tab-ico-lg">💰</div>
+    <div class="tab-content">
+      <div class="tab-name">회계 탭</div>
+      <div class="tab-roles">
+        <span class="role role-super">슈퍼</span>
+        <span class="role role-full">전체</span>
+      </div>
+      <div class="tab-desc">납부 현황 관리 및 마을별 정산 요약을 제공합니다.</div>
+      <div class="tab-detail">
+        <ul>
+          <li>납부 상태: 미납 / 부분납 / 완납 / 환불</li>
+          <li>납부일자·금액·메모 직접 입력 후 저장</li>
+          <li>마을별 납부 집계 테이블</li>
+          <li>미납자 빠른 필터</li>
+          <li>납부 데이터는 <code>MET2026납부</code> 시트에 별도 저장</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-card">
+    <div class="tab-card-hd"><div class="tab-ico-lg">📝</div>
+    <div class="tab-content">
+      <div class="tab-name">수정로그 탭</div>
+      <div class="tab-roles">
+        <span class="role role-super">슈퍼</span>
+        <span class="role role-full">전체</span>
+      </div>
+      <div class="tab-desc">누가 언제 어떤 필드를 어떻게 수정했는지 전체 이력을 조회합니다.</div>
+      <div class="tab-detail">
+        <ul>
+          <li>최신순 정렬</li>
+          <li>본인이 수정한 건: 파란 테두리 + <strong>👤 내 수정</strong> 배지 표시</li>
+          <li>변경 전/후 값 비교 표시</li>
+          <li>상세 필터는 super-admin.html에서 제공</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">✏️ 정보 수정 절차</div>
+    <div class="flow">
+      <div class="flow-step">명단 카드 클릭</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">상세 팝업</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">수정 버튼</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">필드 수정</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">저장</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">로그 자동 기록</div>
+    </div>
+    <div class="callout info" style="margin-top:8px;">
+      <span class="callout-ico">ℹ️</span>
+      <span>수정 가능 필드: 가족관계, 이름, 식별기호, 성별, 전화번호, 주민등록번호, 목자명, 마을, 목장, 사역팀, 참여일정, 차량, 동승운전자, 숙소, 배우자성명, 비고<br>
+      <strong>제출시각·관리번호·그룹번호·신청유형·목장구분은 수정 불가</strong>입니다.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- 4. super-admin.html -->
+<!-- ════════════════════════════════ -->
+<div class="sec" id="s4">
+  <div class="sec-hd">
+    <div class="sec-ico">⚡</div>
+    <div>
+      <div class="sec-num">04</div>
+      <div class="sec-name">super-admin.html — 슈퍼바이저 전용</div>
+    </div>
+  </div>
+
+  <div class="callout err">
+    <span class="callout-ico">🔒</span>
+    <span><strong>슈퍼바이저(고영수, 전태룡)만 접근 가능합니다.</strong> 로그인 시 role이 <code>super</code>가 아니면 입장이 거부됩니다.</span>
+  </div>
+
+  <div class="tab-card">
+    <div class="tab-card-hd"><div class="tab-ico-lg">👥</div>
+    <div class="tab-content">
+      <div class="tab-name">사용자 탭</div>
+      <div class="tab-desc">전체 18명의 역할과 상세팝업 권한을 이 화면에서 변경할 수 있습니다.</div>
+      <div class="tab-detail">
+        <ul>
+          <li>역할 변경: 슈퍼 / 전체 / 마을장 드롭다운 선택</li>
+          <li>팝업 권한: 체크박스 토글</li>
+          <li>변경 건은 노란 점으로 표시 → 하단 "변경사항 저장" 버튼으로 일괄 반영</li>
+          <li>슈퍼바이저 0명 방지 안전장치 내장</li>
+        </ul>
+        <div class="callout warn" style="margin-top:8px;">
+          <span class="callout-ico">⚠️</span>
+          <span>이 화면의 저장은 화면 내 USERS 배열만 변경됩니다. <code>admin.html</code>과 <code>Code.gs</code>에도 별도로 반영해야 완전히 적용됩니다.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-card">
+    <div class="tab-card-hd"><div class="tab-ico-lg">📝</div>
+    <div class="tab-content">
+      <div class="tab-name">수정로그 탭</div>
+      <div class="tab-desc">admin.html의 수정로그보다 강력한 필터링 기능을 제공합니다.</div>
+      <div class="tab-detail">
+        <ul>
+          <li>이름 / 관리번호 / 수정자 통합 검색</li>
+          <li>수정자별 필터 (드롭다운)</li>
+          <li>변경 필드별 필터 (드롭다운)</li>
+          <li>요약 표시: 전체 N건 중 M건, 내 수정 K건</li>
+          <li>본인 수정 건 파란 강조 표시</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-card">
+    <div class="tab-card-hd"><div class="tab-ico-lg">🗑</div>
+    <div class="tab-content">
+      <div class="tab-name">삭제이력 탭</div>
+      <div class="tab-desc">수정로그에서 삭제 관련 항목을 자동으로 추출합니다.</div>
+      <div class="tab-detail">
+        <ul>
+          <li>현재 GAS에 삭제 로그 미기록 시 → Code.gs 보완 방법 화면에 안내</li>
+          <li>삭제 로그 기록을 추가하려면 <code>deleteRowsByRno()</code> 함수 안에 <code>logEdit()</code> 호출 추가 필요</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-card">
+    <div class="tab-card-hd"><div class="tab-ico-lg">⚙️</div>
+    <div class="tab-content">
+      <div class="tab-name">GAS 유틸 탭</div>
+      <div class="tab-desc">GAS 서버에서 직접 실행하는 유틸리티 기능 6가지를 제공합니다.</div>
+      <div class="tab-detail">
+        <table class="tbl" style="margin-top:4px;">
+          <thead><tr><th>유틸</th><th>설명</th><th>주의</th></tr></thead>
+          <tbody>
+            <tr><td>관리번호 재정렬</td><td>제출시각 기준 A/F/G 번호 전체 재부여</td><td>⚠️ 위험</td></tr>
+            <tr><td>시각복구+재정렬</td><td>제출시각 누락 복구 후 재정렬</td><td>⚠️ 위험</td></tr>
+            <tr><td>오타·그룹번호 교정</td><td>오타 자동 수정</td><td>확인 후 실행</td></tr>
+            <tr><td>버스 현황 조회</td><td>버스 탑승 인원·잔여석</td><td>—</td></tr>
+            <tr><td>테스트 이메일</td><td>GAS 이메일 발송 테스트</td><td>—</td></tr>
+            <tr><td>납부시트 동기화</td><td>납부 시트 이름·금액 보정</td><td>확인 후 실행</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- 5. 구글시트 구조 -->
+<!-- ════════════════════════════════ -->
+<div class="sec" id="s5">
+  <div class="sec-hd">
+    <div class="sec-ico">📑</div>
+    <div>
+      <div class="sec-num">05</div>
+      <div class="sec-name">구글시트 구조</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 MET2026신청 (주 데이터)</div>
+    <div class="sheet-cols">
+      <span class="col-chip col-key">제출시각</span>
+      <span class="col-chip col-key">관리번호</span>
+      <span class="col-chip col-key">그룹번호</span>
+      <span class="col-chip col-key">신청유형</span>
+      <span class="col-chip col-key">목장구분</span>
+      <span class="col-chip col-edit">가족관계</span>
+      <span class="col-chip col-edit">이름</span>
+      <span class="col-chip col-edit">식별기호</span>
+      <span class="col-chip col-edit">성별</span>
+      <span class="col-chip col-edit">전화번호</span>
+      <span class="col-chip col-edit">주민등록번호</span>
+      <span class="col-chip col-edit">목자명</span>
+      <span class="col-chip col-edit">마을</span>
+      <span class="col-chip col-edit">목장</span>
+      <span class="col-chip col-edit">사역팀</span>
+      <span class="col-chip col-edit">참여일정</span>
+      <span class="col-chip col-edit">차량</span>
+      <span class="col-chip col-edit">동승운전자</span>
+      <span class="col-chip col-edit">숙소</span>
+      <span class="col-chip col-edit">배우자성명</span>
+      <span class="col-chip col-edit">비고</span>
+      <span class="col-chip col-sys">기기유형</span>
+    </div>
+    <p style="font-size:10px;color:var(--text3);margin-top:8px;">
+      <span class="col-chip col-key">파란색</span> = 구조값 (수정불가) &nbsp;
+      <span class="col-chip col-edit">초록색</span> = 수정가능 &nbsp;
+      <span class="col-chip col-sys">회색</span> = 시스템값
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">💰 MET2026납부</div>
+    <div class="sheet-cols">
+      <span class="col-chip col-key">rno</span>
+      <span class="col-chip col-edit">pay_status</span>
+      <span class="col-chip col-edit">pay_amount</span>
+      <span class="col-chip col-edit">pay_date</span>
+      <span class="col-chip col-edit">pay_memo</span>
+      <span class="col-chip col-sys">updated_at</span>
+      <span class="col-chip col-sys">name</span>
+      <span class="col-chip col-sys">amount_calc</span>
+    </div>
+    <p style="font-size:11px;color:var(--text2);margin-top:8px;">관리번호(rno) 기준으로 신청 시트와 1:1 연결됩니다.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📝 MET2026수정로그</div>
+    <div class="sheet-cols">
+      <span class="col-chip col-sys">수정시각</span>
+      <span class="col-chip col-sys">관리번호</span>
+      <span class="col-chip col-sys">이름</span>
+      <span class="col-chip col-sys">수정자</span>
+      <span class="col-chip col-sys">필드</span>
+      <span class="col-chip col-sys">변경전</span>
+      <span class="col-chip col-sys">변경후</span>
+    </div>
+    <p style="font-size:11px;color:var(--text2);margin-top:8px;">수정자 형식: <code>이름:전화번호4자리</code> (예: <code>전태룡:7463</code>). 직접 편집 금지.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔢 _카운터</div>
+    <p style="font-size:12px;color:var(--text2);line-height:1.7;">
+      A1: 개인(A) 카운터 · B1: 가족(F) 카운터 · C1: 단체(G) 카운터<br>
+      관리번호 자동 부여 시 이 값을 읽고 +1 저장합니다. <strong>직접 수정하면 번호 중복이 발생할 수 있으니 반드시 GAS유틸 재정렬을 사용하세요.</strong>
+    </p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- 6. 신청서 (index.html) -->
+<!-- ════════════════════════════════ -->
+<div class="sec" id="s6">
+  <div class="sec-hd">
+    <div class="sec-ico">📝</div>
+    <div>
+      <div class="sec-num">06</div>
+      <div class="sec-name">신청서 (index.html)</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📌 신청 유형별 흐름</div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>유형</th><th>관리번호</th><th>그룹번호</th><th>설명</th></tr></thead>
+      <tbody>
+        <tr><td>개인</td><td><code>2026-A001</code></td><td>=관리번호</td><td>1명 단독 신청</td></tr>
+        <tr><td>가족</td><td><code>2026-F001</code> 외</td><td>공동 1개</td><td>대표자 1건 → 구성원 추가 행 저장</td></tr>
+        <tr><td>단체</td><td><code>2026-G001</code> 외</td><td>공동 1개</td><td>목장 단위 일괄 신청</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📧 이메일 알림</div>
+    <p style="font-size:12px;color:var(--text2);line-height:1.7;">
+      신청 완료 시 자동으로 알림 이메일이 발송됩니다.<br>
+      수신 대상: <code>0691kys@jiguchon.org</code>, <code>dtrjeon@gmail.com</code>, <code>wj5961@naver.com</code>, <code>mdh6211@hanmail.net</code>
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔍 본인 조회 / 삭제</div>
+    <p style="font-size:12px;color:var(--text2);line-height:1.7;">
+      교인이 이름과 주민번호 6자리로 자신의 신청 건을 조회하고 직접 삭제할 수 있습니다. (<code>lookup</code> + <code>selfDelete</code> 액션 사용)
+    </p>
+    <div class="callout warn" style="margin-top:8px;">
+      <span class="callout-ico">⚠️</span>
+      <span>본인 삭제는 현재 수정로그에 기록되지 않습니다. 삭제 이력이 필요하면 Code.gs의 <code>selfDeleteRow()</code>에 <code>logEdit()</code> 호출을 추가해야 합니다.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- 7. GAS API 레퍼런스 -->
+<!-- ════════════════════════════════ -->
+<div class="sec" id="s7">
+  <div class="sec-hd">
+    <div class="sec-ico">🔌</div>
+    <div>
+      <div class="sec-num">07</div>
+      <div class="sec-name">GAS API 레퍼런스</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">GET 액션</div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>action</th><th>인증</th><th>설명</th></tr></thead>
+      <tbody>
+        <tr><td><code>data</code></td><td>full 이상</td><td>전체 신청 데이터 JSON 반환</td></tr>
+        <tr><td><code>busstat</code></td><td>없음</td><td>버스 탑승 현황 반환</td></tr>
+        <tr><td><code>editLog</code></td><td>super만</td><td>수정로그 전체 JSON 반환</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">POST 액션</div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>action</th><th>인증</th><th>설명</th></tr></thead>
+      <tbody>
+        <tr><td><code>submit</code></td><td>없음</td><td>신청서 제출 (index.html → GAS)</td></tr>
+        <tr><td><code>updateRow</code></td><td>full 이상</td><td>특정 행 필드 수정 + 수정로그 기록</td></tr>
+        <tr><td><code>deleteRows</code></td><td>full 이상</td><td>관리번호 배열로 행 삭제</td></tr>
+        <tr><td><code>savePay</code></td><td>full 이상</td><td>납부 정보 저장</td></tr>
+        <tr><td><code>lookup</code></td><td>없음</td><td>이름+주민번호로 본인 조회</td></tr>
+        <tr><td><code>selfDelete</code></td><td>없음</td><td>본인 신청 건 삭제</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔄 재배포 시 주의사항</div>
+    <p style="font-size:12px;color:var(--text2);line-height:1.7;">
+      Code.gs를 수정한 경우 반드시 Apps Script 편집기에서 <strong>새 버전으로 재배포</strong>해야 합니다.<br>
+      배포 URL은 변경되지 않으므로 HTML의 <code>GAS_URL</code>은 수정 불필요.
+    </p>
+    <div class="flow" style="margin-top:10px;">
+      <div class="flow-step">배포 메뉴</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">배포 관리</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">✏️ 수정</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">새 버전 선택</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">배포</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- 8. FAQ -->
+<!-- ════════════════════════════════ -->
+<div class="sec" id="s8">
+  <div class="sec-hd">
+    <div class="sec-ico">❓</div>
+    <div>
+      <div class="sec-num">08</div>
+      <div class="sec-name">자주 묻는 질문 (FAQ)</div>
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">
+      <span class="faq-q-ico">Q</span>새 관리자를 추가하려면?
+    </div>
+    <div class="faq-a">
+      <code>admin.html</code>, <code>super-admin.html</code>, <code>Code.gs</code> 세 곳의 <code>USERS</code> 배열에 동일하게 추가합니다.<br>
+      Code.gs 수정 후 재배포 필수. 형식:<br>
+      <code>{ name:'홍길동', phone:'1234', role:'admin', detailPopup:false }</code>
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">
+      <span class="faq-q-ico">Q</span>관리번호가 중복됐거나 순서가 엉켰다면?
+    </div>
+    <div class="faq-a">
+      <code>super-admin.html</code> → GAS유틸 탭 → <strong>관리번호 재정렬</strong>을 실행합니다.<br>
+      제출시각 기준으로 A/F/G 번호를 전체 재부여하며 _카운터 시트도 자동 갱신됩니다.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">
+      <span class="faq-q-ico">Q</span>본인이 수정한 건도 수정로그에 기록되나요?
+    </div>
+    <div class="faq-a">
+      네, 예외 없이 기록됩니다. 실제로 값이 바뀐 필드만 기록되며, 수정 창을 열었다 그냥 닫으면 로그가 남지 않습니다.<br>
+      본인 수정 건은 수정로그 화면에서 <strong>파란 강조 + 👤 내 수정</strong> 배지로 구분됩니다.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">
+      <span class="faq-q-ico">Q</span>버스 잔여석은 어디서 확인하나요?
+    </div>
+    <div class="faq-a">
+      admin.html 명단 탭 상단 통계 바에서 실시간 확인 가능합니다.<br>
+      버스 1호차 / 2호차 각각 39석 기준. 슈퍼바이저는 GAS유틸 탭 → 버스 현황 조회를 이용할 수 있습니다.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">
+      <span class="faq-q-ico">Q</span>삭제한 신청자 기록을 복구하려면?
+    </div>
+    <div class="faq-a">
+      현재 삭제 시 수정로그에 기록되지 않습니다. 구글시트 <code>MET2026신청</code>의 <strong>버전 기록</strong>(파일 → 버전 기록)을 통해 이전 상태로 복원할 수 있습니다.<br>
+      향후 삭제 이력 자동 기록 기능 추가 예정.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">
+      <span class="faq-q-ico">Q</span>GAS 유틸 실행 후 "처리 실패"가 뜬다면?
+    </div>
+    <div class="faq-a">
+      해당 유틸 액션이 Code.gs에 구현되어 있지 않은 경우입니다.<br>
+      슈퍼바이저에게 연락하여 Code.gs에 해당 핸들러를 추가하고 재배포를 요청하세요.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">
+      <span class="faq-q-ico">Q</span>이메일 알림이 오지 않는다면?
+    </div>
+    <div class="faq-a">
+      Apps Script 편집기에서 <strong>testEmail()</strong> 함수를 직접 실행하거나, super-admin.html GAS유틸 탭 → 테스트 이메일 발송을 실행합니다.<br>
+      GAS의 하루 이메일 발송 한도(100건)를 초과했는지도 확인하세요.
+    </div>
+  </div>
+
+</div>
+
+<hr class="divider"/>
+
+
+
+</div><!-- /wrap -->
+
+<script>
+function toggleFaq(el){
+  var ans = el.nextElementSibling;
+  ans.classList.toggle('open');
+}
+</script>
+</body>
+</html>
