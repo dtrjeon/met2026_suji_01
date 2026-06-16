@@ -135,6 +135,9 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
 .spnm{font-size:12px;font-weight:600;color:rgba(20,30,70,0.85);line-height:1.4;pointer-events:none;}
 .spinp{display:none;margin-top:8px;}
 .spinp.show{display:block;}
+/* 배우자성명 자동완성 드롭다운 */
+.spinp input[type=text]{width:100%;box-sizing:border-box;}
+#spac-wrap{position:relative;}
 
 .addbtn{width:100%;padding:14px;background:transparent;border:1.5px dashed rgba(32,80,200,0.4);border-radius:10px;font-family:‘Noto Sans KR’,sans-serif;font-size:13px;font-weight:600;color:rgba(20,60,180,0.8);cursor:pointer;margin-top:4px;min-height:50px;-webkit-appearance:none;outline:none;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:rgba(32,80,200,0.1);}
 .subbtn{width:100%;padding:16px;background:linear-gradient(135deg,#2a5cd8,#1a3ab0);border:none;border-radius:8px;font-family:‘Noto Sans KR’,sans-serif;font-size:15px;font-weight:700;color:#fff;cursor:pointer;letter-spacing:2px;margin-top:20px;min-height:52px;-webkit-appearance:none;outline:none;touch-action:manipulation;-webkit-user-select:none;user-select:none;}
@@ -520,6 +523,20 @@ if(typeof NodeList!=='undefined'&&NodeList.prototype&&!NodeList.prototype.forEac
 if(typeof Array.prototype.find==='undefined'){Array.prototype.find=function(predicate){for(var i=0;i<this.length;i++){if(predicate(this[i],i,this))return this[i];}return undefined;};}
 if(typeof Array.prototype.some==='undefined'){Array.prototype.some=function(fn){for(var i=0;i<this.length;i++){if(fn(this[i],i,this))return true;}return false;};}
 var GSURL = 'https://script.google.com/macros/s/AKfycbzvO5lEtq4xEmSrOy3oAR84M8_-hdG8SOm8xoWWCR65PRA2muH6BDvtgQjodnO9PfRq0g/exec';
+
+// 배우자성명 자동완성용 이름 목록 (페이지 로드 시 1회 로드)
+var _nameList = []; // [{name, ids, display}]
+
+function loadNameList(){
+  fetch(GSURL + '?action=names')
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(res.result==='ok') _nameList = res.data || [];
+    })
+    .catch(function(){}); // 실패해도 조용히 무시 (자동완성만 안 될 뿐)
+}
+// 페이지 로드 후 비동기로 이름 목록 가져오기
+window.addEventListener('load', function(){ loadNameList(); });
 
 // ============================================================
 // 스플래시 화면
@@ -1206,6 +1223,51 @@ function onTransChange(uid,val){
   }
 }
 
+// ── 배우자성명 자동완성 ──
+function onSpouseInput(uid, val){
+  var ac = document.getElementById('spac'+uid);
+  if(!ac) return;
+  var q = val.trim();
+  if(!q || _nameList.length===0){ ac.style.display='none'; return; }
+
+  var matches = _nameList.filter(function(item){
+    return item.name.indexOf(q)===0 || item.display.indexOf(q)===0;
+  });
+  if(matches.length===0){ ac.style.display='none'; return; }
+
+  ac.innerHTML = matches.map(function(item){
+    return '<div style="padding:9px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid rgba(32,80,200,0.08);"'
+      +' onmouseenter="this.style.background=\'rgba(32,80,200,0.07)\'"'
+      +' onmouseleave="this.style.background=\'\'">'
+      + item.display
+      + '</div>';
+  }).join('');
+
+  // 클릭 이벤트는 이벤트 위임으로 처리
+  ac.onclick = function(e){
+    var t = e.target;
+    if(t.tagName==='DIV' && t.parentNode===ac){
+      var txt = t.textContent || t.innerText;
+      selectSpouse(uid, txt);
+    }
+  };
+  ac.style.display = 'block';
+}
+
+
+function selectSpouse(uid, display){
+  var inp = document.getElementById('m'+uid+'_spouse');
+  var ac  = document.getElementById('spac'+uid);
+  if(inp) inp.value = display;
+  if(ac)  ac.style.display = 'none';
+  collect();
+}
+
+function hideSpouseAc(uid){
+  var ac = document.getElementById('spac'+uid);
+  if(ac) ac.style.display = 'none';
+}
+
 function onToggleSpouse(uid){
   collect();
   var m=members.find(function(x){return x.uid===uid;});
@@ -1336,9 +1398,7 @@ function buildCard(m,i){
     +'<div class="spchk'+(m.has_spouse?' on':'')+'" id="spchk'+m.uid+'">'+(m.has_spouse?'v':'')+'</div>'
     +'<span class="spnm">배우자는 별도로 국내선교 MET2026 삼척 신청합니다</span></button>'
     +'<div class="spinp'+(m.has_spouse?' show':'')+'" id="spinp'+m.uid+'">'
-    +'<input type="text" id="m'+m.uid+'_spouse" placeholder="배우자 성명" value="'+(m.spouse||'')+'" style="margin-top:8px;"/>'
-    +'<div class="hint">배우자 성명을 입력하면 나중에 가족으로 연결됩니다</div></div>'
-    +'</div></div>':'';
+    +'<div style="position:relative;">'+'<input type="text" id="m'+m.uid+'_spouse" placeholder="배우자 성명 입력 (예: 홍길동)" value="'+(m.spouse||'')+'"'+' autocomplete="off" spellcheck="false"'+' oninput="onSpouseInput('+m.uid+',this.value)"'+' onblur="setTimeout(function(){hideSpouseAc('+m.uid+')},200)"'+' style="width:100%;box-sizing:border-box;margin-top:8px;"/>'+'<div id="spac'+m.uid+'" style="display:none;position:absolute;top:100%;left:0;right:0;'+'background:#fff;border:1px solid rgba(32,80,200,0.25);border-radius:0 0 8px 8px;'+'box-shadow:0 4px 12px rgba(0,0,30,0.12);max-height:180px;overflow-y:auto;z-index:999;"></div>'+'</div>'+'<div class="hint">이름을 입력하면 신청자 목록에서 검색됩니다. 동명이인은 이름(식별기호)로 표시됩니다.</div></div>'+'</div></div>':'';
 
   var transH=isF
     ?'<div class="atrans">'+td+'<span>대표자 차량 자동 적용</span></div>'
@@ -1606,13 +1666,13 @@ return '<div class="doneitem"><strong>'+(i+1)+'. '+m.name+' ('+m.gender+')'
 +(!_cfmPayload.isFamily&&m.spouse?'배우자: '+m.spouse+'<br>':'')
 +(m.note?'비고: '+m.note+'<br>':'')+'</div>';
 }).join('');
-// 모든 savebar 숨김 (doneovl 위에 뜨지 않도록)
 document.querySelectorAll('.savebar').forEach(function(b){ b.style.display='none'; });
 document.getElementById('cfmpage').style.display='none';
 document.getElementById('mainpage').style.display='none';
 document.getElementById('doneovl').className='doneovl show';
 clearSave();
 }
+
 
 // –– 리셋 ––
 function doFinish(){
@@ -1791,6 +1851,7 @@ document.getElementById('restovl').className='restovl show';
     <div class="doneno" id="doneno"></div>
     <div class="doneinfo" id="doneinfo"></div>
     <div class="donelist" id="donelist"></div>
+
     <div class="doneftxt">하나님의 인도하심 가운데 귀한 사역 함께하겠습니다</div>
     <div style="margin-top:12px;padding:14px 16px;background:rgba(32,80,200,0.06);border:1px solid rgba(32,80,200,0.2);border-radius:10px;text-align:left;">
       <div style="font-size:12px;font-weight:700;color:#1a3a9e;margin-bottom:8px;">신청 내용 저장 방법</div>
