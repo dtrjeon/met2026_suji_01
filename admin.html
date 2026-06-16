@@ -198,6 +198,33 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 /* 수정로그 패널 */
 .editlog-panel{display:none;padding:12px 16px 20px;}
 .editlog-panel.show{display:block;}
+.family-panel{display:none;padding:12px 16px 20px;}
+.family-panel.show{display:block;}
+.fam-stat-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.fam-stat-chip{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(32,80,200,0.07);border:1px solid rgba(32,80,200,0.2);color:#1a3a9e;}
+.fam-group{background:#fff;border-radius:12px;box-shadow:0 1px 6px rgba(0,0,30,0.08);margin-bottom:12px;overflow:hidden;}
+.fam-group-hd{display:flex;align-items:center;gap:8px;padding:9px 14px;background:linear-gradient(135deg,rgba(32,80,200,0.08),rgba(32,80,200,0.04));border-bottom:1px solid rgba(32,80,200,0.1);}
+.fam-group-id{font-size:11px;font-weight:700;color:#1a3a9e;background:rgba(32,80,200,0.1);border-radius:5px;padding:2px 7px;}
+.fam-group-cnt{font-size:12px;font-weight:700;color:#333;}
+.fam-group-moksang{font-size:11px;color:#666;margin-left:auto;}
+.fam-group-pay{font-size:11px;font-weight:700;}
+.fam-group-pay.paid{color:#2e7d32;}
+.fam-group-pay.partial{color:#e65100;}
+.fam-group-pay.unpaid{color:#999;}
+.fam-member{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(0,0,0,0.04);}
+.fam-member:last-child{border-bottom:none;}
+.fam-member-rel{font-size:10px;font-weight:700;color:#fff;background:#1a3a9e;border-radius:4px;padding:2px 6px;min-width:28px;text-align:center;}
+.fam-member-rel.spouse{background:#6a1a9e;}
+.fam-member-rel.child{background:#2e7d32;}
+.fam-member-rel.etc{background:#888;}
+.fam-member-name{font-size:13px;font-weight:700;color:#222;min-width:60px;}
+.fam-member-info{font-size:11px;color:#666;flex:1;}
+.fam-member-spouse{font-size:11px;color:#555;}
+.fam-member-spouse.auto{font-style:italic;color:#1a3a9e;}
+.fam-member-pay{font-size:11px;font-weight:700;min-width:40px;text-align:right;}
+.fam-member-pay.paid{color:#2e7d32;}
+.fam-member-pay.unpaid{color:#bbb;}
+.fam-no-family{text-align:center;padding:32px 16px;color:#aaa;font-size:13px;}
 .editlog-card{background:var(--card);border-radius:10px;padding:10px 14px;margin-bottom:8px;box-shadow:var(--shadow);border:1px solid var(--border);}
 .editlog-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
 .editlog-name{font-size:13px;font-weight:700;color:var(--text);}
@@ -430,6 +457,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     <div class="tab" id="tabAcct" onclick="switchTab('acct')">
       <span class="tab-ico">💰</span><span class="tab-lbl">회계</span>
     </div>
+    <div class="tab" id="tabFamily" onclick="switchTab('family')">
+      <span class="tab-ico">👨‍👩‍👧</span><span class="tab-lbl">가족현황</span>
+    </div>
     <div class="tab" id="tabEditlog" onclick="switchTab('editlog')">
       <span class="tab-ico">📝</span><span class="tab-lbl">수정로그</span>
     </div>
@@ -479,6 +509,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
   <!-- 회계 패널 -->
   <div class="acct-panel" id="acctPanel"></div>
+
+  <!-- 가족현황 패널 -->
+  <div class="family-panel" id="familyPanel"></div>
 
   <!-- 수정로그 패널 -->
   <div class="editlog-panel" id="editlogPanel"></div>
@@ -575,10 +608,10 @@ var currentUser = null;
 // acct:  명단 O(팝업X), 회계 O  — 통계X, 확인필요X
 // admin: 명단 O(팝업O), 통계 O  — 회계X, 확인필요X
 var ROLE_TABS = {
-  super: ['list','stat','miss','acct','editlog'],
-  full:  ['list','stat','miss','acct'],
+  super: ['list','stat','miss','acct','family','editlog'],
+  full:  ['list','stat','miss','acct','family'],
   acct:  ['list','acct'],
-  admin: ['list','stat'],
+  admin: ['list','stat','family'],
 };
 
 function getUserRole(){ return currentUser ? currentUser.role : 'full'; }
@@ -697,7 +730,7 @@ function showApp(res) {
 }
 
 function applyTabPermissions() {
-  var tabs = ['list','stat','miss','acct','editlog'];
+  var tabs = ['list','stat','miss','acct','family','editlog'];
   tabs.forEach(function(t){
     var el = document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1));
     if (el) el.style.display = canTab(t) ? '' : 'none';
@@ -1474,6 +1507,8 @@ function switchTab(tab) {
   document.getElementById('tabStat').className = 'tab'+(tab==='stat'?' active':'');
   document.getElementById('tabMiss').className = 'tab'+(tab==='miss'?' active':'');
   document.getElementById('tabAcct').className = 'tab'+(tab==='acct'?' active':'');
+  var tabFamily = document.getElementById('tabFamily');
+  if(tabFamily) tabFamily.className = 'tab'+(tab==='family'?' active':'');
   var tabEditlog = document.getElementById('tabEditlog');
   if(tabEditlog) tabEditlog.className = 'tab'+(tab==='editlog'?' active':'');
   document.getElementById('listWrap').style.display    = tab==='list'?'block':'none';
@@ -1481,16 +1516,19 @@ function switchTab(tab) {
   document.getElementById('missPanel').className       = 'miss-panel'+(tab==='miss'?' show':'');
   document.getElementById('missSearchWrap').style.display = tab==='miss'?'block':'none';
   document.getElementById('acctPanel').className       = 'acct-panel'+(tab==='acct'?' show':'');
+  var familyPanel = document.getElementById('familyPanel');
+  if(familyPanel) familyPanel.className = 'family-panel'+(tab==='family'?' show':'');
   var editlogPanel = document.getElementById('editlogPanel');
   if(editlogPanel) editlogPanel.className = 'editlog-panel'+(tab==='editlog'?' show':'');
   document.getElementById('filterWrap').style.display  = tab==='list'?'flex':'none';
   document.querySelector('.search-wrap').style.display = tab==='list'?'block':'none';
   document.getElementById('resultBar').style.display   = tab==='list'?'block':'none';
   document.getElementById('refreshBtn').style.display  = tab==='list'?'flex':'none';
-  if(tab==='miss') renderMissing();
-  if(tab==='acct') renderAcct();
+  if(tab==='miss')    renderMissing();
+  if(tab==='acct')    renderAcct();
+  if(tab==='family')  renderFamily();
   if(tab==='editlog') loadEditLog();
-  if(tab!=='miss'&&tab!=='acct'&&tab!=='editlog') buildFilters();
+  if(tab!=='miss'&&tab!=='acct'&&tab!=='family'&&tab!=='editlog') buildFilters();
 }
 
 // ── 누락자 렌더링 ──
@@ -2628,7 +2666,114 @@ function saveEdit() {
 }
 
 // ══════════════════════════════════════════
-// 📝 수정로그 탭
+// ── 👨‍👩‍👧 가족현황 탭 ──
+function renderFamily(){
+  var panel = document.getElementById('familyPanel');
+  if(!panel) return;
+
+  // ── 1. family_id별 그룹핑 ──
+  // family_id 있으면 해당 값으로, 없으면 개인(단독)으로 처리 (단독은 표시 안 함)
+  var byFid = {};
+  allData.forEach(function(d){
+    var fid = d.family_id || '';
+    if(!fid) return; // family_id 없는 개인은 표시 안 함
+    if(!byFid[fid]) byFid[fid] = [];
+    byFid[fid].push(d);
+  });
+
+  // ── 2. 배우자성명 자동보완 맵 구성 ──
+  // 같은 family_id 그룹에서 상대방 이름을 찾아 spouse 필드가 비어있으면 자동 채움
+  // 자동 보완된 경우 autoSpouse=true 플래그 설정
+  Object.keys(byFid).forEach(function(fid){
+    var members = byFid[fid];
+    // 부부(2인) 그룹에서만 배우자성명 자동보완 적용
+    var couple = members.filter(function(m){
+      return m.rel==='본인'||m.rel==='배우자'||m.rel==='-'||m.rel==='';
+    });
+    if(couple.length === 2){
+      var m0 = couple[0], m1 = couple[1];
+      if(!m0.spouse && m1.name){ m0._autoSpouse = m1.name; }
+      if(!m1.spouse && m0.name){ m1._autoSpouse = m0.name; }
+    }
+  });
+
+  var fids = Object.keys(byFid).sort();
+  var totalFam = fids.length;
+  var totalMem = allData.filter(function(d){ return !!d.family_id; }).length;
+  var paidFam  = fids.filter(function(fid){
+    return byFid[fid].every(function(m){ return (payData[m.rno]||{}).status==='paid'; });
+  }).length;
+
+  // ── 3. 통계 바 ──
+  var html = '<div class="fam-stat-bar">'
+    + '<span class="fam-stat-chip">👨‍👩‍👧 가족그룹 '+totalFam+'팀</span>'
+    + '<span class="fam-stat-chip">👥 가족참가 '+totalMem+'명</span>'
+    + '<span class="fam-stat-chip" style="background:rgba(46,125,50,0.08);border-color:rgba(46,125,50,0.3);color:#2e7d32;">✅ 납부완료 '+paidFam+'팀</span>'
+    + '<span class="fam-stat-chip" style="background:rgba(230,81,0,0.07);border-color:rgba(230,81,0,0.25);color:#e65100;">⏳ 미완료 '+(totalFam-paidFam)+'팀</span>'
+    + '</div>';
+
+  // ── 4. 가족그룹 카드 ──
+  fids.forEach(function(fid){
+    var members = byFid[fid];
+    // 구성원 정렬: 본인 → 배우자 → 자녀/기타
+    var relOrder = {'본인':0,'배우자':1,'자녀':2,'부모':3,'기타':4,'-':5,'':5};
+    members.sort(function(a,b){
+      return (relOrder[a.rel]||5)-(relOrder[b.rel]||5);
+    });
+
+    // 납부현황
+    var paidCnt  = members.filter(function(m){ return (payData[m.rno]||{}).status==='paid'; }).length;
+    var totalFee = members.reduce(function(s,m){ return s+getFee(m); }, 0);
+    var paidFee  = members.reduce(function(s,m){
+      return s+((payData[m.rno]||{}).status==='paid'?getFee(m):0);
+    }, 0);
+    var payStatus = paidCnt===members.length?'paid':paidCnt>0?'partial':'unpaid';
+    var payLabel  = payStatus==='paid'?'✅ 완납':payStatus==='partial'?'⏳ '+(paidCnt)+'/'+members.length:'⬜ 미납';
+
+    // 대표 목장 (첫 번째 멤버 기준)
+    var rep = members[0];
+
+    html += '<div class="fam-group">';
+    html += '<div class="fam-group-hd">'
+      + '<span class="fam-group-id">'+esc(fid)+'</span>'
+      + '<span class="fam-group-cnt">'+members.length+'명</span>'
+      + (rep.moksang?'<span class="fam-group-moksang">'+esc(rep.moksang)+'</span>':'')
+      + '<span class="fam-group-pay '+payStatus+'">'+payLabel+' '+fmtWon(paidFee)+'/'+fmtWon(totalFee)+'</span>'
+      + '</div>';
+
+    members.forEach(function(m){
+      var rel = m.rel||'-';
+      var relCls = rel==='배우자'?'spouse':rel==='자녀'||rel==='부모'?'child':'';
+      var spouseVal = m.spouse || m._autoSpouse || '';
+      var spouseCls = (!m.spouse && m._autoSpouse) ? 'auto' : '';
+      var spouseHint = spouseCls ? ' (자동)' : '';
+      var pay = payData[m.rno]||{};
+      var payCls = pay.status==='paid'?'paid':'unpaid';
+      var payMark = pay.status==='paid'?'✅':'⬜';
+
+      html += '<div class="fam-member">'
+        + '<span class="fam-member-rel '+relCls+'">'+esc(rel)+'</span>'
+        + '<span class="fam-member-name">'+esc(m.name)+'</span>'
+        + '<span class="fam-member-info">'+esc(m.gender||'-')+' · '+esc(m.sched||'-')+'</span>'
+        + (spouseVal
+            ? '<span class="fam-member-spouse '+spouseCls+'">'
+              +'💑 '+esc(spouseVal)+spouseHint+'</span>'
+            : '')
+        + '<span class="fam-member-pay '+payCls+'">'+payMark+'</span>'
+        + '</div>';
+    });
+
+    html += '</div>'; // .fam-group
+  });
+
+  if(fids.length === 0){
+    html += '<div class="fam-no-family">가족DB에 등록된 그룹이 없습니다.<br>가족DB 시트를 확인해주세요.</div>';
+  }
+
+  panel.innerHTML = html;
+}
+
+// ── 수정로그 탭 ──
 // ══════════════════════════════════════════
 
 function loadEditLog() {
