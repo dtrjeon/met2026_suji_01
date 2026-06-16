@@ -2128,6 +2128,29 @@ function buildGroups(data) {
     var repIdx=allData.indexOf(members[0]);
     groups.push({ gno:gno, members:members, idx:repIdx, isFamily:isGnoFamily(gno), isGroup:isGnoGroup(gno), appType:gnoType(gno) });
   });
+
+  // ── 가족DB 기반 2차 병합: 서로 다른 gno라도 family_id가 같으면 한 그룹으로 합침 ──
+  // (예: 개인으로 각자 신청한 부부가 가족DB에서 같은 family_id로 매칭된 경우)
+  var byFamily={}, merged=[];
+  groups.forEach(function(g){
+    // family_id 병합은 '개인(1인) 그룹'에만 적용 (가족/단체 그룹은 그대로 유지)
+    if(g.members.length!==1){ merged.push(g); return; }
+    var fid = g.members[0].family_id || '';
+    if(!fid){ merged.push(g); return; }
+    if(byFamily[fid]===undefined){
+      byFamily[fid]=merged.length;
+      merged.push({gno:g.gno, members:g.members.slice(), idx:g.idx, isFamily:true, isGroup:false, appType:g.appType, familyMerged:true});
+    } else {
+      var target=merged[byFamily[fid]];
+      target.members=target.members.concat(g.members);
+      if(g.idx<target.idx) target.idx=g.idx;
+    }
+  });
+  groups=merged;
+  groups.forEach(function(g){
+    g.members.sort(function(a,b){ return (a.rel==='본인'?-1:b.rel==='본인'?1:0); });
+  });
+
   // 명단 번호순 정렬
   groups.sort(function(a,b){ return a.idx-b.idx; });
   return groups;
@@ -2280,6 +2303,7 @@ function renderAcct(){
         html+='<div class="pay-card-family-hd">'
           +'<span>&#x1f46a;</span>'
           +'<span class="pay-card-family-hd-lbl">가족 '+g.members.length+'명 &middot; '+esc(g.members[0].moksang||'-')+'</span>'
+          +(g.familyMerged?'<span style="font-size:10px;font-weight:700;color:#1a3a9e;background:rgba(32,80,200,0.08);border:1px solid rgba(32,80,200,0.2);border-radius:5px;padding:1px 5px;">🔗가족매칭</span>':'')
           +'<span class="pay-card-family-total">'+fmtWon(paidFee)+' / '+fmtWon(totalFee)+'</span>'
           +'</div>';
       }

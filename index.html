@@ -1458,10 +1458,11 @@ var mp=isAC?( members[0]?members[0].pastor:null )
       :isChildP?( members[0]?members[0].pastor:null )
       :m.pastor;
 var tr=isF?members[0].trans:m.trans;
-return {name:m.name,ids:m.ids,gender:m.gender,phone:m.phone,ssn:m.ssn,
+return {name:m.name,ids:m.ids,gender:m.gender,phone:m.phone,ssn:m.ssn||'',
 rel:m.rel,spouse:m.spouse||'',ride:m.ride||'',mteam:m.mteam,
 sched:m.sched,trans:tr,accom:m.accom,note:m.note||'',
-pn:mp?mp.n:'',pv:mp?mp.v:'',pp:mp?mp.p:''};
+pn:mp?mp.n:'',pv:mp?mp.v:'',pp:mp?mp.p:'',
+rno:m._loadedRno||''};
 });
 
 _cfmMdata=mdata;
@@ -1494,7 +1495,7 @@ mdata.forEach(function(m,i){
     +cfmRow('이름',m.name+(m.ids?' ('+m.ids+')':''))
     +cfmRow('성별',m.gender)
     +cfmRow('전화번호',m.phone)
-    +cfmRow('주민등록번호',m.ssn||'-')
+    +cfmRow('주민등록번호',m.ssn?m.ssn:(m.rno?'(기존 등록값 유지)':'-'))
     +cfmRow('목자명',m.pn||'-')
     +cfmRow('마을',m.pv||'-')
     +cfmRow('목장',m.pp||'-')
@@ -1580,19 +1581,7 @@ fetch(GSURL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlen
 .then(function(data){
   var rnos = data.rnos || [];
   var gno  = data.gno  || '';
-  // 이메일 발송 요청 (결과와 무관하게 완료 화면 진행)
-  try {
-    var emailPs = 'data=' + encodeURIComponent(JSON.stringify({
-      action: 'sendEmail',
-      emailTo: '0691kys@jiguchon.org,dtrjeon@gmail.com',
-      gno: gno,
-      rnos: rnos,
-      payload: _cfmPayload
-    }));
-    fetch(GSURL, {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:emailPs})
-      .catch(function(){});
-  } catch(e){}
-  showDone(rnos, gno);
+  showDone(rnos, gno, data.updated===true);
 })
 .catch(function(){
   btn.textContent='✅ 완료 및 제출하기'; btn.disabled=false;
@@ -1600,12 +1589,13 @@ fetch(GSURL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlen
 });
 }
 
-function showDone(rnos, gno){
+function showDone(rnos, gno, isUpdate){
 var isGrp=_cfmPayload.isFamily&&_cfmMdata.length>1;
 document.getElementById('doneno').textContent=
   gno ? (isGrp?'그룹번호 '+gno:'관리번호 '+rnos[0]) : '번호 확인 중…';
 document.getElementById('doneinfo').innerHTML=
-  (isGrp?'가족 '+_cfmMdata.length+'명':'개인 신청')
+  (isUpdate?'✏️ 정보 수정 완료 — ':'')
+  +(isGrp?'가족 '+_cfmMdata.length+'명':'개인 신청')
   +(_cfmPayload.isCouple===true?' - 부부목장':_cfmPayload.isCouple===false?' - 형제/자매목장':'');
 document.getElementById('donelist').innerHTML=_cfmMdata.map(function(m,i){
 return '<div class="doneitem"><strong>'+(i+1)+'. '+m.name+' ('+m.gender+')'
@@ -1637,19 +1627,6 @@ function doFinish(){
     msg.innerHTML = '브라우저 탭을 닫아주세요.';
   }
   document.getElementById('endovl').className='endovl show';
-}
-
-function doReset(){
-document.getElementById('doneovl').className='doneovl';
-cfmHide();
-isCouple=null;
-document.getElementById('couplebox').className='couple-box';
-document.getElementById('cbtnyes').className='couple-btn';
-document.getElementById('cbtnno').className='couple-btn';
-document.getElementById('addbtn').style.display='none';
-members=[nm('본인')];
-setAppType('individual');
-render(); clearSave();
 }
 
 // ============================================================
