@@ -97,6 +97,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .tag.mteam{background:#e8f5e9;color:var(--green);}
 .tag.sched{background:#fff3e0;color:var(--orange);}
 .tag.trans{background:#f3e5f5;color:#7b1fa2;}
+.tag.accom{background:#e8f5e9;color:#2e7d32;}
 .tag.rel{background:#fffde7;color:var(--yellow);}
 .card-rno{font-size:10px;color:rgba(26,58,176,0.5);font-weight:700;flex-shrink:0;}
 .card-arrow{font-size:14px;color:var(--text3);flex-shrink:0;margin-left:4px;}
@@ -211,6 +212,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .fam-group-pay.paid{color:#2e7d32;}
 .fam-group-pay.partial{color:#e65100;}
 .fam-group-pay.unpaid{color:#999;}
+.fam-group .card{border-radius:0;box-shadow:none;border-top:1px solid rgba(0,0,0,0.06);margin-bottom:0;}
+.fam-group .card:last-child{border-radius:0 0 12px 12px;}
 .fam-member{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(0,0,0,0.04);}
 .fam-member:last-child{border-bottom:none;}
 .fam-member-rel{font-size:10px;font-weight:700;color:#fff;background:#1a3a9e;border-radius:4px;padding:2px 0;width:36px;min-width:36px;text-align:center;flex-shrink:0;}
@@ -980,43 +983,101 @@ function renderList() {
     wrap.innerHTML = '<div class="empty"><div class="empty-ico">🔍</div><div class="empty-txt">해당하는 신청자가 없습니다</div></div>';
     return;
   }
+
+  // 가족 필터 선택 시 family_id별 그룹핑 렌더링
+  var ftype = document.getElementById('fType').value;
+  if (ftype === '가족') {
+    renderListGrouped();
+    return;
+  }
+
   var total = filtered.length;
   wrap.innerHTML = filtered.map(function(d, i) {
-    var isFamily = isInFamilyDB(d);
-    var isGroup  = d.type === '단체' || isGnoGroup(d.gno);
-    var youth = isYouth(d);
-    var grade = youthGrade(d);
-    var tags = '';
-    if (d.village) tags += '<span class="tag village">' + esc(d.village) + '</span>';
-    if (d.mteam)   tags += '<span class="tag mteam">'   + esc(d.mteam)   + '</span>';
-    if (d.sched)   tags += '<span class="tag sched">'   + esc(d.sched)   + '</span>';
-    if (d.trans)   tags += '<span class="tag trans">'   + esc(d.trans)   + '</span>';
-    if (isFamily && d.rel) tags += '<span class="tag rel">' + esc(d.rel) + '</span>';
-    if (youth) tags += '<span class="tag" style="background:rgba(255,140,0,0.12);color:#b85c00;border:1px solid rgba(255,140,0,0.3);font-weight:700;">🎒'+esc(grade)+'</span>';
-    // 카드 번호 색상: 청소년=주황, 가족=갈색, 일반=파랑
-    var numBg = youth
-      ? 'linear-gradient(135deg,#f07000,#c85000)'
-      : (isGroup  ? 'linear-gradient(135deg,#7b1fa2,#4a148c)'
-      : (isFamily ? 'linear-gradient(135deg,#c87820,#a05a10)'
-                  : 'linear-gradient(135deg,#2050c8,#1a3a9e)'));
-    return '<div class="card" onclick="openDetail(' + i + ')">'
-      + '<div class="card-top">'
-      + '<div class="card-num" style="background:'+numBg+'">' + (youth?'🎒':'')+(total-i) + '</div>'
-      + '<div class="card-info">'
-      + '<div class="card-name">'
-      + (youth?'<span style="margin-right:3px;">🎒</span>':'')
-      + esc(d.name)
-      + (grade?'<span style="font-size:10px;padding:1px 6px;border-radius:4px;background:rgba(255,140,0,0.12);color:#b85c00;border:1px solid rgba(255,140,0,0.25);font-weight:700;margin-left:5px;">'+esc(grade)+'</span>':'')
-      + (d.ids?' <small style="color:rgba(32,80,200,0.7);font-size:11px;font-weight:700;">(' + esc(d.ids) + ')</small>':'')
-      + '<span class="gender">' + esc(d.gender) + '</span></div>'
-      + '<div class="card-sub">' + esc(d.pastor||'-') + ' / ' + esc(d.moksang||'-') + (d.phone?' · '+esc(d.phone):'') + '</div>'
-      + '<div class="card-tags">' + tags + '</div>'
-      + '</div>'
-      + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">'
-      + '<div class="card-rno">' + esc(d.rno) + '</div>'
-      + '<div class="card-arrow">›</div>'
-      + '</div></div></div>';
+    return renderCard(d, i, total);
   }).join('');
+}
+
+// ── 가족 필터 시 그룹핑 렌더링 ──
+function renderListGrouped() {
+  var wrap = document.getElementById('listWrap');
+
+  // family_id별로 그룹핑 (filtered 순서 유지)
+  var groups = {};   // family_id → [멤버]
+  var groupOrder = []; // family_id 등장 순서
+  filtered.forEach(function(d) {
+    var fid = d.family_id || ('_solo_' + d.rno);
+    if (!groups[fid]) { groups[fid] = []; groupOrder.push(fid); }
+    groups[fid].push(d);
+  });
+
+  // filtered 전체 인덱스 맵 (openDetail용)
+  var rnoToIdx = {};
+  filtered.forEach(function(d, i) { rnoToIdx[d.rno] = i; });
+
+  var html = '';
+  var total = filtered.length;
+
+  groupOrder.forEach(function(fid) {
+    var members = groups[fid];
+    var isSolo = fid.indexOf('_solo_') === 0;
+    var rep = members[0];
+
+    if (isSolo) {
+      // 단독(family_id 없는) 카드는 그대로 렌더
+      html += renderCard(rep, rnoToIdx[rep.rno], total);
+    } else {
+      // 가족 그룹 묶음
+      html += '<div class="fam-group">'
+        + '<div class="fam-group-hd">'
+        + '<span class="fam-group-id">' + esc(fid) + '</span>'
+        + '<span class="fam-group-cnt">' + members.length + '명</span>'
+        + '<span class="fam-group-moksang">' + esc(rep.moksang || '-') + '</span>'
+        + '</div>';
+      members.forEach(function(m) {
+        html += renderCard(m, rnoToIdx[m.rno], total);
+      });
+      html += '</div>';
+    }
+  });
+
+  wrap.innerHTML = html;
+}
+
+function renderCard(d, i, total) {
+  var isFamily = isInFamilyDB(d);
+  var isGroup  = d.type === '단체' || isGnoGroup(d.gno);
+  var youth = isYouth(d);
+  var grade = youthGrade(d);
+  var tags = '';
+  if (d.village) tags += '<span class="tag village">' + esc(d.village) + '</span>';
+  if (d.mteam)   tags += '<span class="tag mteam">'   + esc(d.mteam)   + '</span>';
+  if (d.sched)   tags += '<span class="tag sched">'   + esc(d.sched)   + '</span>';
+  if (d.trans)   tags += '<span class="tag trans">'   + esc(d.trans)   + '</span>';
+  if (d.accom)   tags += '<span class="tag accom">'   + esc(d.accom)   + '</span>';
+  if (isFamily && d.rel) tags += '<span class="tag rel">' + esc(d.rel) + '</span>';
+  if (youth) tags += '<span class="tag" style="background:rgba(255,140,0,0.12);color:#b85c00;border:1px solid rgba(255,140,0,0.3);font-weight:700;">🎒'+esc(grade)+'</span>';
+  var numBg = youth
+    ? 'linear-gradient(135deg,#f07000,#c85000)'
+    : (isGroup  ? 'linear-gradient(135deg,#7b1fa2,#4a148c)'
+    : (isFamily ? 'linear-gradient(135deg,#c87820,#a05a10)'
+                : 'linear-gradient(135deg,#2050c8,#1a3a9e)'));
+  return '<div class="card" onclick="openDetail(' + i + ')">'
+    + '<div class="card-top">'
+    + '<div class="card-num" style="background:'+numBg+'">' + (youth?'🎒':'')+(total-i) + '</div>'
+    + '<div class="card-info">'
+    + '<div class="card-name">'
+    + (youth?'<span style="margin-right:3px;">🎒</span>':'')
+    + esc(d.name)
+    + (grade?'<span style="font-size:10px;padding:1px 6px;border-radius:4px;background:rgba(255,140,0,0.12);color:#b85c00;border:1px solid rgba(255,140,0,0.25);font-weight:700;margin-left:5px;">'+esc(grade)+'</span>':'')
+    + (d.ids?' <small style="color:rgba(32,80,200,0.7);font-size:11px;font-weight:700;">(' + esc(d.ids) + ')</small>':'')
+    + '<span class="gender">' + esc(d.gender) + '</span></div>'
+    + '<div class="card-sub">' + esc(d.pastor||'-') + ' / ' + esc(d.moksang||'-') + (d.phone?' · '+esc(d.phone):'') + '</div>'
+    + '<div class="card-tags">' + tags + '</div>'
+    + '</div>'
+    + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">'
+    + '<div class="card-rno">' + esc(d.rno) + '</div>'
+    + '<div class="card-arrow">›</div>'
+    + '</div></div></div>';
 }
 
 // ── 상세 보기 ──
