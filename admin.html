@@ -2187,7 +2187,7 @@ function exportPayExcel() {
   XLSX.writeFile(wb, 'MET2026_납부현황_' + ts + '.xlsx');
 }
 
-var acctFilter = { status:'all', village:'', search:'', groupType:'all' };
+var acctFilter = { status:'all', village:'', moksang:'', search:'', groupType:'all', sortBy:'unpaid', viewMode:'village' };
 
 // gno가 2026-G로 시작하면 가족, 2026-A로 시작하면 개인
 // 번호 prefix로 신청유형 판별
@@ -2313,46 +2313,70 @@ function renderAcct(){
     +'<button class="acct-fbtn exempt-f'+(acctFilter.status==='exempt'?' active':'')+'" onclick="setAcctFilter(&apos;exempt&apos;)">&#x1f516; 면제 ('+exemptCnt+')</button>'
     +'</div>';
 
-  // 개인/가족/단체 필터
+  // ── 개인/가족 필터 (단체 제외) ──
   var allGroups=buildGroups(allData);
-  var indivCnt  =allGroups.filter(function(g){return g.appType==='individual';}).reduce(function(s,g){return s+g.members.length;},0);
-  var familyCnt =allGroups.filter(function(g){return g.appType==='family';}).reduce(function(s,g){return s+g.members.length;},0);
-  var groupCnt  =allGroups.filter(function(g){return g.appType==='group';}).reduce(function(s,g){return s+g.members.length;},0);
+  var indivCnt =allGroups.filter(function(g){return g.appType==='individual';}).reduce(function(s,g){return s+g.members.length;},0);
+  var familyCnt=allGroups.filter(function(g){return g.appType==='family'||g.familyMerged;}).reduce(function(s,g){return s+g.members.length;},0);
   html+='<div class="acct-filter" style="margin-top:-2px;">'
     +'<button class="acct-fbtn'+(acctFilter.groupType==='all'?' active':'')+'" onclick="setAcctGroupType(&apos;all&apos;)">전체 ('+total+')</button>'
-    +'<button class="acct-fbtn'+(acctFilter.groupType==='indiv'?' active':'')+'" style="'+(acctFilter.groupType==='indiv'?'background:#2050c8;border-color:#2050c8;color:#fff;':'background:rgba(32,80,200,0.07);border-color:rgba(32,80,200,0.25);color:#1a3a9e;')+'" onclick="setAcctGroupType(&apos;indiv&apos;)">&#x1f464; 개인 ('+indivCnt+')</button>'
-    +'<button class="acct-fbtn'+(acctFilter.groupType==='family'?' active':'')+'" style="'+(acctFilter.groupType==='family'?'background:#7a4800;border-color:#7a4800;color:#fff;':'background:rgba(200,140,20,0.07);border-color:rgba(200,140,20,0.3);color:#7a4800;')+'" onclick="setAcctGroupType(&apos;family&apos;)">&#x1f46a; 가족 ('+familyCnt+')</button>'
-    +'<button class="acct-fbtn'+(acctFilter.groupType==='group'?' active':'')+'" style="'+(acctFilter.groupType==='group'?'background:#7b1fa2;border-color:#7b1fa2;color:#fff;':'background:rgba(123,31,162,0.07);border-color:rgba(123,31,162,0.25);color:#7b1fa2;')+'" onclick="setAcctGroupType(&apos;group&apos;)">&#x1f4cb; 단체 ('+groupCnt+')</button>'
+    +'<button class="acct-fbtn'+(acctFilter.groupType==='indiv'?' active':'')+'" style="'+(acctFilter.groupType==='indiv'?'background:#2050c8;border-color:#2050c8;color:#fff;':'background:rgba(32,80,200,0.07);border-color:rgba(32,80,200,0.25);color:#1a3a9e;')+'" onclick="setAcctGroupType(&apos;indiv&apos;)">🙍 개인 ('+indivCnt+')</button>'
+    +'<button class="acct-fbtn'+(acctFilter.groupType==='family'?' active':'')+'" style="'+(acctFilter.groupType==='family'?'background:#7a4800;border-color:#7a4800;color:#fff;':'background:rgba(200,140,20,0.07);border-color:rgba(200,140,20,0.3);color:#7a4800;')+'" onclick="setAcctGroupType(&apos;family&apos;)">👨‍👩 가족 ('+familyCnt+')</button>'
     +'</div>';
 
-  // 마을 필터
-  html+='<div class="acct-village-filter">'
-    +'<button class="acct-vbtn'+(acctFilter.village===''?' active':'')+'" onclick="setAcctVillage(&apos;&apos;)">전체</button>';
-  villages.forEach(function(v){
-    html+='<button class="acct-vbtn'+(acctFilter.village===v?' active':'')+'" onclick="setAcctVillage(&apos;'+esc(v)+'&apos;)">'+esc(v)+'</button>';
-  });
-  html+='</div>';
+  // ── 조회 방식: 마을별 / 목장명별 / 등록순 ──
+  html+='<div class="acct-filter" style="margin-top:4px;">'
+    +'<button class="acct-fbtn'+(acctFilter.viewMode==='village'?' active':'')+'" onclick="setAcctViewMode(&apos;village&apos;)">🏘️ 마을별</button>'
+    +'<button class="acct-fbtn'+(acctFilter.viewMode==='moksang'?' active':'')+'" onclick="setAcctViewMode(&apos;moksang&apos;)">⛪ 목장명별</button>'
+    +'<button class="acct-fbtn'+(acctFilter.viewMode==='order'?' active':'')+'" onclick="setAcctViewMode(&apos;order&apos;)">📋 등록순(개별)</button>'
+    +'</div>';
 
-  // 검색
-  html+='<div class="acct-search">&#x1f50d; <input type="text" placeholder="이름 검색&hellip;" value="'+esc(acctFilter.search)+'" oninput="setAcctSearch(this.value)" autocorrect="off" autocapitalize="off" spellcheck="false"/></div>';
+  // ── 마을별 또는 목장명별 세부 필터 ──
+  if(acctFilter.viewMode==='village'){
+    var villages2=uniq(allData.map(function(d){return d.village;}).filter(Boolean)).sort();
+    html+='<div class="acct-village-filter">'
+      +'<button class="acct-vbtn'+(acctFilter.village===''?' active':'')+'" onclick="setAcctVillage(&apos;&apos;)">전체</button>';
+    villages2.forEach(function(v){
+      html+='<button class="acct-vbtn'+(acctFilter.village===v?' active':'')+'" onclick="setAcctVillage(&apos;'+esc(v)+'&apos;)">'+esc(v)+'</button>';
+    });
+    html+='</div>';
+  } else if(acctFilter.viewMode==='moksang'){
+    var moksangs=uniq(allData.map(function(d){return d.moksang;}).filter(function(m){
+      return m && m!=='-' && !/부부목장|형제목장|자매목장/.test(m);
+    })).sort();
+    html+='<div class="acct-village-filter">'
+      +'<button class="acct-vbtn'+(acctFilter.moksang===''?' active':'')+'" onclick="setAcctMoksang(&apos;&apos;)">전체</button>';
+    moksangs.forEach(function(m){
+      html+='<button class="acct-vbtn'+(acctFilter.moksang===m?' active':'')+'" onclick="setAcctMoksang(&apos;'+esc(m)+'&apos;)">'+esc(m)+'</button>';
+    });
+    html+='</div>';
+  }
 
-  // 필터 적용 후 그룹 빌드
+  // ── 검색 ──
+  html+='<div class="acct-search">🔍 <input type="text" placeholder="이름 검색…" value="'+esc(acctFilter.search)+'" oninput="setAcctSearch(this.value)" autocorrect="off" autocapitalize="off" spellcheck="false"/></div>';
+
+  // ── 필터 적용 ──
   var filtered2=allData.filter(function(d){
-    if(acctFilter.village && d.village!==acctFilter.village) return false;
+    // 마을별 필터
+    if(acctFilter.viewMode==='village' && acctFilter.village && d.village!==acctFilter.village) return false;
+    // 목장명별 필터 (부부목장/형제목장/자매목장 제외)
+    if(acctFilter.viewMode==='moksang' && acctFilter.moksang && d.moksang!==acctFilter.moksang) return false;
+    // 검색
     if(acctFilter.search){
       var hay=(d.name+(d.moksang||'')+(d.village||'')).toLowerCase();
       if(hay.indexOf(acctFilter.search.toLowerCase())<0) return false;
     }
-    // 개인/가족 유형 필터 (gno prefix 기준)
+    // 개인/가족 유형 필터
     if(acctFilter.groupType!=='all'){
       var _t=gnoType(d.gno||d.rno);
-      if(acctFilter.groupType==='indiv'  && _t!=='individual') return false;
-      if(acctFilter.groupType==='family' && _t!=='family')     return false;
-      if(acctFilter.groupType==='group'  && _t!=='group')      return false;
+      var _fid=d.family_id||'';
+      var _isFamily=(_t==='family')||(_t==='individual'&&_fid!=='');
+      if(acctFilter.groupType==='indiv'  && _isFamily) return false;
+      if(acctFilter.groupType==='family' && !_isFamily) return false;
     }
+    // 납부상태 필터
     if(acctFilter.status!=='all'){
-      var gno=d.gno||d.rno;
-      var grpMembers=allData.filter(function(x){return (x.gno||x.rno)===gno;});
+      var gno2=d.gno||d.rno;
+      var grpMembers=allData.filter(function(x){return (x.gno||x.rno)===gno2;});
       var gst=groupStatus(grpMembers);
       if(acctFilter.status==='paid'   && gst!=='paid'   && gst!=='partial') return false;
       if(acctFilter.status==='unpaid' && gst!=='unpaid' && gst!=='partial') return false;
@@ -2362,31 +2386,59 @@ function renderAcct(){
   });
 
   var groups=buildGroups(filtered2);
-  // 납부 상태 기준 정렬: 미납 → 납부 → 면제
+
+  // ── 정렬 ──
   var stOrder={'unpaid':0,'paid':1,'exempt':2};
   function groupPriority(g){
     var sts=g.members.map(function(m){return (payData[m.rno]||{}).status||'unpaid';});
-    // 그룹 내 미납이 하나라도 있으면 미납 우선
     if(sts.indexOf('unpaid')>-1) return 0;
-    if(sts.indexOf('paid')>-1 && sts.indexOf('exempt')>-1) return 1; // 혼합
+    if(sts.indexOf('paid')>-1 && sts.indexOf('exempt')>-1) return 1;
     if(sts.indexOf('paid')>-1) return 1;
     return 2;
   }
-  groups.sort(function(a,b){
-    var pa=groupPriority(a), pb=groupPriority(b);
-    if(pa!==pb) return pa-pb;
-    return a.idx-b.idx; // 같은 상태면 명단 순
-  });
+
+  if(acctFilter.viewMode==='order'){
+    // 등록순(개별): 그룹 해제, 개인 단위로 등록순 나열
+    groups.sort(function(a,b){ return a.idx-b.idx; });
+  } else {
+    // 미납 우선 → 같은 상태면 명단순
+    groups.sort(function(a,b){
+      var pa=groupPriority(a), pb=groupPriority(b);
+      if(pa!==pb) return pa-pb;
+      return a.idx-b.idx;
+    });
+  }
   html+='<div class="acct-result"><strong>'+filtered2.length+'</strong>명 표시 중</div>';
 
   if(!groups.length){
     html+='<div style="text-align:center;padding:40px 20px;font-size:14px;color:rgba(60,70,100,0.5);">해당 조건의 참가자가 없습니다</div>';
   } else {
+    var isOrderMode = acctFilter.viewMode==='order';
     groups.forEach(function(g){
-      var isFamily=g.isFamily||g.members.length>1;
+      // 등록순(개별) 모드: 가족 헤더 없이 멤버 1명씩 개별 카드로 표시
+      var displayMembers = isOrderMode ? g.members : [null]; // null = 그룹 전체
+      var isFamily=!isOrderMode&&(g.isFamily||g.members.length>1);
       var totalFee=g.members.reduce(function(s,m){return s+getFee(m);},0);
       var paidFee=g.members.reduce(function(s,m){return s+((payData[m.rno]||{}).status==='paid'?getFee(m):0);},0);
-      html+='<div class="pay-card'+(isFamily?' family':'')+'">';
+      if(isOrderMode){
+        // 등록순(개별): 멤버 1명씩 개별 카드로 출력
+        g.members.forEach(function(m){
+          var pay=payData[m.rno]||{};
+          var st=pay.status||'unpaid';
+          var stIcon=st==='paid'?'✅':st==='exempt'?'🔖':'⬜';
+          var fid=m.family_id?'<span style="font-size:10px;color:#1a3a9e;margin-left:4px;">'+esc(m.family_id)+'</span>':'';
+          html+='<div class="pay-card" style="'+(st==='paid'?'opacity:0.75;':'')+'">'
+            +'<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;">'
+            +'<div style="font-size:13px;font-weight:700;flex:1;">'+esc(m.name)+(m.gender?' ('+esc(m.gender)+')':'')
+            +(isYouth(m)?'<span style="font-size:10px;color:#e65100;margin-left:4px;">청소년</span>':'')
+            +fid+'</div>'
+            +'<div style="font-size:11px;color:#666;text-align:right;">'+esc(m.village||'-')+'<br>'+esc(m.moksang||'-')+'</div>'
+            +'<div style="font-size:12px;font-weight:700;color:#1a3a9e;min-width:52px;text-align:right;">'+fmtWon(getFee(m))+'</div>'
+            +'<div style="font-size:16px;min-width:20px;text-align:center;">'+stIcon+'</div>'
+            +'</div></div>';
+        });
+      } else {
+      html+='<div class="pay-card'+(isFamily?' family':'')+'">'; 
       if(isFamily){
         html+='<div class="pay-card-family-hd">'
           +'<span>&#x1f46a;</span>'
@@ -2395,7 +2447,7 @@ function renderAcct(){
           +'<span class="pay-card-family-total">'+fmtWon(paidFee)+' / '+fmtWon(totalFee)+'</span>'
           +'</div>';
       }
-      g.members.forEach(function(m){
+            g.members.forEach(function(m){
         var st=(payData[m.rno]||{}).status||'unpaid';
         var fee=getFee(m);
         var grade=youthGrade(m);
@@ -2428,6 +2480,7 @@ function renderAcct(){
           +'</div>';
       });
       html+='</div>';
+      } // end else (isOrderMode)
     });
   }
 
@@ -2537,8 +2590,15 @@ function setPayDate(rno, dateVal){
 }
 function setAcctFilter(st){ acctFilter.status=st; renderAcct(); }
 function setAcctGroupType(t){ acctFilter.groupType=t; renderAcct(); }
-function setAcctVillage(v){ acctFilter.village=v; renderAcct(); }
+function setAcctVillage(v){ acctFilter.village=v; acctFilter.moksang=''; renderAcct(); }
+function setAcctMoksang(m){ acctFilter.moksang=m; acctFilter.village=''; renderAcct(); }
 function setAcctSearch(v){  acctFilter.search=v;  renderAcct(); }
+function setAcctViewMode(m){
+  acctFilter.viewMode=m;
+  acctFilter.village='';
+  acctFilter.moksang='';
+  renderAcct();
+}
 
 // ══════════════════════════════════════════
 // ✏️ 슈퍼바이저 명단 수정 (풀스크린 폼)
@@ -2803,10 +2863,16 @@ function renderFamily(){
       var pay = payData[m.rno]||{};
       var payCls = pay.status==='paid'?'paid':'unpaid';
       var payMark = pay.status==='paid'?'✅':'⬜';
+      // 자녀 학년 표기
+      var youth = isYouth(m);
+      var grade = youth ? youthGrade(m) : '';
+      var youthBadge = youth
+        ? ' 🎒<span style="font-size:10px;font-weight:700;color:#b85c00;background:rgba(255,140,0,0.12);border:1px solid rgba(255,140,0,0.25);border-radius:4px;padding:1px 5px;margin-left:2px;">'+esc(grade)+'</span>'
+        : '';
 
       html += '<div class="fam-member">'
-        + '<span class="fam-member-rel '+relCls+'">'+esc(rel)+'</span>'
-        + '<span class="fam-member-name">'+esc(m.name)+'</span>'
+        + '<span class="fam-member-rel '+relCls+'">'+(youth?'🎒 ':'')+esc(rel)+'</span>'
+        + '<span class="fam-member-name">'+esc(m.name)+youthBadge+'</span>'
         + '<span class="fam-member-info">'+esc(m.gender||'-')+' · '+esc(m.sched||'-')+'</span>'
         + (spouseVal
             ? '<span class="fam-member-spouse '+spouseCls+'">'

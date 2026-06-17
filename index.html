@@ -435,16 +435,22 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
       <button type="button" class="type-btn" id="typebtn-family" onclick="setAppType('family')">
         <span class="type-btn-ico">👨‍👩‍👧‍👦</span>
         <span class="type-btn-lbl">가족 신청</span>
-        <span class="type-btn-desc">가족 전체 신청</span>
+        <span class="type-btn-desc">실제 가족 (부부·자녀)</span>
       </button>
       <button type="button" class="type-btn" id="typebtn-group" onclick="setAppType('group')">
         <span class="type-btn-ico">📋</span>
         <span class="type-btn-lbl">단체 신청</span>
-        <span class="type-btn-desc">대표자가 여러명 신청</span>
+        <span class="type-btn-desc">목장 단위 대표 신청</span>
       </button>
     </div>
+    <!-- 가족 신청 안내 -->
+    <div id="familyNotice" style="display:none;margin:6px 0 2px;padding:10px 14px;background:rgba(46,125,50,0.07);border:1px solid rgba(46,125,50,0.2);border-radius:8px;font-size:12px;color:#2e7d32;line-height:1.7;">
+      👨‍👩‍👧‍👦 <b>가족 신청</b>은 <b>실제 가족(부부 또는 부부+자녀)</b>만 해당합니다.<br>
+      부부목장·형제목장·자매목장 모임 단위는 <b>단체 신청</b>을 이용해 주세요.
+    </div>
     <div class="group-notice" id="groupNotice">
-      ⚠️ <b>단체 신청</b>은 대표자가 다른 사람을 대신 신청하는 방식입니다.<br>
+      ⚠️ <b>단체 신청</b>은 대표자가 여러 명을 한꺼번에 신청하는 방식입니다.<br>
+      부부목장·형제목장·자매목장 등 <b>목장 단위 신청 시 이용해 주세요.</b><br>
       전화번호 등 누락된 정보는 추후 개별 확인이 필요할 수 있습니다.
     </div>
     <div class="couple-box" id="couplebox">
@@ -1062,6 +1068,10 @@ function setAppType(type){
   cb.className = 'couple-box' + (isFamily?' show':'');
   ab.style.display = isFamily ? 'block' : 'none';
   gn.className = 'group-notice' + (isGroup?' show':'');
+
+  // 가족 신청 안내문 표시/숨김
+  var fn = document.getElementById('familyNotice');
+  if(fn) fn.style.display = (type==='family') ? 'block' : 'none';
 
   if(!isFamily){
     isCouple=null;
