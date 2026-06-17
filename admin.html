@@ -3047,31 +3047,18 @@ function saveEdit() {
       if (res.result === 'ok') {
         var n = res.updated || 0;
         if (n > 0) {
-          // 저장 성공: 버튼에 체크 표시
-          btn.disabled = true;
-          btn.textContent = '✅ 저장완료';
-          btn.style.background = 'linear-gradient(135deg,#2e7d32,#388e3c)';
-          document.getElementById('editMsg').textContent = n+'개 항목이 저장되었습니다.';
-          document.getElementById('editMsg').className = 'edit-msg ok';
+          // 저장 성공: 즉시 닫기
           var prevTab = _editFromTab || 'list';
-          setTimeout(function(){
-            try {
-              btn.style.background = '';
-              btn.disabled = false;
-              btn.textContent = '💾 저장';
-            } catch(e2){}
-            _editFromTab = null;
-            closeEdit();
-            // closeDetail은 e 없이 호출 시 overlay 클릭 조건 우회
-            document.getElementById('detailOvl').className = 'detail-ovl';
-            document.body.style.position = '';
-            document.body.style.top = '';
-            document.body.style.left = '';
-            document.body.style.right = '';
-            document.body.style.width = '';
-            window.scrollTo(0, _scrollY);
-            loadData(prevTab);
-          }, 1200);
+          _editFromTab = null;
+          closeEdit();
+          document.getElementById('detailOvl').className = 'detail-ovl';
+          document.body.style.position = '';
+          document.body.style.top = '';
+          document.body.style.left = '';
+          document.body.style.right = '';
+          document.body.style.width = '';
+          window.scrollTo(0, _scrollY);
+          loadData(prevTab);
         } else {
           btn.disabled = false; btn.textContent = '💾 저장';
           document.getElementById('editMsg').textContent = '변경된 내용이 없습니다.';
