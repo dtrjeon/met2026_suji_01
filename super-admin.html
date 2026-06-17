@@ -287,6 +287,22 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
       <div class="util-result" id="res-backfillPay"></div>
     </div>
 
+    <div class="util-card">
+      <div class="util-ico">👨‍👩‍👧</div>
+      <div class="util-name">가족ID 일괄적용</div>
+      <div class="util-desc">배우자성명 기반으로 family_id를 전체 소급 적용합니다. (autoRegisterFamilyBySpouseAll)</div>
+      <button class="btn btn-ghost btn-full btn-sm" onclick="runUtil('syncFamily')">실행</button>
+      <div class="util-result" id="res-syncFamily"></div>
+    </div>
+
+    <div class="util-card">
+      <div class="util-ico">🔄</div>
+      <div class="util-name">가족DB 동기화</div>
+      <div class="util-desc">가족DB → 신청/납부 시트의 family_id 열을 일괄 갱신합니다. (syncFamilyId)</div>
+      <button class="btn btn-ghost btn-full btn-sm" onclick="runUtil('syncFamilyId')">실행</button>
+      <div class="util-result" id="res-syncFamilyId"></div>
+    </div>
+
   </div>
 </div>
 
@@ -600,6 +616,8 @@ var UTIL_CONFIRM = {
   busStat:        null,
   testEmail:      { title:'테스트 이메일 발송', msg:'등록된 이메일 주소로 테스트 메일을 발송합니다. 계속하시겠습니까?', danger:false },
   backfillPay:    { title:'납부시트 동기화', msg:'납부 시트의 이름·금액을 신청 데이터 기준으로 보정합니다. 계속하시겠습니까?', danger:false },
+  syncFamily:     { title:'가족ID 일괄적용', msg:'배우자성명 기반으로 family_id를 전체 소급 적용합니다. 계속하시겠습니까?', danger:false },
+  syncFamilyId:   { title:'가족DB 동기화', msg:'가족DB → 신청/납부 시트의 family_id 열을 갱신합니다. 계속하시겠습니까?', danger:false },
 };
 
 function runUtil(key){
@@ -620,15 +638,33 @@ function execUtil(key){
     busStat:        'busstat',
     testEmail:      'runTestEmail',
     backfillPay:    'runBackfillPay',
+    syncFamily:     'syncFamily',
+    syncFamilyId:   'syncFamilyId',
   };
   var action = actionMap[key];
 
+  // GET 방식 유틸 (busstat, syncFamily, syncFamilyId)
   if(action === 'busstat'){
     fetch(GAS_URL + '?action=busstat')
       .then(function(r){ return r.json(); })
       .then(function(res){
         resEl.className = 'util-result show';
         resEl.textContent = JSON.stringify(res, null, 2);
+      })
+      .catch(function(e){ resEl.className='util-result err show'; resEl.textContent='오류: '+e.message; });
+    return;
+  }
+  if(action === 'syncFamily' || action === 'syncFamilyId'){
+    fetch(GAS_URL + '?action=' + action + '&pw=' + encodeURIComponent(_pw))
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        if(res.result === 'ok'){
+          resEl.className = 'util-result show';
+          resEl.textContent = '✅ ' + (res.message || '완료');
+        } else {
+          resEl.className = 'util-result err show';
+          resEl.textContent = '⚠️ ' + (res.message || JSON.stringify(res));
+        }
       })
       .catch(function(e){ resEl.className='util-result err show'; resEl.textContent='오류: '+e.message; });
     return;
