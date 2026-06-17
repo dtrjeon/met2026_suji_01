@@ -837,7 +837,7 @@ function buildFamilyRnoSet() {
   allData.forEach(function(d){
     if(d.family_id) _familyRnoSet[d.rno] = true;
   });
-  // 2) spouse 상호매칭 (family_id 없는 경우)
+  // 2) spouse 상호매칭 (family_id 없는 경우) — 한쪽만 배우자성명 입력해도 매칭 (renderFamily 동일 로직)
   var spouseGrouped = {};
   allData.forEach(function(d){
     if(d.family_id || spouseGrouped[d.rno]) return;
@@ -846,7 +846,7 @@ function buildFamilyRnoSet() {
     var partner = allData.find(function(x){
       return x.rno !== d.rno && (x.name||'') === sp && !x.family_id;
     });
-    if(!partner || spouseGrouped[partner.rno]) return;
+    if(!partner) return;
     spouseGrouped[d.rno] = true;
     spouseGrouped[partner.rno] = true;
     _familyRnoSet[d.rno] = true;
@@ -1069,6 +1069,7 @@ function openDetail(idx) {
     + '<div class="detail-sec"><div class="detail-sec-title">제출 정보</div><div class="detail-grid">'
     + row('제출시각', d.submitAt)
     + row('관리번호', d.rno)
+    + (d.family_id ? row('가족번호', d.family_id) : '')
     + '</div></div>';
 
   document.getElementById('detailEditBtn').style.display = canEdit() ? 'block' : 'none';
