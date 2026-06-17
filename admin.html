@@ -485,6 +485,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
   <!-- 필터 -->
   <div class="filter-wrap" id="filterWrap">
+    <select class="filter-sel" id="fType" onchange="applyFilter()">
+      <option value="">전체 대상</option>
+      <option value="개인">개인</option>
+      <option value="가족">가족</option>
+    </select>
     <select class="filter-sel" id="fVillage" onchange="applyFilter()"><option value="">전체 마을</option></select>
     <select class="filter-sel" id="fMoksang" onchange="applyFilter()"><option value="">전체 목장</option></select>
     <select class="filter-sel" id="fMteam"   onchange="applyFilter()"><option value="">전체 사역팀</option></select>
@@ -861,13 +866,14 @@ function uniq(arr) {
 
 // ── 필터 적용 ──
 function applyFilter() {
+  var ftype = document.getElementById('fType').value;
   var fv = document.getElementById('fVillage').value;
   var fm = document.getElementById('fMoksang').value;
   var ft = document.getElementById('fMteam').value;
   var fs = document.getElementById('fSched').value;
   var sq = document.getElementById('searchInput').value.trim();
 
-  ['fVillage','fMoksang','fMteam','fSched'].forEach(function(id){
+  ['fType','fVillage','fMoksang','fMteam','fSched'].forEach(function(id){
     document.getElementById(id).classList.toggle('active', !!document.getElementById(id).value);
   });
 
@@ -882,6 +888,10 @@ function applyFilter() {
   }
 
   filtered = allData.filter(function(d){
+    if (ftype) {
+      if (ftype === '가족' && d.type !== '가족') return false;
+      if (ftype === '개인' && d.type !== '개인') return false;
+    }
     if (fv && d.village !== fv) return false;
     if (fm && d.moksang !== fm) return false;
     if (ft && d.mteam   !== ft) return false;
@@ -909,7 +919,7 @@ function applyFilter() {
 }
 
 function resetFilter() {
-  ['fVillage','fMoksang','fMteam','fSched'].forEach(function(id){
+  ['fType','fVillage','fMoksang','fMteam','fSched'].forEach(function(id){
     document.getElementById(id).value='';
     document.getElementById(id).classList.remove('active');
   });
