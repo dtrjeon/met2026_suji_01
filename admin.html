@@ -3086,6 +3086,28 @@ function saveEdit() {
 
 // ══════════════════════════════════════════
 // ── 👨‍👩‍👧 가족현황 탭 ──
+function syncFamilyIdFromAdmin(){
+  if(!currentUser||currentUser.role!=='super'){alert('슈퍼바이저만 실행할 수 있습니다.');return;}
+  var btn = document.getElementById('syncFamilyBtn');
+  btn.disabled = true; btn.textContent = '처리 중...';
+  var pw = currentUser.name + ':' + currentUser.phone;
+  fetch(GAS_URL + '?action=syncFamily&pw=' + encodeURIComponent(pw))
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      btn.disabled = false; btn.textContent = '👨‍👩‍👧 가족ID 일괄적용';
+      if(res.result === 'ok'){
+        alert('완료! 가족ID가 적용되었습니다.\n페이지를 새로고침합니다.');
+        loadData('family');
+      } else {
+        alert('오류: ' + (res.message || '알 수 없는 오류'));
+      }
+    })
+    .catch(function(e){
+      btn.disabled = false; btn.textContent = '👨‍👩‍👧 가족ID 일괄적용';
+      alert('네트워크 오류: ' + e.message);
+    });
+}
+
 function renderFamily(){
   var panel = document.getElementById('familyPanel');
   if(!panel) return;
@@ -3145,8 +3167,11 @@ function renderFamily(){
     return byFid[fid].every(function(m){ return (payData[m.rno]||{}).status==='paid'; });
   }).length;
 
-  // ── 3. 통계 바 ──
-  var html = '<div class="fam-stat-bar">'
+  // ── 3. 통계 바 + 가족ID 일괄적용 버튼 ──
+  var syncBtn = (currentUser&&currentUser.role==='super')
+    ? '<div style="padding:0 0 10px;"><button id="syncFamilyBtn" onclick="syncFamilyIdFromAdmin()" style="width:100%;padding:11px;background:linear-gradient(135deg,#1a3a9e,#2050c8);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation;">👨‍👩‍👧 가족ID 일괄적용 (배우자성명 기반)</button></div>'
+    : '';
+  var html = syncBtn + '<div class="fam-stat-bar">'
     + '<span class="fam-stat-chip">👨‍👩‍👧 가족그룹 '+totalFam+'팀</span>'
     + '<span class="fam-stat-chip">👥 가족참가 '+totalMem+'명</span>'
     + '<span class="fam-stat-chip" style="background:rgba(46,125,50,0.08);border-color:rgba(46,125,50,0.3);color:#2e7d32;">✅ 납부완료 '+paidFam+'팀</span>'
