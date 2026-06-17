@@ -46,12 +46,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .hd-logout{font-size:10px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:6px;padding:3px 8px;cursor:pointer;color:#fff;-webkit-appearance:none;touch-action:manipulation;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;}
 .hd-updated{font-size:9px;opacity:0.5;margin-top:2px;}
 
-/* 통계 바 */
-.stat-bar{display:flex;gap:6px;padding:8px 16px;background:rgba(0,0,0,0.15);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
-.stat-bar::-webkit-scrollbar{display:none;}
-.stat-chip{flex-shrink:0;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;color:#fff;white-space:nowrap;letter-spacing:.5px;}
-.stat-chip span{font-family:'Bebas Neue',sans-serif;font-size:14px;margin-left:4px;}
-
 /* 탭 바 (상단) */
 .tab-bar{background:#fff;border-bottom:2px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none;position:sticky;top:calc(50px + env(safe-area-inset-top));z-index:90;}
 .tab-bar::-webkit-scrollbar{display:none;}
@@ -505,14 +499,16 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   <!-- 필터 -->
   <div class="filter-wrap" id="filterWrap">
     <select class="filter-sel" id="fType" onchange="applyFilter()">
-      <option value="">전체 대상</option>
+      <option value="">개인/가족</option>
       <option value="개인">개인</option>
       <option value="가족">가족</option>
     </select>
-    <select class="filter-sel" id="fVillage" onchange="applyFilter()"><option value="">전체 마을</option></select>
-    <select class="filter-sel" id="fMoksang" onchange="applyFilter()"><option value="">전체 목장</option></select>
     <select class="filter-sel" id="fMteam"   onchange="applyFilter()"><option value="">전체 사역팀</option></select>
     <select class="filter-sel" id="fSched"   onchange="applyFilter()"><option value="">전체 일정</option></select>
+    <select class="filter-sel" id="fAccom"   onchange="applyFilter()"><option value="">전체 숙소</option></select>
+    <select class="filter-sel" id="fTrans"   onchange="applyFilter()"><option value="">전체 차량</option></select>
+    <select class="filter-sel" id="fVillage" onchange="applyFilter()"><option value="">전체 마을</option></select>
+    <select class="filter-sel" id="fMoksang" onchange="applyFilter()"><option value="">전체 목장</option></select>
     <button class="filter-reset" onclick="resetFilter()">✕ 초기화</button>
   </div>
 
@@ -842,11 +838,7 @@ function processData(res, returnTab) {
   holdData = res.holdData || [];
   if (res.payData) loadPayDataFromServer(res.payData);
   document.getElementById('updatedAt').textContent = '마지막 업데이트: ' + (res.updated || '-');
-  var _adult = allData.filter(function(d){return !isYouth(d);}).length;
-  var _youth = allData.filter(function(d){return isYouth(d);}).length;
   document.getElementById('cntTotal').textContent = allData.length + ' 명';
-  var sub = document.getElementById('cntSub');
-  sub.style.display = 'none';
   buildFilters();
   buildFamilyRnoSet();
   applyFilter();
@@ -897,21 +889,14 @@ function buildFilters() {
   var moksangs = uniq(allData.map(function(d){ return d.moksang; }).filter(Boolean)).sort();
   var mteams   = uniq(allData.map(function(d){ return d.mteam;   }).filter(Boolean)).sort();
   var scheds   = uniq(allData.map(function(d){ return d.sched;   }).filter(Boolean));
-  fillSelect('fVillage', '전체 마을',   villages);
-  fillSelect('fMoksang', '전체 목장',   moksangs);
+  var accoms   = uniq(allData.map(function(d){ return d.accom;   }).filter(Boolean)).sort();
+  var transs   = uniq(allData.map(function(d){ return d.trans;   }).filter(Boolean)).sort();
   fillSelect('fMteam',   '전체 사역팀', mteams);
   fillSelect('fSched',   '전체 일정',   scheds);
-
-  // 통계 바 (마을별 인원)
-  var vMap = {};
-  allData.forEach(function(d){ if(d.village) vMap[d.village]=(vMap[d.village]||0)+1; });
-  var adultCnt = allData.filter(function(d){ return !isYouth(d); }).length;
-  var youthCnt = allData.filter(function(d){ return isYouth(d); }).length;
-  var chips = '<div class="stat-chip">전체 <span>' + allData.length + '</span></div>';
-  chips += '<div class="stat-chip">성인 <span>' + adultCnt + '</span></div>';
-  chips += '<div class="stat-chip">청소년 <span>' + youthCnt + '</span></div>';
-  villages.forEach(function(v){ chips += '<div class="stat-chip">' + esc(v) + ' <span>' + (vMap[v]||0) + '</span></div>'; });
-  // statBar removed
+  fillSelect('fAccom',   '전체 숙소',   accoms);
+  fillSelect('fTrans',   '전체 차량',   transs);
+  fillSelect('fVillage', '전체 마을',   villages);
+  fillSelect('fMoksang', '전체 목장',   moksangs);
 }
 
 function fillSelect(id, placeholder, items) {
@@ -936,9 +921,11 @@ function applyFilter() {
   var fm = document.getElementById('fMoksang').value;
   var ft = document.getElementById('fMteam').value;
   var fs = document.getElementById('fSched').value;
+  var fa = document.getElementById('fAccom').value;
+  var ftr = document.getElementById('fTrans').value;
   var sq = document.getElementById('searchInput').value.trim();
 
-  ['fType','fVillage','fMoksang','fMteam','fSched'].forEach(function(id){
+  ['fType','fMteam','fSched','fAccom','fTrans','fVillage','fMoksang'].forEach(function(id){
     document.getElementById(id).classList.toggle('active', !!document.getElementById(id).value);
   });
 
@@ -957,10 +944,12 @@ function applyFilter() {
       if (ftype === '가족' && !isInFamilyDB(d)) return false;
       if (ftype === '개인' && isInFamilyDB(d))  return false;
     }
-    if (fv && d.village !== fv) return false;
-    if (fm && d.moksang !== fm) return false;
-    if (ft && d.mteam   !== ft) return false;
-    if (fs && d.sched   !== fs) return false;
+    if (fv  && d.village !== fv)  return false;
+    if (fm  && d.moksang !== fm)  return false;
+    if (ft  && d.mteam   !== ft)  return false;
+    if (fs  && d.sched   !== fs)  return false;
+    if (fa  && d.accom   !== fa)  return false;
+    if (ftr && d.trans   !== ftr) return false;
     if (sq) {
       var hay = (d.name+d.moksang+d.village+d.mteam+d.pastor+d.phone).toLowerCase();
       if (hay.indexOf(sq.toLowerCase()) < 0) return false;
@@ -993,7 +982,7 @@ function applyFilter() {
 }
 
 function resetFilter() {
-  ['fType','fVillage','fMoksang','fMteam','fSched'].forEach(function(id){
+  ['fType','fMteam','fSched','fAccom','fTrans','fVillage','fMoksang'].forEach(function(id){
     document.getElementById(id).value='';
     document.getElementById(id).classList.remove('active');
   });
@@ -2158,46 +2147,35 @@ function openMissDetail(rno) {
 // ── XSS 방지 ──
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-// ── 청소년 판별 (비고란에 초/중/고 학년 기재된 경우) ──
-// ── 주민등록번호로 학년 추정 (중3 이하만) ──
+// ── 청소년 판별 (비고란 학년 또는 주민번호 추정) ──
 function gradeFromSsn(ssn) {
   if (!ssn) return '';
   var s = ssn.replace(/[^0-9]/g, '');
   if (s.length < 7) return '';
   var yy = parseInt(s.slice(0, 2), 10);
   var g7 = parseInt(s[6], 10);
-  // 7번째 자리: 3,4 = 2000년대생 / 1,2 = 1900년대생
   var birthYear;
   if (g7 === 3 || g7 === 4) birthYear = 2000 + yy;
   else if (g7 === 1 || g7 === 2) birthYear = 1900 + yy;
   else return '';
-  // 학년 = 현재연도 - 출생연도 - 6
-  // 예) 2019년생 → 2026-2019-6=1 → 초1, 2011년생 → 2026-2011-6=9 → 중3
-  var curYear = new Date().getFullYear();
-  var schoolYear = curYear - birthYear - 6;
-  if (schoolYear < 1) return '유치'; // 미취학
+  var schoolYear = new Date().getFullYear() - birthYear - 6;
+  if (schoolYear < 1) return '유치';
   if (schoolYear <= 6) return '초' + schoolYear;
   if (schoolYear === 7) return '중1';
   if (schoolYear === 8) return '중2';
   if (schoolYear === 9) return '중3';
-  return ''; // 고등학생 이상은 표시 안 함
+  return '';
 }
 function isYouth(d) {
-  // note 필드 우선
   if (d.note && (/[초중고][0-9]/.test(d.note) || /유치|유아|어린이/.test(d.note))) return true;
-  // ssn으로 추정
-  if (gradeFromSsn(d.ssn)) return true;
-  return false;
+  return !!gradeFromSsn(d.ssn);
 }
 function youthGrade(d) {
-  // note 필드 우선
   if (d.note) {
     var m = d.note.match(/([초중고][0-9]|유치|유아|어린이)/);
     if (m) return m[0];
   }
-  // ssn으로 추정
-  var g = gradeFromSsn(d.ssn);
-  return g;
+  return gradeFromSsn(d.ssn);
 }
 
 // ── iOS 상세 스와이프 닫기 ──
@@ -2215,7 +2193,7 @@ function youthGrade(d) {
 (function(){
   if (TEST_MODE) {
     // 테스트 모드: 전태룡으로 자동 로그인
-    currentUser = USERS[0];
+    currentUser = USERS[1]; // 전태룡
     _pw = 'test';
     showApp({ result:'ok', data: TEST_DATA, updated: '테스트 데이터' });
     return;
@@ -2247,10 +2225,10 @@ function youthGrade(d) {
 // ══════════════════════════════════════════
 // 💰 회계 탭
 // ══════════════════════════════════════════
-// 💰 회계 탭 — 리스트 인라인 체크
-// ══════════════════════════════════════════
 
 var payData = {};  // { rno: { status, amount, date, memo } }
+
+var acctFilter = { status: 'all', search: '', village: '', moksang: '', groupType: 'all', viewMode: 'family' };
 
 // GAS에서 payData 로드 (processData 호출 시 병합)
 function loadPayDataFromServer(serverPayData) {
@@ -2483,20 +2461,8 @@ function renderAcct(){
     else unpaidCnt++;
   });
   var pct=total>0?Math.round(paidAmt/totalAmt*100):0;
-  // 회계 탭 stat-bar에 납부완료 정보 추가
   var adultCnt=allData.filter(function(d){return !isYouth(d);}).length;
   var youthCnt=allData.filter(function(d){return isYouth(d);}).length;
-  var vMap={};
-  allData.forEach(function(d){if(d.village)vMap[d.village]=(vMap[d.village]||0)+1;});
-  var villages=uniq(allData.map(function(d){return d.village;}).filter(Boolean)).sort();
-  var chips='<div class="stat-chip">전체 <span>'+total+'</span></div>';
-  chips+='<div class="stat-chip">성인 <span>'+adultCnt+'</span></div>';
-  chips+='<div class="stat-chip">청소년 <span>'+youthCnt+'</span></div>';
-  chips+='<div class="stat-chip" style="background:rgba(46,125,50,0.35);border-color:rgba(100,200,100,0.4);">납부완료 <span>'+paidCnt+'</span></div>';
-  chips+='<div class="stat-chip" style="background:rgba(21,101,192,0.3);border-color:rgba(100,160,255,0.4);">미납 <span>'+unpaidCnt+'</span></div>';
-  if(exemptCnt>0) chips+='<div class="stat-chip" style="background:rgba(123,31,162,0.3);border-color:rgba(180,100,220,0.4);">면제 <span>'+exemptCnt+'</span></div>';
-  villages.forEach(function(v){chips+='<div class="stat-chip">'+esc(v)+' <span>'+(vMap[v]||0)+'</span></div>';});
-  // statBar removed
   var villages=uniq(allData.map(function(d){return d.village;}).filter(Boolean)).sort();
   var html='';
 
