@@ -392,6 +392,24 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .status-toast.show{opacity:1;}
 
 @media(max-width:360px){.detail-grid{grid-template-columns:1fr;}.detail-row.full{grid-column:1;}}
+
+/* 배우자 찾기 */
+.spouse-search-wrap{position:relative;}
+.spouse-search-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:var(--primary);border:none;border-radius:5px;color:#fff;font-size:11px;font-weight:700;padding:4px 8px;cursor:pointer;touch-action:manipulation;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;z-index:1;}
+.spouse-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid var(--primary);border-radius:8px;box-shadow:0 6px 20px rgba(26,58,176,0.18);z-index:9999;max-height:220px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.spouse-dropdown-search{padding:8px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;}
+.spouse-dropdown-search input{width:100%;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:13px;outline:none;font-family:'Noto Sans KR',sans-serif;background:#f7f9ff;}
+.spouse-dropdown-search input:focus{border-color:var(--primary);}
+.spouse-item{padding:9px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;touch-action:manipulation;}
+.spouse-item:last-child{border-bottom:none;}
+.spouse-item:active{background:#f0f4ff;}
+.spouse-item-name{font-weight:700;color:var(--text);}
+.spouse-item-sub{font-size:10px;color:var(--text3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.spouse-item-gender{font-size:10px;padding:1px 5px;border-radius:4px;font-weight:700;flex-shrink:0;}
+.spouse-item-gender.m{background:#e3f0ff;color:var(--blue);}
+.spouse-item-gender.f{background:#fdecea;color:var(--red);}
+.spouse-no-result{padding:16px 12px;text-align:center;font-size:12px;color:var(--text3);}
+.spouse-section-hd{padding:5px 12px 3px;font-size:9px;font-weight:700;letter-spacing:1px;color:var(--primary);background:#f0f4ff;border-bottom:1px solid var(--border);}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -2720,7 +2738,16 @@ function openEdit() {
         + '</div>';
     }
 
-    if (f.type === 'select') {
+    if (f.key === 'spouse') {
+      html += '<div class="spouse-search-wrap">'
+        + '<input type="text" class="edit-input" id="ef_spouse" value="'+esc(val)+'" placeholder="배우자 성명" autocorrect="off" autocapitalize="off" spellcheck="false" oninput="filterSpouseDropdown(this.value)" onfocus="openSpouseDropdown()" style="padding-right:56px;"/>'
+        + '<button class="spouse-search-btn" onclick="openSpouseDropdown()" type="button">🔍 찾기</button>'
+        + '<div class="spouse-dropdown" id="spouseDropdown" style="display:none;">'
+        + '<div class="spouse-dropdown-search"><input type="text" id="spouseSearchInput" placeholder="이름 검색…" oninput="filterSpouseDropdown(this.value)" autocorrect="off" autocapitalize="off" spellcheck="false"/></div>'
+        + '<div id="spouseDropdownList"></div>'
+        + '</div>'
+        + '</div>';
+    } else if (f.type === 'select') {
       html += '<select class="edit-select" id="ef_'+f.key+'">';
       var opts = f.options.slice();
       // 현재값이 옵션에 없으면 맨 앞에 추가 (데이터 손실 방지)
@@ -2750,8 +2777,110 @@ function openEdit() {
   document.getElementById('editOvl').className = 'edit-ovl show';
 }
 
+// ── 배우자 찾기 드롭다운 ──
+var _spouseDropdownOpen = false;
+
+function openSpouseDropdown() {
+  var dd = document.getElementById('spouseDropdown');
+  if (!dd) return;
+  dd.style.display = 'block';
+  _spouseDropdownOpen = true;
+  var q = (document.getElementById('ef_spouse') || {}).value || '';
+  renderSpouseList(q);
+  setTimeout(function(){
+    var si = document.getElementById('spouseSearchInput');
+    if (si) { si.value = q; si.focus(); }
+  }, 80);
+}
+
+function closeSpouseDropdown() {
+  var dd = document.getElementById('spouseDropdown');
+  if (dd) dd.style.display = 'none';
+  _spouseDropdownOpen = false;
+}
+
+function filterSpouseDropdown(q) {
+  var dd = document.getElementById('spouseDropdown');
+  if (!dd || dd.style.display === 'none') return;
+  // 두 입력란 동기화
+  var si = document.getElementById('spouseSearchInput');
+  var ei = document.getElementById('ef_spouse');
+  if (document.activeElement === ei && si) si.value = q;
+  renderSpouseList(q);
+}
+
+function renderSpouseList(q) {
+  var listEl = document.getElementById('spouseDropdownList');
+  if (!listEl) return;
+  q = (q || '').trim();
+
+  // 현재 수정 중인 본인 rno 제외
+  var selfRno = _currentDetailRno;
+  var candidates = allData.filter(function(d){ return d.rno !== selfRno; });
+
+  // 검색어 있으면 필터, 없으면 전체
+  if (q) {
+    candidates = candidates.filter(function(d){
+      return (d.name || '').indexOf(q) >= 0;
+    });
+  }
+
+  if (!candidates.length) {
+    listEl.innerHTML = '<div class="spouse-no-result">검색 결과가 없습니다</div>';
+    return;
+  }
+
+  // 신청자 DB에 있는 사람 먼저, 나머지 뒤 (모두 allData 기반이므로 전부 신청자)
+  // 이름 가나다순 정렬
+  candidates.sort(function(a, b){
+    return (a.name || '').localeCompare(b.name || '', 'ko');
+  });
+
+  var html = '';
+  if (!q) html += '<div class="spouse-section-hd">📋 신청자 전체</div>';
+  else html += '<div class="spouse-section-hd">🔍 "'+esc(q)+'" 검색 결과 '+candidates.length+'명</div>';
+
+  candidates.forEach(function(d){
+    var genderCls = (d.gender || '').indexOf('남') >= 0 ? 'm' : 'f';
+    var genderLbl = (d.gender || '').indexOf('남') >= 0 ? '남' : '여';
+    var sub = [d.moksang, d.village].filter(Boolean).join(' · ');
+    html += '<div class="spouse-item" onclick="selectSpouse(\''+esc(d.name)+'\')">'
+      + '<span class="spouse-item-gender '+genderCls+'">'+genderLbl+'</span>'
+      + '<span class="spouse-item-name">'+esc(d.name)+'</span>'
+      + '<span class="spouse-item-sub">'+esc(sub)+'</span>'
+      + '</div>';
+  });
+  listEl.innerHTML = html;
+}
+
+function selectSpouse(name) {
+  var ei = document.getElementById('ef_spouse');
+  if (ei) ei.value = name;
+  closeSpouseDropdown();
+}
+
+// 드롭다운 외부 터치/클릭 시 닫기
+document.addEventListener('mousedown', function(e){
+  if (!_spouseDropdownOpen) return;
+  var dd = document.getElementById('spouseDropdown');
+  var btn = document.querySelector('.spouse-search-btn');
+  var inp = document.getElementById('ef_spouse');
+  if (dd && !dd.contains(e.target) && e.target !== btn && e.target !== inp) {
+    closeSpouseDropdown();
+  }
+});
+document.addEventListener('touchstart', function(e){
+  if (!_spouseDropdownOpen) return;
+  var dd = document.getElementById('spouseDropdown');
+  var btn = document.querySelector('.spouse-search-btn');
+  var inp = document.getElementById('ef_spouse');
+  if (dd && !dd.contains(e.target) && e.target !== btn && e.target !== inp) {
+    closeSpouseDropdown();
+  }
+}, {passive:true});
+
 function closeEdit() {
-  document.getElementById('editOvl').className = 'edit-ovl';
+  closeSpouseDropdown();
 }
 
 function saveEdit() {
@@ -2840,17 +2969,39 @@ function renderFamily(){
   var byFid = {};
   allData.forEach(function(d){
     var fid = d.family_id || '';
-    if(!fid) return; // family_id 없는 개인은 표시 안 함
+    if(!fid) return;
     if(!byFid[fid]) byFid[fid] = [];
     byFid[fid].push(d);
   });
 
+  // ── 1-B. family_id 없어도 배우자성명 상호 매칭으로 가족그룹 구성 ──
+  // A의 spouse = B.name  &&  B의 spouse = A.name  → 같은 그룹으로 묶음
+  // 또는 A의 spouse = B.name만 있어도 B가 allData에 존재하면 묶음
+  var spouseGrouped = {}; // rno → 합성 fid (spouse-RNOMIN_RNOMAX)
+  allData.forEach(function(d){
+    if(d.family_id) return; // family_id 있는 사람은 이미 위에서 처리됨
+    if(spouseGrouped[d.rno]) return; // 이미 묶임
+    var sp = (d.spouse || '').trim();
+    if(!sp) return;
+    // allData에서 이름이 일치하는 상대방 찾기
+    var partner = allData.find(function(x){
+      return x.rno !== d.rno && (x.name||'') === sp && !x.family_id;
+    });
+    if(!partner) return;
+    if(spouseGrouped[partner.rno]) return;
+    // 합성 fid: 두 rno를 정렬해 고유키 생성
+    var ids = [d.rno, partner.rno].sort();
+    var synFid = 'spouse-' + ids[0] + '_' + ids[1];
+    spouseGrouped[d.rno] = synFid;
+    spouseGrouped[partner.rno] = synFid;
+    if(!byFid[synFid]) byFid[synFid] = [];
+    byFid[synFid].push(d);
+    byFid[synFid].push(partner);
+  });
+
   // ── 2. 배우자성명 자동보완 맵 구성 ──
-  // 같은 family_id 그룹에서 상대방 이름을 찾아 spouse 필드가 비어있으면 자동 채움
-  // 자동 보완된 경우 autoSpouse=true 플래그 설정
   Object.keys(byFid).forEach(function(fid){
     var members = byFid[fid];
-    // 부부(2인) 그룹에서만 배우자성명 자동보완 적용
     var couple = members.filter(function(m){
       return m.rel==='본인'||m.rel==='배우자'||m.rel==='-'||m.rel==='';
     });
@@ -2904,7 +3055,7 @@ function renderFamily(){
 
     html += '<div class="fam-group">';
     html += '<div class="fam-group-hd">'
-      + '<span class="fam-group-id">'+esc(fid)+'</span>'
+      + '<span class="fam-group-id">'+(fid.indexOf('spouse-')===0?'💑 배우자매칭':esc(fid))+'</span>'
       + '<span class="fam-group-cnt">'+members.length+'명</span>'
       + (rep.moksang?'<span class="fam-group-moksang">'+esc(rep.moksang)+'</span>':'')
       + '<span class="fam-group-pay '+payStatus+'">'+payLabel+' '+fmtWon(paidFee)+'/'+fmtWon(totalFee)+'</span>'
