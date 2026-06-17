@@ -3257,7 +3257,7 @@ function renderFamily(){
       html += '<div class="fam-member">'
         + '<span class="fam-member-rel '+relCls+'">'+(youth?'🎒 ':'')+esc(rel)+'</span>'
         + '<span class="fam-member-name">'+esc(m.name)+youthBadge+'</span>'
-        + '<span class="fam-member-info">'+esc(m.gender||'-')+' · '+esc(m.sched||'-')+'</span>'
+        + '<span class="fam-member-info">'+esc(m.gender||'-')+' · '+esc((m.sched||'-').replace(/\([^)]*\)/g,'').trim())+'</span>'
         + (spouseVal
             ? '<span class="fam-member-spouse '+spouseCls+'">'
               +'💑 '+esc(spouseVal)+spouseHint+'</span>'
