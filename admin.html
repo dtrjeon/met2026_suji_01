@@ -2992,8 +2992,14 @@ document.addEventListener('touchstart', function(e){
 }, {passive:true});
 
 function closeEdit() {
-  closeSpouseDropdown();
-  document.getElementById('editOvl').className = 'edit-ovl';
+  try { closeSpouseDropdown(); } catch(e) {}
+  var ov = document.getElementById('editOvl');
+  if (ov) ov.className = 'edit-ovl';
+  // 버튼 상태 항상 초기화
+  var sb = document.getElementById('editSaveBtn');
+  if (sb) { sb.disabled = false; sb.textContent = '💾 저장'; sb.style.background = ''; }
+  var em = document.getElementById('editMsg');
+  if (em) { em.textContent = ''; em.className = 'edit-msg'; }
 }
 
 function saveEdit() {
@@ -3032,6 +3038,7 @@ function saveEdit() {
   }
 
   var btn = document.getElementById('editSaveBtn');
+  if (btn.disabled) return; // 이중 실행 방지
   btn.disabled = true; btn.textContent = '저장 중...';
   document.getElementById('editMsg').textContent = '';
   document.getElementById('editMsg').className = 'edit-msg';
