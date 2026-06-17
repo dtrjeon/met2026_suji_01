@@ -672,6 +672,7 @@ var holdData = []; // 가족매칭 보류목록
 var _pw      = '';
 var _scrollY = 0;
 var _editFromTab = null; // 수정 팝업이 열린 탭 기억 (저장 후 복귀용)
+var _familyRnoSet = {}; // 가족현황 기준 rno 집합 (buildFamilyRnoSet으로 갱신)
 
 // ── 로그인 ──
 function tryLogin() {
@@ -815,6 +816,7 @@ function processData(res, returnTab) {
   var sub = document.getElementById('cntSub');
   sub.style.display = 'none';
   buildFilters();
+  buildFamilyRnoSet();
   applyFilter();
   renderStats();
   // 저장 후 원래 탭으로 복귀 (miss/family 등)
@@ -824,6 +826,37 @@ function processData(res, returnTab) {
 function showListError(msg) {
   document.getElementById('listWrap').innerHTML =
     '<div class="empty"><div class="empty-ico">⚠️</div><div class="empty-txt">' + esc(msg) + '</div></div>';
+}
+
+// ── 가족현황 기준 rno 집합 구축 ──
+// renderFamily()와 동일한 로직(family_id + spouse 상호매칭)으로
+// 가족그룹에 속하는 rno를 _familyRnoSet에 저장한다.
+function buildFamilyRnoSet() {
+  _familyRnoSet = {};
+  // 1) family_id 있는 경우
+  allData.forEach(function(d){
+    if(d.family_id) _familyRnoSet[d.rno] = true;
+  });
+  // 2) spouse 상호매칭 (family_id 없는 경우)
+  var spouseGrouped = {};
+  allData.forEach(function(d){
+    if(d.family_id || spouseGrouped[d.rno]) return;
+    var sp = (d.spouse || '').trim();
+    if(!sp) return;
+    var partner = allData.find(function(x){
+      return x.rno !== d.rno && (x.name||'') === sp && !x.family_id;
+    });
+    if(!partner || spouseGrouped[partner.rno]) return;
+    spouseGrouped[d.rno] = true;
+    spouseGrouped[partner.rno] = true;
+    _familyRnoSet[d.rno] = true;
+    _familyRnoSet[partner.rno] = true;
+  });
+}
+
+// 가족현황에 포함된 사람인지 여부
+function isInFamilyDB(d) {
+  return !!_familyRnoSet[d.rno];
 }
 
 // ── 필터 구성 ──
@@ -889,8 +922,8 @@ function applyFilter() {
 
   filtered = allData.filter(function(d){
     if (ftype) {
-      if (ftype === '가족' && d.type !== '가족') return false;
-      if (ftype === '개인' && d.type !== '개인') return false;
+      if (ftype === '가족' && !isInFamilyDB(d)) return false;
+      if (ftype === '개인' && isInFamilyDB(d))  return false;
     }
     if (fv && d.village !== fv) return false;
     if (fm && d.moksang !== fm) return false;
@@ -949,7 +982,7 @@ function renderList() {
   }
   var total = filtered.length;
   wrap.innerHTML = filtered.map(function(d, i) {
-    var isFamily = d.type === '가족' || d.type === '가족/단체' || isGnoFamily(d.gno);
+    var isFamily = isInFamilyDB(d);
     var isGroup  = d.type === '단체' || isGnoGroup(d.gno);
     var youth = isYouth(d);
     var grade = youthGrade(d);
