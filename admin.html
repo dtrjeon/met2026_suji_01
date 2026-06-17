@@ -2260,8 +2260,8 @@ function buildGroups(data) {
   // (예: 개인으로 각자 신청한 부부가 가족DB에서 같은 family_id로 매칭된 경우)
   var byFamily={}, merged=[];
   groups.forEach(function(g){
-    // family_id 병합은 '개인(1인) 그룹'에만 적용 (가족/단체 그룹은 그대로 유지)
-    if(g.members.length!==1){ merged.push(g); return; }
+    // family_id 병합은 단체(2026-G) 그룹 제외하고 적용 (개인/가족 모두 대상)
+    if(g.isGroup){ merged.push(g); return; }
     var fid = g.members[0].family_id || '';
     if(!fid){ merged.push(g); return; }
     if(byFamily[fid]===undefined){
