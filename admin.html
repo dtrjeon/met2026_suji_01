@@ -2879,6 +2879,13 @@ function openEdit() {
 
   document.getElementById('editBody').innerHTML = html;
   document.getElementById('editBody').scrollTop = 0;
+  // 버튼 상태 초기화 (이전 저장완료 상태 잔존 방지)
+  var saveBtn = document.getElementById('editSaveBtn');
+  saveBtn.disabled = false;
+  saveBtn.textContent = '💾 저장';
+  saveBtn.style.background = '';
+  document.getElementById('editMsg').textContent = '';
+  document.getElementById('editMsg').className = 'edit-msg';
   document.getElementById('editOvl').className = 'edit-ovl show';
 }
 
@@ -3048,10 +3055,21 @@ function saveEdit() {
           document.getElementById('editMsg').className = 'edit-msg ok';
           var prevTab = _editFromTab || 'list';
           setTimeout(function(){
-            btn.style.background = '';
-            closeEdit();
-            closeDetail();
+            try {
+              btn.style.background = '';
+              btn.disabled = false;
+              btn.textContent = '💾 저장';
+            } catch(e2){}
             _editFromTab = null;
+            closeEdit();
+            // closeDetail은 e 없이 호출 시 overlay 클릭 조건 우회
+            document.getElementById('detailOvl').className = 'detail-ovl';
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.left = '';
+            document.body.style.right = '';
+            document.body.style.width = '';
+            window.scrollTo(0, _scrollY);
             loadData(prevTab);
           }, 1200);
         } else {
