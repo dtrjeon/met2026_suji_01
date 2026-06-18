@@ -3233,7 +3233,7 @@ function renderFamily(){
         : transVal==='자차' ? 'color:#1a3a9e;background:rgba(26,58,158,0.10);border:1px solid rgba(26,58,158,0.25);'
         : transVal==='동승' ? 'color:#6a1b9a;background:rgba(106,27,154,0.10);border:1px solid rgba(106,27,154,0.25);'
         : 'color:#555;background:rgba(0,0,0,0.06);border:1px solid rgba(0,0,0,0.15);';
-      var transHtml = '<span style="font-size:9px;font-weight:700;border-radius:4px;padding:1px 5px;white-space:nowrap;flex-shrink:0;text-align:center;display:inline-block;'+transStyle+'">'+esc(transVal)+'</span>';
+      var transHtml = '<span style="font-size:9px;font-weight:700;border-radius:4px;width:28px;height:16px;line-height:16px;white-space:nowrap;flex-shrink:0;text-align:center;display:inline-block;box-sizing:border-box;'+transStyle+'">'+esc(transVal)+'</span>';
 
       var spouseToggle = '';
       if (spouseVal) {
