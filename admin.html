@@ -3228,6 +3228,12 @@ function renderFamily(){
         : '';
       var mteamVal = (m.mteam||'').trim();
       var mteamHtml = '<span style="font-size:9px;font-weight:700;color:#1565c0;background:rgba(21,101,192,0.08);border:1px solid rgba(21,101,192,0.2);border-radius:4px;padding:1px 5px;white-space:nowrap;flex-shrink:0;min-width:68px;max-width:90px;overflow:hidden;text-overflow:ellipsis;text-align:center;display:inline-block;">'+(mteamVal && mteamVal!=='-'?esc(mteamVal):'-')+'</span>';
+      var transVal = (m.trans||'-').trim();
+      var transStyle = transVal==='버스' ? 'color:#1b5e20;background:rgba(27,94,32,0.10);border:1px solid rgba(27,94,32,0.25);'
+        : transVal==='자차' ? 'color:#1a3a9e;background:rgba(26,58,158,0.10);border:1px solid rgba(26,58,158,0.25);'
+        : transVal==='동승' ? 'color:#6a1b9a;background:rgba(106,27,154,0.10);border:1px solid rgba(106,27,154,0.25);'
+        : 'color:#555;background:rgba(0,0,0,0.06);border:1px solid rgba(0,0,0,0.15);';
+      var transHtml = '<span style="font-size:9px;font-weight:700;border-radius:4px;padding:1px 5px;white-space:nowrap;flex-shrink:0;text-align:center;display:inline-block;'+transStyle+'">'+esc(transVal)+'</span>';
 
       var spouseToggle = '';
       if (spouseVal) {
@@ -3241,6 +3247,7 @@ function renderFamily(){
         + '<span class="fam-member-name">'+esc(m.name)+youthBadge+'</span>'
         + '<span class="fam-member-info">'+esc(m.gender||'-')+' · '+esc((m.sched||'-').replace(/\([^)]*\)/g,'').trim())+'</span>'
         + mteamHtml
+        + transHtml
         + spouseToggle
         + '</div>';
     });
