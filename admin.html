@@ -211,18 +211,18 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .fam-group-pay.unpaid{color:#999;}
 .fam-group .card{border-radius:0;box-shadow:none;border-top:1px solid rgba(0,0,0,0.06);margin-bottom:0;}
 .fam-group .card:last-child{border-radius:0 0 12px 12px;}
-.fam-member{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(0,0,0,0.04);}
+.fam-member{display:flex;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid rgba(0,0,0,0.04);}
 .fam-member:last-child{border-bottom:none;}
-.fam-member-rel{font-size:10px;font-weight:700;color:#fff;background:#1a3a9e;border-radius:4px;padding:2px 0;width:36px;min-width:36px;text-align:center;flex-shrink:0;}
+.fam-member-rel{font-size:9px;font-weight:700;color:#fff;background:#1a3a9e;border-radius:4px;padding:2px 0;width:32px;min-width:32px;text-align:center;flex-shrink:0;}
 .fam-member-rel.spouse{background:#6a1a9e;}
 .fam-member-rel.child{background:#2e7d32;}
 .fam-member-rel.etc{background:#888;}
-.fam-member-name{font-size:13px;font-weight:700;color:#222;min-width:60px;}
-.fam-member-info{font-size:11px;color:#666;flex:1;}
-.fam-member-spouse{font-size:11px;color:#555;display:none;margin-left:2px;}
+.fam-member-name{font-size:12px;font-weight:700;color:#222;width:72px;min-width:72px;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0;}
+.fam-member-info{font-size:10px;color:#666;white-space:nowrap;width:72px;min-width:72px;flex-shrink:0;}
+.fam-member-spouse{font-size:10px;color:#555;display:none;margin-left:2px;white-space:nowrap;}
 .fam-member-spouse.auto{font-style:italic;color:#1a3a9e;}
 .fam-member-spouse.visible{display:inline;}
-.fam-spouse-toggle{font-size:11px;color:rgba(26,58,176,0.5);cursor:pointer;padding:2px 5px;border-radius:4px;border:1px solid rgba(26,58,176,0.15);background:rgba(26,58,176,0.04);flex-shrink:0;touch-action:manipulation;transition:all .15s;line-height:1;user-select:none;-webkit-user-select:none;}
+.fam-spouse-toggle{font-size:10px;color:rgba(26,58,176,0.5);cursor:pointer;padding:2px 4px;border-radius:4px;border:1px solid rgba(26,58,176,0.15);background:rgba(26,58,176,0.04);flex-shrink:0;touch-action:manipulation;transition:all .15s;line-height:1;user-select:none;-webkit-user-select:none;white-space:nowrap;margin-left:auto;}
 .fam-spouse-toggle.open{color:var(--primary);background:rgba(26,58,176,0.1);border-color:rgba(26,58,176,0.3);}
 .fam-member-pay{font-size:11px;font-weight:700;min-width:40px;text-align:right;}
 .fam-member-pay.paid{color:#2e7d32;}
@@ -3227,9 +3227,7 @@ function renderFamily(){
         ? ' 🎒<span style="font-size:10px;font-weight:700;color:#b85c00;background:rgba(255,140,0,0.12);border:1px solid rgba(255,140,0,0.25);border-radius:4px;padding:1px 5px;margin-left:2px;">'+esc(grade)+'</span>'
         : '';
       var mteamVal = (m.mteam||'').trim();
-      var mteamHtml = mteamVal && mteamVal !== '-'
-        ? '<span style="font-size:10px;font-weight:700;color:#1565c0;background:rgba(21,101,192,0.08);border:1px solid rgba(21,101,192,0.2);border-radius:4px;padding:1px 6px;white-space:nowrap;flex-shrink:0;">'+esc(mteamVal)+'</span>'
-        : '';
+      var mteamHtml = '<span style="font-size:9px;font-weight:700;color:#1565c0;background:rgba(21,101,192,0.08);border:1px solid rgba(21,101,192,0.2);border-radius:4px;padding:1px 5px;white-space:nowrap;flex-shrink:0;min-width:68px;max-width:90px;overflow:hidden;text-overflow:ellipsis;text-align:center;display:inline-block;">'+(mteamVal && mteamVal!=='-'?esc(mteamVal):'-')+'</span>';
 
       var spouseToggle = '';
       if (spouseVal) {
