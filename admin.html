@@ -219,8 +219,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .fam-member-rel.etc{background:#888;}
 .fam-member-name{font-size:13px;font-weight:700;color:#222;min-width:60px;}
 .fam-member-info{font-size:11px;color:#666;flex:1;}
-.fam-member-spouse{font-size:11px;color:#555;}
+.fam-member-spouse{font-size:11px;color:#555;display:none;margin-left:2px;}
 .fam-member-spouse.auto{font-style:italic;color:#1a3a9e;}
+.fam-member-spouse.visible{display:inline;}
+.fam-spouse-toggle{font-size:11px;color:rgba(26,58,176,0.5);cursor:pointer;padding:2px 5px;border-radius:4px;border:1px solid rgba(26,58,176,0.15);background:rgba(26,58,176,0.04);flex-shrink:0;touch-action:manipulation;transition:all .15s;line-height:1;user-select:none;-webkit-user-select:none;}
+.fam-spouse-toggle.open{color:var(--primary);background:rgba(26,58,176,0.1);border-color:rgba(26,58,176,0.3);}
 .fam-member-pay{font-size:11px;font-weight:700;min-width:40px;text-align:right;}
 .fam-member-pay.paid{color:#2e7d32;}
 .fam-member-pay.unpaid{color:#bbb;}
@@ -3182,23 +3185,9 @@ function renderFamily(){
   var syncBtn = (currentUser&&currentUser.role==='super')
     ? '<div style="padding:0 0 10px;"><button id="syncFamilyBtn" onclick="syncFamilyIdFromAdmin()" style="width:100%;padding:11px;background:linear-gradient(135deg,#1a3a9e,#2050c8);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation;">👨‍👩‍👧 가족ID 일괄적용 (배우자성명 기반)</button></div>'
     : '';
-  // 사역팀 집계 (가족그룹 내 멤버 전체)
-  var mteamCount = {};
-  fids.forEach(function(fid){
-    byFid[fid].forEach(function(m){
-      var mt = (m.mteam||'').trim();
-      if(mt && mt !== '-') mteamCount[mt] = (mteamCount[mt]||0) + 1;
-    });
-  });
-  var mteamKeys = Object.keys(mteamCount).sort();
-  var mteamChips = mteamKeys.map(function(mt){
-    return '<span class="fam-stat-chip" style="background:rgba(21,101,192,0.07);border-color:rgba(21,101,192,0.25);color:#1565c0;">'+esc(mt)+' '+mteamCount[mt]+'명</span>';
-  }).join('');
-
   var html = syncBtn + '<div class="fam-stat-bar">'
     + '<span class="fam-stat-chip">👨‍👩‍👧 가족그룹 '+totalFam+'팀</span>'
     + '<span class="fam-stat-chip">👥 가족참가 '+totalMem+'명</span>'
-    + mteamChips
     + '</div>';
 
   // ── 4. 가족그룹 카드 ──
@@ -3240,17 +3229,21 @@ function renderFamily(){
       var mteamVal = (m.mteam||'').trim();
       var mteamHtml = mteamVal && mteamVal !== '-'
         ? '<span style="font-size:10px;font-weight:700;color:#1565c0;background:rgba(21,101,192,0.08);border:1px solid rgba(21,101,192,0.2);border-radius:4px;padding:1px 6px;white-space:nowrap;flex-shrink:0;">'+esc(mteamVal)+'</span>'
-        : '<span style="font-size:10px;color:#bbb;flex-shrink:0;">-</span>';
+        : '';
+
+      var spouseToggle = '';
+      if (spouseVal) {
+        var sid = 'sp-' + esc(m.rno);
+        spouseToggle = '<span class="fam-spouse-toggle" id="tgl-'+esc(m.rno)+'" onclick="toggleSpouse(\''+esc(m.rno)+'\')">💑 ›</span>'
+          + '<span class="fam-member-spouse '+spouseCls+'" id="'+sid+'">'+esc(spouseVal)+spouseHint+'</span>';
+      }
 
       html += '<div class="fam-member">'
         + '<span class="fam-member-rel '+relCls+'">'+(youth?'🎒 ':'')+esc(rel)+'</span>'
         + '<span class="fam-member-name">'+esc(m.name)+youthBadge+'</span>'
         + '<span class="fam-member-info">'+esc(m.gender||'-')+' · '+esc((m.sched||'-').replace(/\([^)]*\)/g,'').trim())+'</span>'
-        + (spouseVal
-            ? '<span class="fam-member-spouse '+spouseCls+'">'
-              +'💑 '+esc(spouseVal)+spouseHint+'</span>'
-            : '')
         + mteamHtml
+        + spouseToggle
         + '</div>';
     });
 
@@ -3396,6 +3389,23 @@ function onCardLongPress(event, rno) {
   if (!_selMode) enterSelMode(rno);
   else toggleSelCard(rno);
 }
+
+function toggleSpouse(rno) {
+  var sp  = document.getElementById('sp-' + rno);
+  var tgl = document.getElementById('tgl-' + rno);
+  if (!sp || !tgl) return;
+  var open = sp.classList.contains('visible');
+  if (open) {
+    sp.classList.remove('visible');
+    tgl.classList.remove('open');
+    tgl.textContent = '💑 ›';
+  } else {
+    sp.classList.add('visible');
+    tgl.classList.add('open');
+    tgl.textContent = '💑 ‹';
+  }
+}
+
 
 function doLinkFamily() {
   var rnos = Object.keys(_selRnos);
