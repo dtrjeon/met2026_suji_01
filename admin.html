@@ -261,7 +261,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
 /* 회계 요약 카드 */
 .acct-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
-.acct-card{background:var(--card);border-radius:10px;padding:12px 14px;box-shadow:var(--shadow);border-top:3px solid var(--primary);}
+.acct-card{background:var(--card);border-radius:10px;padding:12px 10px;box-shadow:var(--shadow);border-top:3px solid var(--primary);}
 .acct-card.full{grid-column:1/-1;border-top-color:var(--primary);}
 .acct-card-label{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:.5px;margin-bottom:4px;text-transform:uppercase;}
 .acct-card-val{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;line-height:1;color:var(--text);}
@@ -2471,15 +2471,15 @@ function renderAcct(){
   html+='<div class="acct-summary">'
     +'<div class="acct-card"><div class="acct-card-label">전체</div>'
     +'<div class="acct-card-val">'+total+'명</div>'
-    +'<div style="font-size:10px;color:#4a5568;margin-top:2px;">성인 <b style="color:#1a3ab0;">'+adultCnt+'</b> · 청소년 <b style="color:#e65100;">'+youthCnt+'</b></div>'
+    +'<div style="font-size:9px;color:#4a5568;margin-top:2px;white-space:nowrap;">성인 <b style="color:#1a3ab0;">'+adultCnt+'</b> · 청소년 <b style="color:#e65100;">'+youthCnt+'</b></div>'
     +'<div class="acct-card-sub">목표 '+fmtWon(totalAmt)+'</div></div>'
     +'<div class="acct-card"><div class="acct-card-label">납부완료</div>'
     +'<div class="acct-card-val paid">'+paidCnt+'명</div>'
-    +'<div style="font-size:10px;color:#4a5568;margin-top:2px;">성인 <b style="color:#2e7d32;">'+_paidAdult+'</b> · 청소년 <b style="color:#2e7d32;">'+_paidYouth+'</b></div>'
+    +'<div style="font-size:9px;color:#4a5568;margin-top:2px;white-space:nowrap;">성인 <b style="color:#2e7d32;">'+_paidAdult+'</b> · 청소년 <b style="color:#2e7d32;">'+_paidYouth+'</b></div>'
     +'<div class="acct-card-sub">'+fmtWon(paidAmt)+'</div></div>'
     +'<div class="acct-card"><div class="acct-card-label">미납</div>'
     +'<div class="acct-card-val unpaid">'+unpaidCnt+'명</div>'
-    +'<div style="font-size:10px;color:#4a5568;margin-top:2px;">성인 <b style="color:#1565c0;">'+_unpaidAdult+'</b> · 청소년 <b style="color:#1565c0;">'+_unpaidYouth+'</b></div>'
+    +'<div style="font-size:9px;color:#4a5568;margin-top:2px;white-space:nowrap;">성인 <b style="color:#1565c0;">'+_unpaidAdult+'</b> · 청소년 <b style="color:#1565c0;">'+_unpaidYouth+'</b></div>'
     +'<div class="acct-card-sub">면제 '+exemptCnt+'명</div></div>'
     +'<div class="acct-card full"><div class="acct-card-label">납부율 '+pct+'%</div>'
     +'<div class="acct-progress"><div class="acct-progress-fill" style="width:'+pct+'%"></div></div>'
