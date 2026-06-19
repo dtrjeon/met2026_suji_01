@@ -1400,17 +1400,19 @@ function toggleStatSection(secId, key) {
   }
 }
 
-function makeSectionHtml(secId, title, key, subMap) {
+function makeSectionHtml(secId, title, key, subMap, defaultTable) {
   var dataMap = countBy(key);
   if(!Object.keys(dataMap).length) return '';
-  var bodyHtml = makeGraphView(dataMap, subMap);
+  var on = !!defaultTable;
+  if (on) statTableMode[secId] = true;
+  var bodyHtml = on ? makeTableView(key) : makeGraphView(dataMap, subMap);
   return '<div class="stat-section">'
     +'<div class="stat-sec-title">'
     +'<span>'+title+'</span>'
     +'<div class="tgl-wrap" onclick="toggleStatSection(&apos;'+secId+'&apos;,&apos;'+key+'&apos;)">'
-    +'<span class="tgl-lbl" id="tgl-lbl-'+secId+'">그래프</span>'
-    +'<div class="tgl-track" id="tgl-track-'+secId+'">'
-    +'<div class="tgl-knob" id="tgl-knob-'+secId+'"></div>'
+    +'<span class="tgl-lbl'+(on?' on':'')+'" id="tgl-lbl-'+secId+'">'+(on?'테이블':'그래프')+'</span>'
+    +'<div class="tgl-track'+(on?' on':'')+'" id="tgl-track-'+secId+'">'
+    +'<div class="tgl-knob'+(on?' on':'')+'" id="tgl-knob-'+secId+'"></div>'
     +'</div></div></div>'
     +'<div id="stat-body-'+secId+'">'+bodyHtml+'</div>'
     +'</div>';
@@ -1421,7 +1423,7 @@ function renderStats() {
   statTableMode = {};
   document.getElementById('statPanel').innerHTML =
     '<div style="padding:12px 0 4px;font-size:11px;font-weight:700;color:rgba(60,70,100,0.6);letter-spacing:1px;">총 '+allData.length+'명 등록</div>'
-    + makeSectionHtml('mteam',   '사역팀별',   'mteam',   null)
+    + makeSectionHtml('mteam',   '사역팀별',   'mteam',   null, true)
     + makeVillageSectionHtml()
     + makeSectionHtml('sched',   '참여일정별', 'sched',   null)
     + makeSectionHtml('trans',   '차량별',     'trans',   null)
