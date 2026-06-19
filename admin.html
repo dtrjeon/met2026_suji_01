@@ -214,8 +214,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .fam-member-rel{font-size:9px;font-weight:700;color:#fff;background:#1a3a9e;border-radius:4px;padding:2px 0;width:32px;min-width:32px;text-align:center;flex-shrink:0;}
 .fam-member-rel.spouse{background:#6a1a9e;}
 .fam-member-rel.child{background:#2e7d32;}
-.fam-member-rel.driver{background:#1a6e3a;}
-.fam-member-rel.pax{background:#888;}
 .fam-member-name{font-size:12px;font-weight:700;color:#222;width:72px;min-width:72px;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0;}
 .fam-member-info{font-size:10px;color:#666;white-space:nowrap;width:72px;min-width:72px;flex-shrink:0;}
 .fam-member-spouse{font-size:10px;color:#555;display:none;margin-left:2px;white-space:nowrap;}
@@ -933,9 +931,11 @@ var transFilterSelected = [];
 function openTransSheet(){
   var list = document.getElementById('transSheetList');
   var html = '';
+  if (_transAllOptions.indexOf('자차')>=0 && _transAllOptions.indexOf('동승')>=0) {
+    html += '<label class="trans-chk-row combo"><input type="checkbox" value="자차+동승" '+(transFilterSelected.indexOf('자차+동승')>=0?'checked':'')+'><span>🚗 자차+동승</span></label>';
+  }
   _transAllOptions.forEach(function(o){
-    var isCombo = o === '자차+동승';
-    html += '<label class="trans-chk-row'+(isCombo?' combo':'')+'"><input type="checkbox" value="'+esc(o)+'" '+(transFilterSelected.indexOf(o)>=0?'checked':'')+'><span>'+(isCombo?'🚗 ':'')+esc(o)+'</span></label>';
+    html += '<label class="trans-chk-row"><input type="checkbox" value="'+esc(o)+'" '+(transFilterSelected.indexOf(o)>=0?'checked':'')+'><span>'+esc(o)+'</span></label>';
   });
   list.innerHTML = html || '<div style="padding:16px 4px;text-align:center;color:var(--text3);font-size:12px;">선택 가능한 차량 항목이 없습니다</div>';
   document.getElementById('transSheetOvl').classList.add('show');
@@ -964,11 +964,10 @@ function updateTransBtnLabel(){
     btn.classList.add('active');
   }
 }
-// '자차+동승'을 선택하면 차량묶음 대상(운전자 자신 + 동승자)이 함께 보이도록 매칭 확장
 function transMatches(trans, sel){
   for (var i=0;i<sel.length;i++){
     var s = sel[i];
-    if (s === '자차+동승') { if (trans==='자차+동승'||trans==='동승') return true; }
+    if (s === '자차+동승') { if (trans==='자차'||trans==='동승') return true; }
     else if (trans === s) return true;
   }
   return false;
@@ -1142,7 +1141,7 @@ function renderListGroupedByVehicle() {
   var wrap = document.getElementById('listWrap');
   var total = filtered.length;
 
-  var drivers    = filtered.filter(function(d){ return d.trans === '자차+동승'; });
+  var drivers    = filtered.filter(function(d){ return d.trans === '자차'; });
   var passengers = filtered.filter(function(d){ return d.trans === '동승'; });
 
   var driverByName = {};
@@ -1487,12 +1486,7 @@ function makeTableView(key) {
       html += '<tr style="background:'+rowBg+';">';
       // 구분 — 첫 행만 rowSpan
       if(ri===0){
-        var leaderInfo = (key === 'mteam' && MTEAM_LEADERS[grpName])
-          ? '<div style="font-size:9px;color:#5a6a9a;font-weight:600;margin-top:2px;line-height:1.5;">'
-            + MTEAM_LEADERS[grpName].split(',').map(function(n){ return esc(n.trim()); }).join('<br>')
-            + '</div>'
-          : '';
-        html += '<td rowspan="'+rows.length+'" class="grp" style="background:'+sideBg+';vertical-align:middle;">'+esc(grpName)+leaderInfo+'</td>';
+        html += '<td rowspan="'+rows.length+'" class="grp" style="background:'+sideBg+';vertical-align:middle;">'+esc(grpName)+'</td>';
       }
       // 신청자 — 5명 가로
       html += '<td>';
@@ -1554,11 +1548,7 @@ function makeSectionHtml(secId, title, key, subMap, defaultTable) {
   var on = !!defaultTable;
   if (on) statTableMode[secId] = true;
   var bodyHtml = on ? makeTableView(key) : makeGraphView(dataMap, subMap);
-  var exportBtn = secId==='mteam'
-    ? '<button onclick="exportMteamExcel()" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:9px;margin-bottom:8px;background:linear-gradient(135deg,#1d6f42,#2e7d32);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(46,125,50,0.25);">📥 사역팀 명단 엑셀 저장</button>'
-    : '';
   return '<div class="stat-section">'
-    + exportBtn
     +'<div class="stat-sec-title">'
     +'<span>'+title+'</span>'
     +'<div class="tgl-wrap" onclick="toggleStatSection(&apos;'+secId+'&apos;,&apos;'+key+'&apos;)">'
@@ -1568,74 +1558,6 @@ function makeSectionHtml(secId, title, key, subMap, defaultTable) {
     +'</div></div></div>'
     +'<div id="stat-body-'+secId+'">'+bodyHtml+'</div>'
     +'</div>';
-}
-
-// ── 사역팀 명단 엑셀 내보내기 (팀명 / 팀장·부팀장(공란) / 팀원(신청자)) ──
-// 팀장/부팀장 매핑 (사역팀 실제 값 기준, 괄호 포함 그대로)
-var MTEAM_LEADERS = {
-  '전도팀':            '이은영, 손오성',
-  '시설지원팀':         '문동훈, 기재호, 최종문',
-  '장금이팀':           '김하연, 황은성',
-  '맛사지팀':           '최난주',
-  '간식팀':             '김영미',
-  '어린이(청소년)팀':    '정지원, 유원종',
-  '장수사진/메이크업팀': '이상훈, 임수현',
-  '의료팀':             '김미라',
-  '이미용팀':           '유수영',
-  '바자회팀':           '김의겸'
-};
-
-function exportMteamExcel(){
-  var byTeam = {};
-  var order = [];
-  allData.forEach(function(d){
-    var t = (d.mteam||'').trim();
-    if(!t) return;
-    if(!byTeam[t]){ byTeam[t]=[]; order.push(t); }
-    byTeam[t].push(d.name);
-  });
-  order.sort(function(a,b){ return a.localeCompare(b,'ko'); });
-
-  var headers = ['팀명','팀장/부팀장','팀원(신청자)'];
-  var rows = order.map(function(t){
-    var lines = chunk(byTeam[t], 5).map(function(g){ return g.join(', '); });
-    return { '팀명': t, '팀장/부팀장': MTEAM_LEADERS[t] || '', '팀원(신청자)': lines.join('\n'), _lineCount: lines.length };
-  });
-
-  var ws = XLSX.utils.json_to_sheet(rows, { header: headers });
-  ws['!cols'] = [{wch:16},{wch:16},{wch:90}];
-
-  var range = XLSX.utils.decode_range(ws['!ref']);
-  for (var C = range.s.c; C <= range.e.c; C++) {
-    var hdr = XLSX.utils.encode_cell({ r: 0, c: C });
-    if (!ws[hdr]) continue;
-    ws[hdr].s = {
-      fill: { fgColor: { rgb: '1A3AB0' } },
-      font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 11 },
-      alignment: { horizontal: 'center', vertical: 'center' }
-    };
-  }
-
-  // 팀원 열 줄바꿈(wrap) 처리 + 행 높이를 줄 수에 맞게 조정
-  var rowHeights = [{ hpt: 20 }]; // 헤더 행
-  for (var R = 1; R <= range.e.r; R++) {
-    var memCell = XLSX.utils.encode_cell({ r: R, c: 2 });
-    if (ws[memCell]) {
-      ws[memCell].s = { alignment: { wrapText: true, vertical: 'center' } };
-    }
-    var lc = rows[R-1] ? rows[R-1]._lineCount : 1;
-    rowHeights.push({ hpt: Math.max(18, lc * 16) });
-  }
-  ws['!rows'] = rowHeights;
-
-  var wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, '사역팀명단');
-
-  var now = new Date();
-  var ts = now.getFullYear()
-    + String(now.getMonth()+1).padStart(2,'0')
-    + String(now.getDate()).padStart(2,'0');
-  XLSX.writeFile(wb, 'MET2026_사역팀명단_' + ts + '.xlsx');
 }
 
 function renderStats() {
@@ -3000,8 +2922,8 @@ var _currentDetailRno = '';
 var EDIT_MT  = ['전도팀','장금이팀','장수사진/메이크업팀','맛사지팀','간식팀','어린이(청소년)팀','시설지원팀','바자회팀','중보기도팀','의료팀','이미용팀','-'];
 var EDIT_SC  = ['7/21(화)','7/22(수)','7/21~22(화~수)'];
 var EDIT_REL = ['본인','배우자','자녀','부모','기타'];
-var EDIT_TRANS = ['자차+동승','자차','동승','버스'];
-var EDIT_ACCOM = ['개인가정','개인(개별준비)','단체(교회준비)'];
+var EDIT_TRANS = ['버스','자차','동승','-'];
+var EDIT_ACCOM = ['단체(교회준비)','개인(개별준비)'];
 var EDIT_VILLAGES = Object.keys(VILLAGE_MOKSANG);
 
 // 수정 가능 필드 정의: {key: 데이터 필드명, label, type, options?}
@@ -3324,69 +3246,10 @@ function syncFamilyIdFromAdmin(){
     });
 }
 
-var familySubTab = 'family'; // 'family' | 'vehicle' | 'accom'
-
-function setFamilySubTab(tab){
-  familySubTab = tab;
-  renderFamily();
-}
-
-// 가족현황 공통 멤버 행 렌더러 (가족묶음/차량묶음/숙소묶음 공용)
-function renderFamMemberRow(m, badgeLabel, badgeCls){
-  var spouseVal = m.spouse || m._autoSpouse || '';
-  var spouseCls = (!m.spouse && m._autoSpouse) ? 'auto' : '';
-  var spouseHint = spouseCls ? ' (자동)' : '';
-  var youth = isYouth(m);
-  var grade = youth ? youthGrade(m) : '';
-  var youthBadge = youth
-    ? ' 🎒<span style="font-size:10px;font-weight:700;color:#b85c00;background:rgba(255,140,0,0.12);border:1px solid rgba(255,140,0,0.25);border-radius:4px;padding:1px 5px;margin-left:2px;">'+esc(grade)+'</span>'
-    : '';
-  var mteamVal = (m.mteam||'').trim();
-  var mteamHtml = '<span style="font-size:9px;font-weight:700;color:#1565c0;background:rgba(21,101,192,0.08);border:1px solid rgba(21,101,192,0.2);border-radius:4px;padding:1px 5px;white-space:nowrap;flex-shrink:0;min-width:68px;max-width:90px;overflow:hidden;text-overflow:ellipsis;text-align:center;display:inline-block;">'+(mteamVal && mteamVal!=='-'?esc(mteamVal):'-')+'</span>';
-  var transVal = (m.trans||'-').trim();
-  var transStyle = transVal==='버스' ? 'color:#1b5e20;background:rgba(27,94,32,0.10);border:1px solid rgba(27,94,32,0.25);'
-    : transVal==='자차+동승' ? 'color:#1a6e3a;background:rgba(26,110,58,0.10);border:1px solid rgba(26,110,58,0.3);'
-    : transVal==='자차' ? 'color:#1a3a9e;background:rgba(26,58,158,0.10);border:1px solid rgba(26,58,158,0.25);'
-    : transVal==='동승' ? 'color:#6a1b9a;background:rgba(106,27,154,0.10);border:1px solid rgba(106,27,154,0.25);'
-    : 'color:#555;background:rgba(0,0,0,0.06);border:1px solid rgba(0,0,0,0.15);';
-  var transHtml = '<span style="font-size:9px;font-weight:700;border-radius:4px;min-width:28px;height:16px;line-height:16px;padding:0 3px;white-space:nowrap;flex-shrink:0;text-align:center;display:inline-block;box-sizing:border-box;'+transStyle+'">'+esc(transVal)+'</span>';
-
-  var spouseToggle = '';
-  if (spouseVal) {
-    var sid = 'sp-' + esc(m.rno);
-    spouseToggle = '<span class="fam-spouse-toggle" id="tgl-'+esc(m.rno)+'" onclick="toggleSpouse(\''+esc(m.rno)+'\')">💑 ›</span>'
-      + '<span class="fam-member-spouse '+spouseCls+'" id="'+sid+'">'+esc(spouseVal)+spouseHint+'</span>';
-  }
-
-  return '<div class="fam-member">'
-    + '<span class="fam-member-rel '+(badgeCls||'')+'">'+(youth?'🎒 ':'')+esc(badgeLabel)+'</span>'
-    + '<span class="fam-member-name">'+esc(m.name)+youthBadge+'</span>'
-    + '<span class="fam-member-info">'+esc(m.gender||'-')+' · '+esc((m.sched||'-').replace(/\([^)]*\)/g,'').trim())+'</span>'
-    + transHtml
-    + mteamHtml
-    + spouseToggle
-    + '</div>';
-}
-
 function renderFamily(){
   var panel = document.getElementById('familyPanel');
   if(!panel) return;
 
-  var subBar = '<div class="acct-filter" style="margin-bottom:10px;">'
-    + '<button class="acct-fbtn'+(familySubTab==='family'  ?' active':'')+'" onclick="setFamilySubTab(\'family\')">👨‍👩‍👧 가족묶음</button>'
-    + '<button class="acct-fbtn'+(familySubTab==='vehicle' ?' active':'')+'" onclick="setFamilySubTab(\'vehicle\')">🚗 차량묶음</button>'
-    + '<button class="acct-fbtn'+(familySubTab==='accom'   ?' active':'')+'" onclick="setFamilySubTab(\'accom\')">🏨 숙소묶음</button>'
-    + '</div>';
-
-  var body = familySubTab==='vehicle' ? renderVehicleGroupsHtml()
-    : familySubTab==='accom' ? renderAccomGroupsHtml()
-    : renderFamilyGroupsHtml();
-
-  panel.innerHTML = subBar + body;
-}
-
-// ── 👨‍👩‍👧 가족묶음 ──
-function renderFamilyGroupsHtml(){
   // ── 1. family_id별 그룹핑 ──
   // family_id 있으면 해당 값으로, 없으면 개인(단독)으로 처리 (단독은 표시 안 함)
   var byFid = {};
@@ -3438,6 +3301,9 @@ function renderFamilyGroupsHtml(){
   var fids = Object.keys(byFid).sort();
   var totalFam = fids.length;
   var totalMem = allData.filter(function(d){ return !!d.family_id; }).length;
+  var paidFam  = fids.filter(function(fid){
+    return byFid[fid].every(function(m){ return (payData[m.rno]||{}).status==='paid'; });
+  }).length;
 
   // ── 3. 통계 바 + 가족ID 일괄적용 버튼 ──
   var syncBtn = (currentUser&&currentUser.role==='super')
@@ -3475,7 +3341,39 @@ function renderFamilyGroupsHtml(){
     members.forEach(function(m){
       var rel = m.rel||'-';
       var relCls = rel==='배우자'?'spouse':rel==='자녀'||rel==='부모'?'child':'';
-      html += renderFamMemberRow(m, rel, relCls);
+      var spouseVal = m.spouse || m._autoSpouse || '';
+      var spouseCls = (!m.spouse && m._autoSpouse) ? 'auto' : '';
+      var spouseHint = spouseCls ? ' (자동)' : '';
+      // 자녀 학년 표기
+      var youth = isYouth(m);
+      var grade = youth ? youthGrade(m) : '';
+      var youthBadge = youth
+        ? ' 🎒<span style="font-size:10px;font-weight:700;color:#b85c00;background:rgba(255,140,0,0.12);border:1px solid rgba(255,140,0,0.25);border-radius:4px;padding:1px 5px;margin-left:2px;">'+esc(grade)+'</span>'
+        : '';
+      var mteamVal = (m.mteam||'').trim();
+      var mteamHtml = '<span style="font-size:9px;font-weight:700;color:#1565c0;background:rgba(21,101,192,0.08);border:1px solid rgba(21,101,192,0.2);border-radius:4px;padding:1px 5px;white-space:nowrap;flex-shrink:0;min-width:68px;max-width:90px;overflow:hidden;text-overflow:ellipsis;text-align:center;display:inline-block;">'+(mteamVal && mteamVal!=='-'?esc(mteamVal):'-')+'</span>';
+      var transVal = (m.trans||'-').trim();
+      var transStyle = transVal==='버스' ? 'color:#1b5e20;background:rgba(27,94,32,0.10);border:1px solid rgba(27,94,32,0.25);'
+        : transVal==='자차' ? 'color:#1a3a9e;background:rgba(26,58,158,0.10);border:1px solid rgba(26,58,158,0.25);'
+        : transVal==='동승' ? 'color:#6a1b9a;background:rgba(106,27,154,0.10);border:1px solid rgba(106,27,154,0.25);'
+        : 'color:#555;background:rgba(0,0,0,0.06);border:1px solid rgba(0,0,0,0.15);';
+      var transHtml = '<span style="font-size:9px;font-weight:700;border-radius:4px;width:28px;height:16px;line-height:16px;white-space:nowrap;flex-shrink:0;text-align:center;display:inline-block;box-sizing:border-box;'+transStyle+'">'+esc(transVal)+'</span>';
+
+      var spouseToggle = '';
+      if (spouseVal) {
+        var sid = 'sp-' + esc(m.rno);
+        spouseToggle = '<span class="fam-spouse-toggle" id="tgl-'+esc(m.rno)+'" onclick="toggleSpouse(\''+esc(m.rno)+'\')">💑 ›</span>'
+          + '<span class="fam-member-spouse '+spouseCls+'" id="'+sid+'">'+esc(spouseVal)+spouseHint+'</span>';
+      }
+
+      html += '<div class="fam-member">'
+        + '<span class="fam-member-rel '+relCls+'">'+(youth?'🎒 ':'')+esc(rel)+'</span>'
+        + '<span class="fam-member-name">'+esc(m.name)+youthBadge+'</span>'
+        + '<span class="fam-member-info">'+esc(m.gender||'-')+' · '+esc((m.sched||'-').replace(/\([^)]*\)/g,'').trim())+'</span>'
+        + transHtml
+        + mteamHtml
+        + spouseToggle
+        + '</div>';
     });
 
     html += '</div>'; // .fam-group
@@ -3485,123 +3383,7 @@ function renderFamilyGroupsHtml(){
     html += '<div class="fam-no-family">가족DB에 등록된 그룹이 없습니다.<br>가족DB 시트를 확인해주세요.</div>';
   }
 
-  return html;
-}
-
-// ── 🚗 차량묶음 ('자차+동승' 운전자 + '동승' 동승자만 대상, '자차' 단독·버스 제외) ──
-function renderVehicleGroupsHtml(){
-  var pool = allData.filter(function(d){ return d.trans === '자차+동승' || d.trans === '동승'; });
-  var drivers = pool.filter(function(d){ return d.trans === '자차+동승'; });
-  var passengers = pool.filter(function(d){ return d.trans === '동승'; });
-
-  var driverByName = {};
-  drivers.forEach(function(d){ driverByName[d.name] = true; });
-
-  var groups = {};     // 운전자 이름 → 동승자[]
-  var unassigned = [];
-  passengers.forEach(function(p){
-    var rideName = (p.ride || '').trim();
-    if (rideName && driverByName[rideName]) {
-      if (!groups[rideName]) groups[rideName] = [];
-      groups[rideName].push(p);
-    } else {
-      unassigned.push(p);
-    }
-  });
-
-  var html = '<div class="fam-stat-bar">'
-    + '<span class="fam-stat-chip">🚗 차량그룹 '+drivers.length+'팀</span>'
-    + '<span class="fam-stat-chip">👥 탑승인원 '+pool.length+'명</span>'
-    + '</div>';
-
-  drivers.forEach(function(drv){
-    var pax = groups[drv.name] || [];
-    html += '<div class="fam-group veh-group">';
-    html += '<div class="fam-group-hd">'
-      + '<span class="fam-group-id">🚗 '+esc(drv.name)+' 차량</span>'
-      + '<span class="fam-group-cnt">'+(1+pax.length)+'명</span>'
-      + (drv.moksang?'<span class="fam-group-moksang">'+esc(drv.moksang)+'</span>':'')
-      + '</div>';
-    html += renderFamMemberRow(drv, '운전자', 'driver');
-    pax.forEach(function(p){ html += renderFamMemberRow(p, '동승', 'pax'); });
-    html += '</div>';
-  });
-
-  if (unassigned.length) {
-    html += '<div class="fam-group veh-group veh-unassigned">';
-    html += '<div class="fam-group-hd">'
-      + '<span class="fam-group-id">⚠️ 차량 미지정 동승</span>'
-      + '<span class="fam-group-cnt">'+unassigned.length+'명</span>'
-      + '</div>';
-    unassigned.forEach(function(p){ html += renderFamMemberRow(p, '동승', 'pax'); });
-    html += '</div>';
-  }
-
-  if (drivers.length === 0 && unassigned.length === 0) {
-    html += '<div class="fam-no-family">자차+동승 / 동승으로 등록된 인원이 없습니다.<br>(자차 단독·버스는 제외됩니다)</div>';
-  }
-
-  return html;
-}
-
-// ── 🏨 숙소묶음 ('개인가정'만 대상, 가족현황(family_id) 기준으로 그룹핑) ──
-function renderAccomGroupsHtml(){
-  var pool = allData.filter(function(d){ return d.accom === '개인가정'; });
-
-  var byFid = {};
-  var fidOrder = [];
-  var solo = [];
-  pool.forEach(function(d){
-    var fid = d.family_id || '';
-    if (!fid) { solo.push(d); return; }
-    if (!byFid[fid]) { byFid[fid] = []; fidOrder.push(fid); }
-    byFid[fid].push(d);
-  });
-  fidOrder.sort();
-
-  var html = '<div class="fam-stat-bar">'
-    + '<span class="fam-stat-chip">🏨 개인가정 '+pool.length+'명</span>'
-    + '<span class="fam-stat-chip">👨‍👩‍👧 가족단위 '+fidOrder.length+'팀</span>'
-    + '</div>';
-
-  fidOrder.forEach(function(fid){
-    var members = byFid[fid];
-    var relOrder = {'본인':0,'배우자':1,'부모':2,'자녀':3,'기타':4,'-':5,'':5};
-    members.sort(function(a,b){
-      var ra=relOrder[a.rel]!==undefined?relOrder[a.rel]:5;
-      var rb=relOrder[b.rel]!==undefined?relOrder[b.rel]:5;
-      return ra-rb;
-    });
-    var rep = members[0];
-    html += '<div class="fam-group accom-group">';
-    html += '<div class="fam-group-hd">'
-      + '<span class="fam-group-id">🏨 '+esc(fid)+'</span>'
-      + '<span class="fam-group-cnt">'+members.length+'명</span>'
-      + (rep.moksang?'<span class="fam-group-moksang">'+esc(rep.moksang)+'</span>':'')
-      + '</div>';
-    members.forEach(function(m){
-      var rel = m.rel||'-';
-      var relCls = rel==='배우자'?'spouse':rel==='자녀'||rel==='부모'?'child':'';
-      html += renderFamMemberRow(m, rel, relCls);
-    });
-    html += '</div>';
-  });
-
-  if (solo.length) {
-    html += '<div class="fam-group accom-group accom-solo">';
-    html += '<div class="fam-group-hd">'
-      + '<span class="fam-group-id">🏠 개별 (가족묶음 없음)</span>'
-      + '<span class="fam-group-cnt">'+solo.length+'명</span>'
-      + '</div>';
-    solo.forEach(function(m){ html += renderFamMemberRow(m, m.village || '-', ''); });
-    html += '</div>';
-  }
-
-  if (pool.length === 0) {
-    html += '<div class="fam-no-family">개인가정 숙소로 등록된 인원이 없습니다.</div>';
-  }
-
-  return html;
+  panel.innerHTML = html;
 }
 
 // ── 수정로그 탭 ──
@@ -3880,9 +3662,9 @@ function doLinkVehicle() {
   if (!canEdit()) { showToast('슈퍼바이저 권한이 필요합니다'); return; }
 
   var members = rnos.map(function(r){ return allData.find(function(d){ return d.rno === r; }); }).filter(Boolean);
-  var drivers = members.filter(function(d){ return d.trans === '자차+동승'; });
-  if (drivers.length === 0) { showToast('자차+동승 운전자 1명을 포함해서 선택하세요'); return; }
-  if (drivers.length > 1)  { showToast('자차+동승 운전자는 1명만 선택하세요'); return; }
+  var drivers = members.filter(function(d){ return d.trans === '자차'; });
+  if (drivers.length === 0) { showToast('자차 운전자 1명을 포함해서 선택하세요'); return; }
+  if (drivers.length > 1)  { showToast('자차는 1명만 선택하세요'); return; }
   var driver = drivers[0];
   var passengers = members.filter(function(d){ return d.rno !== driver.rno; });
   if (passengers.length === 0) { showToast('동승할 인원을 1명 이상 선택하세요'); return; }
