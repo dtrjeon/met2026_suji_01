@@ -1487,7 +1487,12 @@ function makeTableView(key) {
       html += '<tr style="background:'+rowBg+';">';
       // 구분 — 첫 행만 rowSpan
       if(ri===0){
-        html += '<td rowspan="'+rows.length+'" class="grp" style="background:'+sideBg+';vertical-align:middle;">'+esc(grpName)+'</td>';
+        var leaderInfo = (key === 'mteam' && MTEAM_LEADERS[grpName])
+          ? '<div style="font-size:9px;color:#5a6a9a;font-weight:600;margin-top:2px;line-height:1.5;">'
+            + MTEAM_LEADERS[grpName].split(',').map(function(n){ return esc(n.trim()); }).join('<br>')
+            + '</div>'
+          : '';
+        html += '<td rowspan="'+rows.length+'" class="grp" style="background:'+sideBg+';vertical-align:middle;">'+esc(grpName)+leaderInfo+'</td>';
       }
       // 신청자 — 5명 가로
       html += '<td>';
@@ -1549,7 +1554,11 @@ function makeSectionHtml(secId, title, key, subMap, defaultTable) {
   var on = !!defaultTable;
   if (on) statTableMode[secId] = true;
   var bodyHtml = on ? makeTableView(key) : makeGraphView(dataMap, subMap);
+  var exportBtn = secId==='mteam'
+    ? '<button onclick="exportMteamExcel()" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:9px;margin-bottom:8px;background:linear-gradient(135deg,#1d6f42,#2e7d32);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(46,125,50,0.25);">📥 사역팀 명단 엑셀 저장</button>'
+    : '';
   return '<div class="stat-section">'
+    + exportBtn
     +'<div class="stat-sec-title">'
     +'<span>'+title+'</span>'
     +'<div class="tgl-wrap" onclick="toggleStatSection(&apos;'+secId+'&apos;,&apos;'+key+'&apos;)">'
@@ -1559,6 +1568,74 @@ function makeSectionHtml(secId, title, key, subMap, defaultTable) {
     +'</div></div></div>'
     +'<div id="stat-body-'+secId+'">'+bodyHtml+'</div>'
     +'</div>';
+}
+
+// ── 사역팀 명단 엑셀 내보내기 (팀명 / 팀장·부팀장(공란) / 팀원(신청자)) ──
+// 팀장/부팀장 매핑 (사역팀 실제 값 기준, 괄호 포함 그대로)
+var MTEAM_LEADERS = {
+  '전도팀':            '이은영, 손오성',
+  '시설지원팀':         '문동훈, 기재호, 최종문',
+  '장금이팀':           '김하연, 황은성',
+  '맛사지팀':           '최난주',
+  '간식팀':             '김영미',
+  '어린이(청소년)팀':    '정지원, 유원종',
+  '장수사진/메이크업팀': '이상훈, 임수현',
+  '의료팀':             '김미라',
+  '이미용팀':           '유수영',
+  '바자회팀':           '김의겸'
+};
+
+function exportMteamExcel(){
+  var byTeam = {};
+  var order = [];
+  allData.forEach(function(d){
+    var t = (d.mteam||'').trim();
+    if(!t) return;
+    if(!byTeam[t]){ byTeam[t]=[]; order.push(t); }
+    byTeam[t].push(d.name);
+  });
+  order.sort(function(a,b){ return a.localeCompare(b,'ko'); });
+
+  var headers = ['팀명','팀장/부팀장','팀원(신청자)'];
+  var rows = order.map(function(t){
+    var lines = chunk(byTeam[t], 5).map(function(g){ return g.join(', '); });
+    return { '팀명': t, '팀장/부팀장': MTEAM_LEADERS[t] || '', '팀원(신청자)': lines.join('\n'), _lineCount: lines.length };
+  });
+
+  var ws = XLSX.utils.json_to_sheet(rows, { header: headers });
+  ws['!cols'] = [{wch:16},{wch:16},{wch:90}];
+
+  var range = XLSX.utils.decode_range(ws['!ref']);
+  for (var C = range.s.c; C <= range.e.c; C++) {
+    var hdr = XLSX.utils.encode_cell({ r: 0, c: C });
+    if (!ws[hdr]) continue;
+    ws[hdr].s = {
+      fill: { fgColor: { rgb: '1A3AB0' } },
+      font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 11 },
+      alignment: { horizontal: 'center', vertical: 'center' }
+    };
+  }
+
+  // 팀원 열 줄바꿈(wrap) 처리 + 행 높이를 줄 수에 맞게 조정
+  var rowHeights = [{ hpt: 20 }]; // 헤더 행
+  for (var R = 1; R <= range.e.r; R++) {
+    var memCell = XLSX.utils.encode_cell({ r: R, c: 2 });
+    if (ws[memCell]) {
+      ws[memCell].s = { alignment: { wrapText: true, vertical: 'center' } };
+    }
+    var lc = rows[R-1] ? rows[R-1]._lineCount : 1;
+    rowHeights.push({ hpt: Math.max(18, lc * 16) });
+  }
+  ws['!rows'] = rowHeights;
+
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '사역팀명단');
+
+  var now = new Date();
+  var ts = now.getFullYear()
+    + String(now.getMonth()+1).padStart(2,'0')
+    + String(now.getDate()).padStart(2,'0');
+  XLSX.writeFile(wb, 'MET2026_사역팀명단_' + ts + '.xlsx');
 }
 
 function renderStats() {
