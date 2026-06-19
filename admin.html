@@ -334,6 +334,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .date-sheet-btns{display:flex;gap:8px;margin-top:14px;}
 .date-sheet-cancel{flex:1;padding:12px;background:#f0f2f8;border:none;border-radius:8px;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
 .date-sheet-ok{flex:2;padding:12px;background:linear-gradient(135deg,#2a5cd8,#1a3ab0);border:none;border-radius:8px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.trans-sheet-list{max-height:46vh;overflow-y:auto;}
+.trans-chk-row{display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text);}
+.trans-chk-row:last-child{border-bottom:none;}
+.trans-chk-row input{width:18px;height:18px;flex-shrink:0;accent-color:var(--primary);}
+.trans-chk-row.combo{color:var(--primary);}
 .date-sheet-clear{padding:12px 14px;background:#fdecea;border:none;border-radius:8px;font-size:12px;font-weight:700;color:var(--red);cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
 .acct-village-table{background:var(--card);border-radius:10px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:10px;}
 .acct-vtable-title{padding:10px 14px;background:#f0f4ff;font-size:11px;font-weight:700;color:var(--primary);letter-spacing:.8px;border-bottom:1px solid var(--border);}
@@ -370,6 +375,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .link-fam-count{font-size:12px;font-weight:700;color:rgba(255,255,255,0.85);}
 .link-fam-btn{background:#fff;border:none;border-radius:8px;color:var(--primary);font-size:12px;font-weight:700;padding:7px 14px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;touch-action:manipulation;}
 .link-fam-cancel{background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);border-radius:8px;color:#fff;font-size:11px;font-weight:600;padding:7px 10px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;touch-action:manipulation;}
+.link-fam-bar.veh-bar{background:linear-gradient(135deg,#1a6e3a,#2e9c52);}
+.veh-mode-btn{flex-shrink:0;padding:5px 12px;background:#fff;border:1px solid rgba(0,0,20,0.15);border-radius:6px;font-size:11px;font-weight:700;color:var(--text3);-webkit-appearance:none;outline:none;cursor:pointer;min-height:32px;touch-action:manipulation;font-family:'Noto Sans KR',sans-serif;}
+.veh-mode-btn.active{background:#1a6e3a;border-color:#1a6e3a;color:#fff;}
 
 /* 메인 앱 */
 .app{display:none;}
@@ -481,7 +489,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     <select class="filter-sel" id="fMteam"   onchange="applyFilter()"><option value="">전체 사역팀</option></select>
     <select class="filter-sel" id="fSched"   onchange="applyFilter()"><option value="">전체 일정</option></select>
     <select class="filter-sel" id="fAccom"   onchange="applyFilter()"><option value="">전체 숙소</option></select>
-    <select class="filter-sel" id="fTrans"   onchange="applyFilter()"><option value="">전체 차량</option></select>
+    <button class="filter-sel" id="fTransBtn" onclick="openTransSheet()" type="button">전체 차량</button>
     <select class="filter-sel" id="fVillage" onchange="applyFilter()"><option value="">전체 마을</option></select>
     <select class="filter-sel" id="fMoksang" onchange="applyFilter()"><option value="">전체 목장</option></select>
     <button class="filter-reset" onclick="resetFilter()">✕ 초기화</button>
@@ -501,6 +509,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   <div class="result-bar" id="resultBar">
     <span><strong>0</strong>명 표시 중</span>
     <div class="sort-btn-wrap">
+      <button class="veh-mode-btn" id="vehModeBtn" onclick="toggleVehSelMode()">🚗 차량묶기</button>
       <button class="sort-btn active" id="sortBtnRecent" onclick="setSortOrder('recent')">최신순</button>
       <button class="sort-btn" id="sortBtnAlpha" onclick="setSortOrder('alpha')">가나다순</button>
     </div>
@@ -546,6 +555,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     <button class="link-fam-cancel" onclick="exitSelMode()">취소</button>
   </div>
 
+  <!-- 차량묶기 선택모드 바 -->
+  <div class="link-fam-bar veh-bar" id="vehLinkBar">
+    <span class="link-fam-count" id="vehLinkCount">0명 선택</span>
+    <button class="link-fam-btn" onclick="doLinkVehicle()">🚗 차량으로 묶기</button>
+    <button class="link-fam-cancel" onclick="exitVehSelMode()">취소</button>
+  </div>
+
 </div><!-- /app -->
 
 <!-- 상세 오버레이 -->
@@ -589,6 +605,18 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
       <button class="date-sheet-clear" onclick="confirmClearDate()">삭제</button>
       <button class="date-sheet-cancel" onclick="closeDateSheet()">취소</button>
       <button class="date-sheet-ok" onclick="applyDateSheet()">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 차량 필터 시트 -->
+<div class="date-sheet-ovl" id="transSheetOvl" onclick="if(event.target===this)closeTransSheet()">
+  <div class="date-sheet">
+    <div class="date-sheet-title">🚗 차량 필터 (복수 선택)</div>
+    <div class="trans-sheet-list" id="transSheetList"></div>
+    <div class="date-sheet-btns">
+      <button class="date-sheet-cancel" onclick="closeTransSheet()">취소</button>
+      <button class="date-sheet-ok" onclick="applyTransSheet()">적용</button>
     </div>
   </div>
 </div>
@@ -871,7 +899,8 @@ function buildFilters() {
   fillSelect('fMteam',   '전체 사역팀', mteams);
   fillSelect('fSched',   '전체 일정',   scheds);
   fillSelect('fAccom',   '전체 숙소',   accoms);
-  fillSelect('fTrans',   '전체 차량',   transs);
+  _transAllOptions = transs;
+  updateTransBtnLabel();
   fillSelect('fVillage', '전체 마을',   villages);
   fillSelect('fMoksang', '전체 목장',   moksangs);
 }
@@ -891,6 +920,55 @@ function uniq(arr) {
   return out;
 }
 
+// ── 차량 필터 (복수선택) ──
+var _transAllOptions = [];
+var transFilterSelected = [];
+
+function openTransSheet(){
+  var list = document.getElementById('transSheetList');
+  var html = '';
+  if (_transAllOptions.indexOf('자차')>=0 && _transAllOptions.indexOf('동승')>=0) {
+    html += '<label class="trans-chk-row combo"><input type="checkbox" value="자차+동승" '+(transFilterSelected.indexOf('자차+동승')>=0?'checked':'')+'><span>🚗 자차+동승</span></label>';
+  }
+  _transAllOptions.forEach(function(o){
+    html += '<label class="trans-chk-row"><input type="checkbox" value="'+esc(o)+'" '+(transFilterSelected.indexOf(o)>=0?'checked':'')+'><span>'+esc(o)+'</span></label>';
+  });
+  list.innerHTML = html || '<div style="padding:16px 4px;text-align:center;color:var(--text3);font-size:12px;">선택 가능한 차량 항목이 없습니다</div>';
+  document.getElementById('transSheetOvl').classList.add('show');
+}
+function closeTransSheet(){
+  document.getElementById('transSheetOvl').classList.remove('show');
+}
+function applyTransSheet(){
+  var checks = document.querySelectorAll('#transSheetList input[type=checkbox]:checked');
+  transFilterSelected = Array.prototype.map.call(checks, function(c){ return c.value; });
+  updateTransBtnLabel();
+  closeTransSheet();
+  applyFilter();
+}
+function updateTransBtnLabel(){
+  var btn = document.getElementById('fTransBtn');
+  if (!btn) return;
+  if (transFilterSelected.length === 0) {
+    btn.textContent = '전체 차량';
+    btn.classList.remove('active');
+  } else if (transFilterSelected.length === 1) {
+    btn.textContent = transFilterSelected[0];
+    btn.classList.add('active');
+  } else {
+    btn.textContent = '차량 ' + transFilterSelected.length + '개';
+    btn.classList.add('active');
+  }
+}
+function transMatches(trans, sel){
+  for (var i=0;i<sel.length;i++){
+    var s = sel[i];
+    if (s === '자차+동승') { if (trans==='자차'||trans==='동승') return true; }
+    else if (trans === s) return true;
+  }
+  return false;
+}
+
 // ── 필터 적용 ──
 function applyFilter() {
   var ftype = document.getElementById('fType').value;
@@ -899,10 +977,9 @@ function applyFilter() {
   var ft = document.getElementById('fMteam').value;
   var fs = document.getElementById('fSched').value;
   var fa = document.getElementById('fAccom').value;
-  var ftr = document.getElementById('fTrans').value;
   var sq = document.getElementById('searchInput').value.trim();
 
-  ['fType','fMteam','fSched','fAccom','fTrans','fVillage','fMoksang'].forEach(function(id){
+  ['fType','fMteam','fSched','fAccom','fVillage','fMoksang'].forEach(function(id){
     document.getElementById(id).classList.toggle('active', !!document.getElementById(id).value);
   });
 
@@ -926,7 +1003,7 @@ function applyFilter() {
     if (ft  && d.mteam   !== ft)  return false;
     if (fs  && d.sched   !== fs)  return false;
     if (fa  && d.accom   !== fa)  return false;
-    if (ftr && d.trans   !== ftr) return false;
+    if (transFilterSelected.length && !transMatches(d.trans, transFilterSelected)) return false;
     if (sq) {
       var hay = (d.name+d.moksang+d.village+d.mteam+d.pastor+d.phone).toLowerCase();
       if (hay.indexOf(sq.toLowerCase()) < 0) return false;
@@ -959,10 +1036,12 @@ function applyFilter() {
 }
 
 function resetFilter() {
-  ['fType','fMteam','fSched','fAccom','fTrans','fVillage','fMoksang'].forEach(function(id){
+  ['fType','fMteam','fSched','fAccom','fVillage','fMoksang'].forEach(function(id){
     document.getElementById(id).value='';
     document.getElementById(id).classList.remove('active');
   });
+  transFilterSelected = [];
+  updateTransBtnLabel();
   document.getElementById('searchInput').value='';
   document.getElementById('searchClr').style.display='none';
   buildFilters();
@@ -3300,16 +3379,23 @@ function renderEditLog(logs) {
 }
 
 // ══════════════════════════════════════════
-// ── 가족묶기 선택 모드 ──
+// ── 가족묶기 / 차량묶기 선택 모드 ──
 // ══════════════════════════════════════════
 var _selMode = false;
 var _selRnos = {};
+var _vehSelMode = false;
+var _vehSelRnos = {};
 var _longPressTimer = null;
 
+function refreshSelModeClass() {
+  document.getElementById('listWrap').classList.toggle('sel-mode-active', _selMode || _vehSelMode);
+}
+
 function enterSelMode(triggerRno) {
+  if (_vehSelMode) exitVehSelMode();
   _selMode = true;
   _selRnos = {};
-  document.getElementById('listWrap').classList.add('sel-mode-active');
+  refreshSelModeClass();
   if (triggerRno) toggleSelCard(triggerRno);
   updateSelBar();
 }
@@ -3317,8 +3403,8 @@ function enterSelMode(triggerRno) {
 function exitSelMode() {
   _selMode = false;
   _selRnos = {};
-  document.getElementById('listWrap').classList.remove('sel-mode-active');
   document.querySelectorAll('.card.selected').forEach(function(c){ c.classList.remove('selected'); });
+  refreshSelModeClass();
   updateSelBar();
 }
 
@@ -3351,10 +3437,66 @@ function updateSelBar() {
   }
 }
 
+// ── 차량묶기 선택 모드 ──
+function toggleVehSelMode() {
+  if (_vehSelMode) exitVehSelMode();
+  else enterVehSelMode();
+}
+
+function enterVehSelMode() {
+  if (_selMode) exitSelMode();
+  _vehSelMode = true;
+  _vehSelRnos = {};
+  refreshSelModeClass();
+  document.getElementById('vehModeBtn').classList.add('active');
+  updateVehSelBar();
+}
+
+function exitVehSelMode() {
+  _vehSelMode = false;
+  _vehSelRnos = {};
+  document.querySelectorAll('.card.selected').forEach(function(c){ c.classList.remove('selected'); });
+  refreshSelModeClass();
+  document.getElementById('vehModeBtn').classList.remove('active');
+  updateVehSelBar();
+}
+
+function toggleVehSelCard(rno) {
+  var card = document.getElementById('card-' + rno);
+  if (!card) return;
+  if (_vehSelRnos[rno]) {
+    delete _vehSelRnos[rno];
+    card.classList.remove('selected');
+  } else {
+    _vehSelRnos[rno] = true;
+    card.classList.add('selected');
+  }
+  updateVehSelBar();
+}
+
+function updateVehSelBar() {
+  var bar = document.getElementById('vehLinkBar');
+  var cnt = Object.keys(_vehSelRnos).length;
+  document.getElementById('vehLinkCount').textContent = cnt + '명 선택';
+  var btn = bar.querySelector('.link-fam-btn');
+  if (cnt >= 2) {
+    bar.classList.add('show');
+    btn.disabled = false; btn.style.opacity = '1';
+  } else if (cnt === 1) {
+    bar.classList.add('show');
+    btn.disabled = true; btn.style.opacity = '0.45';
+  } else {
+    bar.classList.remove('show');
+  }
+}
+
 function onCardClick(event, idx) {
   if (_selMode) {
     var d = filtered[idx];
     if (d) toggleSelCard(d.rno);
+  } else if (_vehSelMode) {
+    var d2 = filtered[idx];
+    if (d2) toggleVehSelCard(d2.rno);
   } else {
     openDetail(idx);
   }
@@ -3364,6 +3506,7 @@ function startLongPress(event, rno) {
   cancelLongPress();
   _longPressTimer = setTimeout(function() {
     _longPressTimer = null;
+    if (_vehSelMode) { toggleVehSelCard(rno); return; }
     if (!_selMode) enterSelMode(rno);
     else toggleSelCard(rno);
   }, 500);
@@ -3373,6 +3516,7 @@ function cancelLongPress() {
 }
 function onCardLongPress(event, rno) {
   event.preventDefault();
+  if (_vehSelMode) { toggleVehSelCard(rno); return; }
   if (!_selMode) enterSelMode(rno);
   else toggleSelCard(rno);
 }
@@ -3446,6 +3590,64 @@ function doLinkFamily() {
     showToast('⚠️ 네트워크 오류: ' + e.message);
     btn.textContent = '👨‍👩‍👧 가족으로 묶기'; btn.disabled = false;
   });
+}
+
+// ── 차량으로 묶기: 자차 1명 + 동승 N명 선택 → 동승자들의 '동승운전자'를 자차 운전자 이름으로 채움 ──
+function doLinkVehicle() {
+  var rnos = Object.keys(_vehSelRnos);
+  if (rnos.length < 2) { showToast('2명 이상 선택하세요'); return; }
+  if (!canEdit()) { showToast('슈퍼바이저 권한이 필요합니다'); return; }
+
+  var members = rnos.map(function(r){ return allData.find(function(d){ return d.rno === r; }); }).filter(Boolean);
+  var drivers = members.filter(function(d){ return d.trans === '자차'; });
+  if (drivers.length === 0) { showToast('자차 운전자 1명을 포함해서 선택하세요'); return; }
+  if (drivers.length > 1)  { showToast('자차는 1명만 선택하세요'); return; }
+  var driver = drivers[0];
+  var passengers = members.filter(function(d){ return d.rno !== driver.rno; });
+  if (passengers.length === 0) { showToast('동승할 인원을 1명 이상 선택하세요'); return; }
+
+  var pNames = passengers.map(function(p){ return p.name; }).join(', ');
+  var msg = '🚗 ' + driver.name + ' 차량\n동승: ' + pNames + '\n\n위 ' + passengers.length + '명을 이 차량에 동승으로 묶겠습니까?';
+  if (!confirm(msg)) return;
+
+  var pw = currentUser.name + ':' + currentUser.phone;
+  var bar = document.getElementById('vehLinkBar');
+  var btn = bar.querySelector('.link-fam-btn');
+  btn.textContent = '처리 중…'; btn.disabled = true;
+
+  var done = 0, fail = 0;
+  function next(i) {
+    if (i >= passengers.length) {
+      if (fail === 0) {
+        showToast('✅ ' + driver.name + ' 차량으로 ' + done + '명 묶음 완료!');
+        exitVehSelMode();
+        loadData();
+      } else {
+        showToast('⚠️ ' + done + '명 완료, ' + fail + '명 실패');
+        btn.textContent = '🚗 차량으로 묶기'; btn.disabled = false;
+      }
+      return;
+    }
+    var p = passengers[i];
+    fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'data=' + encodeURIComponent(JSON.stringify({
+        action: 'updateRow',
+        rno: p.rno,
+        fields: { '차량': '동승', '동승운전자': driver.name },
+        pw: pw,
+        editor: currentUser.name
+      }))
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (res.result === 'ok') done++; else fail++;
+      next(i + 1);
+    })
+    .catch(function(){ fail++; next(i + 1); });
+  }
+  next(0);
 }
 
 </script>
