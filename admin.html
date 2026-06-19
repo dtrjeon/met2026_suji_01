@@ -140,7 +140,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .stat-table td:last-child{border-right:none;}
 .stat-table td.grp{font-weight:700;color:var(--primary);}
 .stat-table td.cnt{text-align:center;font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--primary);}
-.nm-badge{display:inline-flex;align-items:center;gap:3px;white-space:nowrap;margin-right:4px;}
+.nm-badge{display:inline-flex;align-items:center;gap:3px;white-space:nowrap;margin-right:4px;cursor:pointer;border-radius:4px;padding:1px 3px;transition:background .1s;}
+.nm-badge:active{background:rgba(32,80,200,0.12);}
 .nm-badge .nm{font-size:11px;font-weight:600;color:var(--text);}
 .nm-badge .gd{font-size:9px;padding:1px 4px;border-radius:4px;font-weight:700;}
 .nm-badge .gd.f{background:#fdecea;color:var(--red);}
@@ -180,9 +181,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .dup-chk{width:18px;height:18px;border-radius:4px;border:2px solid rgba(230,81,0,0.3);background:#fff;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;}
 .dup-chk.checked{background:var(--orange);border-color:var(--orange);}
 .dup-info{flex:1;min-width:0;}
-.dup-name{font-size:12px;font-weight:700;color:var(--text);}
-.dup-sub{font-size:10px;color:var(--text2);margin-top:2px;}
-.dup-date{font-size:10px;color:var(--text3);flex-shrink:0;text-align:right;}
 .dup-del-bar{position:sticky;bottom:0;left:0;right:0;background:#fff;border-top:2px solid rgba(230,81,0,0.2);padding:10px 16px;display:none;z-index:90;box-shadow:0 -2px 12px rgba(0,0,0,0.08);}
 .dup-del-bar.show{display:flex;align-items:center;gap:10px;}
 .dup-del-btn{flex:1;padding:11px;background:linear-gradient(135deg,var(--orange),#bf360c);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
@@ -205,10 +203,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .fam-group-id{font-size:11px;font-weight:700;color:#1a3a9e;background:rgba(32,80,200,0.1);border-radius:5px;padding:2px 7px;}
 .fam-group-cnt{font-size:12px;font-weight:700;color:#333;}
 .fam-group-moksang{font-size:11px;color:#666;margin-left:auto;}
-.fam-group-pay{font-size:11px;font-weight:700;}
-.fam-group-pay.paid{color:#2e7d32;}
-.fam-group-pay.partial{color:#e65100;}
-.fam-group-pay.unpaid{color:#999;}
 .fam-group .card{border-radius:0;box-shadow:none;border-top:1px solid rgba(0,0,0,0.06);margin-bottom:0;}
 .fam-group .card:last-child{border-radius:0 0 12px 12px;}
 .fam-member{display:flex;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid rgba(0,0,0,0.04);}
@@ -216,7 +210,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .fam-member-rel{font-size:9px;font-weight:700;color:#fff;background:#1a3a9e;border-radius:4px;padding:2px 0;width:32px;min-width:32px;text-align:center;flex-shrink:0;}
 .fam-member-rel.spouse{background:#6a1a9e;}
 .fam-member-rel.child{background:#2e7d32;}
-.fam-member-rel.etc{background:#888;}
 .fam-member-name{font-size:12px;font-weight:700;color:#222;width:72px;min-width:72px;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0;}
 .fam-member-info{font-size:10px;color:#666;white-space:nowrap;width:72px;min-width:72px;flex-shrink:0;}
 .fam-member-spouse{font-size:10px;color:#555;display:none;margin-left:2px;white-space:nowrap;}
@@ -224,9 +217,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .fam-member-spouse.visible{display:inline;}
 .fam-spouse-toggle{font-size:10px;color:rgba(26,58,176,0.5);cursor:pointer;padding:2px 4px;border-radius:4px;border:1px solid rgba(26,58,176,0.15);background:rgba(26,58,176,0.04);flex-shrink:0;touch-action:manipulation;transition:all .15s;line-height:1;user-select:none;-webkit-user-select:none;white-space:nowrap;margin-left:auto;}
 .fam-spouse-toggle.open{color:var(--primary);background:rgba(26,58,176,0.1);border-color:rgba(26,58,176,0.3);}
-.fam-member-pay{font-size:11px;font-weight:700;min-width:40px;text-align:right;}
-.fam-member-pay.paid{color:#2e7d32;}
-.fam-member-pay.unpaid{color:#bbb;}
 .fam-no-family{text-align:center;padding:32px 16px;color:#aaa;font-size:13px;}
 .editlog-card{background:var(--card);border-radius:10px;padding:10px 14px;margin-bottom:8px;box-shadow:var(--shadow);border:1px solid var(--border);}
 .editlog-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
@@ -298,12 +288,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .acct-search input{flex:1;border:none;background:transparent;font-size:13px;color:var(--text);outline:none;-webkit-appearance:none;font-family:'Noto Sans KR',sans-serif;}
 .acct-search input::placeholder{color:var(--text3);}
 
-/* 마을별 필터 */
-.acct-village-filter{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:6px;margin-bottom:8px;}
-.acct-village-filter::-webkit-scrollbar{display:none;}
-.acct-vbtn{flex-shrink:0;padding:4px 10px;background:#f7f9ff;border:1px solid var(--border);border-radius:6px;font-size:10px;font-weight:700;color:var(--primary);cursor:pointer;-webkit-appearance:none;touch-action:manipulation;white-space:nowrap;font-family:'Noto Sans KR',sans-serif;}
-.acct-vbtn.active{background:var(--primary);border-color:var(--primary);color:#fff;}
-
 /* 결과 수 */
 .acct-result{font-size:10px;color:var(--text3);margin-bottom:6px;letter-spacing:.3px;}
 .acct-result strong{color:var(--primary);}
@@ -318,10 +302,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .pay-member-row:last-child{border-bottom:none;}
 .pay-member-row.paid-bg{background:#f1f8f1;}
 .pay-member-row.exempt-bg{background:#f5f0fb;}
-.pay-avatar{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;}
-.pay-avatar.paid{background:var(--green);}
-.pay-avatar.unpaid{background:#5c7fc2;}
-.pay-avatar.exempt{background:#7b1fa2;}
 .pay-member-info{flex:1;min-width:0;}
 .pay-member-name{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
 .pay-member-sub{font-size:10px;color:var(--text2);margin-top:1px;}
@@ -340,8 +320,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .psb-cycle.exempt{background:#f3e5f5;border-color:rgba(123,31,162,0.2);color:#7b1fa2;}
 /* 회계 - 납입일 + 전화번호 */
 .pay-member-right{display:flex;flex-direction:row;align-items:center;gap:5px;flex-shrink:0;min-width:120px;justify-content:flex-end;}
-.pay-date-btn{font-size:10px;font-weight:700;color:#1a6e3a;border:1.5px solid rgba(46,125,50,0.3);border-radius:6px;background:#f1f8f1;padding:4px 8px;cursor:pointer;white-space:nowrap;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
-.pay-date-btn.empty{color:var(--text3);background:#f7f9ff;border-color:var(--border);font-weight:400;}
 .pay-date-tag{font-size:11px;font-weight:700;color:rgba(30,100,60,0.75);cursor:pointer;white-space:nowrap;touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:2px 2px;}
 .pay-date-tag.empty{font-size:10px;font-weight:400;color:var(--text3);border:1px dashed var(--border);border-radius:4px;padding:2px 5px;}
 .pay-phone{font-size:10px;color:#1560a8;font-weight:600;white-space:nowrap;letter-spacing:.3px;}
@@ -366,12 +344,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
 /* 배지 */
 .badge{display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;}
-.b-red{background:#fdecea;color:var(--red);}
-.b-blue{background:#e3f0ff;color:var(--blue);}
-.b-green{background:#e8f5e9;color:var(--green);}
-.b-orange{background:#fff3e0;color:var(--orange);}
-.b-gray{background:#f5f5f5;color:#666;}
-.b-purple{background:#f3e5f5;color:#7b1fa2;}
 
 /* 로딩 / 에러 */
 .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:14px;}
@@ -620,6 +592,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     </div>
   </div>
 </div>
+
+<div class="status-toast" id="statusToast"></div>
 
 <script>
 // ★ GAS 배포 URL — Code.gs 배포 후 발급된 URL로 교체하세요
@@ -1377,7 +1351,7 @@ function makeTableView(key) {
       rowMembers.forEach(function(m){
         var gClass = m.gender==='여' ? 'f' : 'm';
         var yth = isYouth(m); var grd = youthGrade(m);
-        html += '<span class="nm-badge">'
+        html += '<span class="nm-badge" onclick="openStatDetail(\''+esc(m.rno)+'\')">'
           +(yth?'<span style="font-size:10px;">🎒</span>':'')
           +'<span class="nm">'+esc(m.name)+'</span>'
           +(grd?'<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:rgba(255,140,0,0.12);color:#b85c00;border:1px solid rgba(255,140,0,0.2);font-weight:700;">'+esc(grd)+'</span>':'')
@@ -1587,7 +1561,7 @@ function makeVillageTableView() {
           rowMembers.forEach(function(m){
             var yth = isYouth(m); var grd = youthGrade(m);
             var gClass = m.gender==='여' ? 'f' : 'm';
-            html += '<span class="nm-badge">'
+            html += '<span class="nm-badge" onclick="openStatDetail(\''+esc(m.rno)+'\')">'
               +(yth?'<span style="font-size:10px;">🎒</span>':'')
               +'<span class="nm">'+esc(m.name)+'</span>'
               +(grd?'<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:rgba(255,140,0,0.12);color:#b85c00;border:1px solid rgba(255,140,0,0.2);font-weight:700;">'+esc(grd)+'</span>':'')
@@ -2147,8 +2121,31 @@ function openMissDetail(rno) {
   }
 }
 
+// ── 통계 탭에서 이름 클릭 시 상세보기 ──
+function openStatDetail(rno) {
+  var idx = filtered.findIndex ? filtered.findIndex(function(d){ return d.rno===rno; }) : -1;
+  if(idx < 0) {
+    idx = allData.findIndex ? allData.findIndex(function(d){ return d.rno===rno; }) : -1;
+    if(idx >= 0) { filtered = allData; }
+  }
+  if(idx >= 0) {
+    _editFromTab = 'stat'; // 저장 후 통계 탭으로 복귀
+    openDetail(idx);
+  }
+}
+
 // ── XSS 방지 ──
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+var _toastTimer = null;
+function showToast(msg) {
+  var el = document.getElementById('statusToast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  if (_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2200);
+}
 
 // ── 청소년 판별 (비고란 학년 또는 주민번호 추정) ──
 function gradeFromSsn(ssn) {
@@ -2231,7 +2228,7 @@ function youthGrade(d) {
 
 var payData = {};  // { rno: { status, amount, date, memo } }
 
-var acctFilter = { status: 'all', search: '', village: '', moksang: '', groupType: 'all', viewMode: 'family' };
+var acctFilter = { status: 'all', search: '' };
 
 // GAS에서 payData 로드 (processData 호출 시 병합)
 function loadPayDataFromServer(serverPayData) {
@@ -2444,14 +2441,6 @@ function buildGroups(data) {
   // 명단 번호순 정렬
   groups.sort(function(a,b){ return a.idx-b.idx; });
   return groups;
-}
-
-function groupStatus(members){
-  var sts=members.map(function(m){ return (payData[m.rno]||{}).status||'unpaid'; });
-  if(sts.every(function(s){return s==='paid';})) return 'paid';
-  if(sts.every(function(s){return s==='unpaid';})) return 'unpaid';
-  if(sts.every(function(s){return s==='exempt';})) return 'exempt';
-  return 'partial';
 }
 
 function renderAcct(){
@@ -2777,16 +2766,7 @@ function setPayDate(rno, dateVal){
   renderAcct();
 }
 function setAcctFilter(st){ acctFilter.status=st; renderAcct(); }
-function setAcctGroupType(t){ acctFilter.groupType=t; renderAcct(); }
-function setAcctVillage(v){ acctFilter.village=v; acctFilter.moksang=''; renderAcct(); }
-function setAcctMoksang(m){ acctFilter.moksang=m; acctFilter.village=''; renderAcct(); }
 function setAcctSearch(v){  acctFilter.search=v;  renderAcct(); }
-function setAcctViewMode(m){
-  acctFilter.viewMode=m;
-  acctFilter.village='';
-  acctFilter.moksang='';
-  renderAcct();
-}
 
 // ══════════════════════════════════════════
 // ✏️ 슈퍼바이저 명단 수정 (풀스크린 폼)
