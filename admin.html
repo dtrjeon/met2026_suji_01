@@ -205,6 +205,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .fam-group-moksang{font-size:11px;color:#666;margin-left:auto;}
 .fam-group .card{border-radius:0;box-shadow:none;border-top:1px solid rgba(0,0,0,0.06);margin-bottom:0;}
 .fam-group .card:last-child{border-radius:0 0 12px 12px;}
+.veh-group .fam-group-hd{background:linear-gradient(135deg,rgba(26,110,58,0.1),rgba(26,110,58,0.04));border-bottom:1px solid rgba(26,110,58,0.15);}
+.veh-group .fam-group-id{color:#1a6e3a;background:rgba(26,110,58,0.12);}
+.veh-group.veh-unassigned .fam-group-hd{background:linear-gradient(135deg,rgba(200,80,32,0.1),rgba(200,80,32,0.04));border-bottom:1px solid rgba(200,80,32,0.15);}
+.veh-group.veh-unassigned .fam-group-id{color:#c85020;background:rgba(200,80,32,0.12);}
 .fam-member{display:flex;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid rgba(0,0,0,0.04);}
 .fam-member:last-child{border-bottom:none;}
 .fam-member-rel{font-size:9px;font-weight:700;color:#fff;background:#1a3a9e;border-radius:4px;padding:2px 0;width:32px;min-width:32px;text-align:center;flex-shrink:0;}
@@ -1074,6 +1078,12 @@ function renderList() {
     return;
   }
 
+  // 차량 필터가 "자차+동승"일 때 운전자별 그룹핑 렌더링
+  if (transFilterSelected.length === 1 && transFilterSelected[0] === '자차+동승') {
+    renderListGroupedByVehicle();
+    return;
+  }
+
   var total = filtered.length;
   wrap.innerHTML = filtered.map(function(d, i) {
     return renderCard(d, i, total);
@@ -1124,6 +1134,59 @@ function renderListGrouped() {
   });
 
   wrap.innerHTML = html;
+}
+
+// ── "자차+동승" 필터 시 운전자별 그룹핑 렌더링 ──
+function renderListGroupedByVehicle() {
+  var wrap = document.getElementById('listWrap');
+  var total = filtered.length;
+
+  var drivers    = filtered.filter(function(d){ return d.trans === '자차'; });
+  var passengers = filtered.filter(function(d){ return d.trans === '동승'; });
+
+  var driverByName = {};
+  drivers.forEach(function(d){ driverByName[d.name] = true; });
+
+  var groups = {};     // 운전자 이름 → 동승자[]
+  var unassigned = [];
+  passengers.forEach(function(p){
+    var rideName = (p.ride || '').trim();
+    if (rideName && driverByName[rideName]) {
+      if (!groups[rideName]) groups[rideName] = [];
+      groups[rideName].push(p);
+    } else {
+      unassigned.push(p);
+    }
+  });
+
+  var rnoToIdx = {};
+  filtered.forEach(function(d, i) { rnoToIdx[d.rno] = i; });
+
+  var html = '';
+
+  drivers.forEach(function(drv) {
+    var pax = groups[drv.name] || [];
+    html += '<div class="fam-group veh-group">'
+      + '<div class="fam-group-hd">'
+      + '<span class="fam-group-id">🚗 ' + esc(drv.name) + ' 차량</span>'
+      + '<span class="fam-group-cnt">' + (1 + pax.length) + '명</span>'
+      + '</div>';
+    html += renderCard(drv, rnoToIdx[drv.rno], total);
+    pax.forEach(function(p) { html += renderCard(p, rnoToIdx[p.rno], total); });
+    html += '</div>';
+  });
+
+  if (unassigned.length) {
+    html += '<div class="fam-group veh-group veh-unassigned">'
+      + '<div class="fam-group-hd">'
+      + '<span class="fam-group-id">⚠️ 차량 미지정 동승</span>'
+      + '<span class="fam-group-cnt">' + unassigned.length + '명</span>'
+      + '</div>';
+    unassigned.forEach(function(p) { html += renderCard(p, rnoToIdx[p.rno], total); });
+    html += '</div>';
+  }
+
+  wrap.innerHTML = html || '<div class="empty"><div class="empty-ico">🚗</div><div class="empty-txt">해당하는 차량 인원이 없습니다</div></div>';
 }
 
 function renderCard(d, i, total) {
