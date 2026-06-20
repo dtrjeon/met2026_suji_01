@@ -2460,7 +2460,7 @@ function loadPayDataFromServer(serverPayData) {
 }
 
 // 변경된 납부 정보를 GAS에 저장
-function savePayData(rno) {
+function savePayData(rno, prevState) {
   if (!rno || !payData[rno]) return;
   var d = payData[rno];
   // allData에서 이름과 계산 금액 조회
@@ -2487,7 +2487,22 @@ function savePayData(rno) {
       pw: _pw,
       rows: rows
     }))
-  }).catch(function(e){ console.warn('납부 저장 오류:', e); });
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(res){
+    if (res.result !== 'ok') {
+      // 저장 실패: 화면 상태를 이전값으로 되돌림
+      if (prevState !== undefined) { payData[rno] = prevState; }
+      renderAcct();
+      showToast('⚠️ 저장 실패: ' + (res.message || '권한을 확인해주세요'));
+    }
+  })
+  .catch(function(e){
+    console.warn('납부 저장 오류:', e);
+    if (prevState !== undefined) { payData[rno] = prevState; }
+    renderAcct();
+    showToast('⚠️ 네트워크 오류로 저장되지 않았습니다');
+  });
 }
 
 function getFee(d){
@@ -2914,6 +2929,7 @@ function cyclePaySt(rno){
   setPaySt(rno,next);
 }
 function setPaySt(rno,st){
+  var prev = payData[rno] ? Object.assign({}, payData[rno]) : null;
   if(!payData[rno]) payData[rno]={};
   payData[rno].status=st;
   if(st==='paid'){
@@ -2924,7 +2940,7 @@ function setPaySt(rno,st){
   } else {
     payData[rno].date='';
   }
-  savePayData(rno);
+  savePayData(rno, prev);
   renderAcct();
 }
 // ── 납입일 시트 ──
@@ -2978,12 +2994,13 @@ function confirmClearDate() {
   });
 })();
 function setPayDate(rno, dateVal){
+  var prev = payData[rno] ? Object.assign({}, payData[rno]) : null;
   if(!payData[rno]) payData[rno]={};
   payData[rno].date = dateVal || '';
   if(dateVal && (!payData[rno].status || payData[rno].status==='unpaid')){
     payData[rno].status = 'paid';
   }
-  savePayData(rno);
+  savePayData(rno, prev);
   renderAcct();
 }
 function setAcctFilter(st){ acctFilter.status=st; renderAcct(); }
