@@ -222,6 +222,37 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
 .lkup-btn{display:flex;align-items:center;gap:8px;margin:0 auto 0;padding:10px 18px;background:rgba(32,80,200,0.07);border:1.5px solid rgba(32,80,200,0.2);border-radius:8px;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;color:#1a3a9e;cursor:pointer;width:100%;justify-content:center;-webkit-appearance:none;margin-bottom:14px;}
 .lkup-btn:active{background:rgba(32,80,200,0.13);}
 
+/* 신청하기 토글 */
+.apply-toggle{display:flex;align-items:center;justify-content:center;gap:8px;padding:15px 18px;background:linear-gradient(135deg,#2a5cd8,#1a3ab0);border:none;border-radius:10px;cursor:pointer;margin-bottom:14px;width:100%;-webkit-appearance:none;touch-action:manipulation;-webkit-tap-highlight-color:rgba(255,255,255,0.15);box-shadow:0 3px 10px rgba(26,58,176,0.25);}
+.apply-toggle:active{opacity:0.88;}
+.apply-toggle-title{font-size:15px;font-weight:800;color:#fff;letter-spacing:1px;font-family:'Noto Sans KR',sans-serif;}
+.apply-toggle-arrow{font-size:12px;color:#fff;transition:transform .15s;display:inline-block;}
+.apply-toggle-arrow.open{transform:rotate(180deg);}
+.apply-form-wrap{display:none;}
+.apply-form-wrap.open{display:block;}
+
+/* 공지사항 */
+.notice-box{background:rgba(32,80,200,0.05);border:1px solid rgba(32,80,200,0.18);border-radius:10px;padding:14px 16px;margin-bottom:14px;}
+.notice-box-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.notice-box-title{font-size:12px;font-weight:800;color:#1a3a9e;display:flex;align-items:center;gap:6px;}
+.notice-add-btn{padding:6px 13px;background:#fff;border:1px solid rgba(32,80,200,0.3);border-radius:20px;font-size:11px;font-weight:700;color:#1a3a9e;cursor:pointer;-webkit-appearance:none;font-family:'Noto Sans KR',sans-serif;touch-action:manipulation;min-height:30px;}
+.notice-add-btn:active{background:rgba(32,80,200,0.1);}
+.notice-list{display:flex;flex-direction:column;gap:8px;}
+.notice-item{background:#fff;border:1px solid rgba(32,80,200,0.12);border-radius:8px;padding:10px 12px;}
+.notice-item-body{font-size:12px;color:#1a1e3a;line-height:1.6;white-space:pre-wrap;word-break:break-word;}
+.notice-item-meta{font-size:10px;color:rgba(40,50,90,0.55);margin-top:6px;}
+.notice-empty{font-size:11px;color:rgba(80,90,130,0.5);text-align:center;padding:10px;}
+.notice-form{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(32,80,200,0.25);}
+.notice-form-row{display:flex;gap:8px;margin-bottom:8px;}
+.notice-form-row input{flex:1;min-width:0;}
+.notice-form textarea{width:100%;min-height:64px;margin-bottom:8px;}
+.notice-form-btns{display:flex;gap:8px;}
+.notice-form-btns button{flex:1;padding:10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;-webkit-appearance:none;font-family:'Noto Sans KR',sans-serif;touch-action:manipulation;border:none;min-height:40px;}
+.notice-cancel-btn{background:#f0f2f8;color:rgba(20,30,70,0.7);}
+.notice-submit-btn{background:linear-gradient(135deg,#2a5cd8,#1a3ab0);color:#fff;}
+.notice-submit-btn:disabled{opacity:0.6;}
+.notice-form-msg{font-size:11px;color:#c00;margin-top:6px;min-height:14px;}
+
 /* 사역팀 신청 현황 */
 .team-stat{margin-bottom:14px;}
 .team-stat-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
@@ -454,6 +485,29 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
 
 <div class="con">
 
+  <!-- 공지사항 -->
+  <div class="notice-box" id="noticeBox">
+    <div class="notice-box-hd">
+      <div class="notice-box-title">📢 공지사항</div>
+      <button type="button" class="notice-add-btn" onclick="toggleNoticeForm()">+ 작성</button>
+    </div>
+    <div class="notice-list" id="noticeList">
+      <div class="notice-empty">불러오는 중…</div>
+    </div>
+    <div class="notice-form" id="noticeForm" style="display:none;">
+      <div class="notice-form-row">
+        <input type="text" id="noticeName" placeholder="이름" maxlength="20"/>
+        <input type="tel" id="noticePhone" placeholder="전화번호" maxlength="20" inputmode="tel"/>
+      </div>
+      <textarea id="noticeContent" placeholder="공지 내용을 입력하세요" maxlength="500"></textarea>
+      <div class="notice-form-btns">
+        <button type="button" class="notice-cancel-btn" onclick="toggleNoticeForm()">취소</button>
+        <button type="button" class="notice-submit-btn" onclick="submitNotice()">등록</button>
+      </div>
+      <div class="notice-form-msg" id="noticeFormMsg"></div>
+    </div>
+  </div>
+
   <!-- 사역팀 신청 현황 -->
   <div class="team-stat" id="teamStatBox">
     <div class="team-stat-hd" onclick="toggleTeamStatSection()">
@@ -477,6 +531,13 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
     🔍 이전 신청 내용 불러오기 / 수정
   </button>
 
+  <!-- 신청하기 토글 -->
+  <button type="button" class="apply-toggle" id="applyToggle" onclick="toggleApplyForm()">
+    <span class="apply-toggle-title">✍️ 신청하기</span>
+    <span class="apply-toggle-arrow" id="applyToggleArrow">▾</span>
+  </button>
+
+  <div class="apply-form-wrap" id="applyFormWrap">
   <div class="sec">
     <div class="sec-lbl">신청 유형</div>
     <div class="type-sel">
@@ -525,6 +586,7 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
     <div class="errtitle">아래 항목을 확인해주세요</div>
     <div id="errlist"></div>
   </div>
+  </div><!-- /applyFormWrap -->
 </div><!-- /con -->
 </div><!-- /mainpage -->
 
@@ -770,6 +832,115 @@ window.addEventListener('load', function(){ loadNameList(); });
 })();
 
 // ============================================================
+// 공지사항 (작성 시 이름·전화번호 필수)
+// ============================================================
+(function(){
+  function noticeEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function renderNotices(data){
+    var list = document.getElementById('noticeList');
+    if(!list) return;
+    if(!data || data.result!=='ok' || !data.data || !data.data.length){
+      list.innerHTML = '<div class="notice-empty">등록된 공지가 없습니다</div>';
+      return;
+    }
+    var html = '';
+    data.data.forEach(function(n){
+      html += '<div class="notice-item">'
+        +'<div class="notice-item-body">'+noticeEsc(n.content).replace(/\n/g,'<br>')+'</div>'
+        +'<div class="notice-item-meta">'+noticeEsc(n.name||'익명')+' · '+noticeEsc(n.time||'')+'</div>'
+        +'</div>';
+    });
+    list.innerHTML = html;
+  }
+
+  function fetchNotices(){
+    var url = GSURL + '?action=notices';
+    if(typeof fetch === 'function'){
+      fetch(url, {method:'GET', mode:'cors'})
+        .then(function(r){ return r.json(); })
+        .then(function(data){ renderNotices(data); })
+        .catch(function(){ renderNotices(null); });
+    } else {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', url, true);
+      xhr.onreadystatechange = function(){
+        if(xhr.readyState === 4){
+          if(xhr.status === 200){
+            try { renderNotices(JSON.parse(xhr.responseText)); }
+            catch(e){ renderNotices(null); }
+          } else { renderNotices(null); }
+        }
+      };
+      xhr.onerror = function(){ renderNotices(null); };
+      try{ xhr.send(); } catch(e){ renderNotices(null); }
+    }
+  }
+
+  function toggleNoticeForm(){
+    var f = document.getElementById('noticeForm');
+    if(!f) return;
+    var willShow = f.style.display === 'none' || !f.style.display;
+    f.style.display = willShow ? 'block' : 'none';
+    var msg = document.getElementById('noticeFormMsg');
+    if(msg){ msg.textContent=''; msg.style.color=''; }
+    if(willShow){
+      var nm = document.getElementById('noticeName');
+      if(nm) setTimeout(function(){ nm.focus(); }, 100);
+    }
+  }
+  window.toggleNoticeForm = toggleNoticeForm;
+
+  function submitNotice(){
+    var nameEl    = document.getElementById('noticeName');
+    var phoneEl   = document.getElementById('noticePhone');
+    var contentEl = document.getElementById('noticeContent');
+    var msgEl     = document.getElementById('noticeFormMsg');
+    var btn       = document.querySelector('.notice-submit-btn');
+    var name    = nameEl.value.trim();
+    var phone   = phoneEl.value.trim();
+    var content = contentEl.value.trim();
+    msgEl.style.color = '#c00';
+    if(!name){    msgEl.textContent = '이름을 입력해주세요.';      nameEl.focus();    return; }
+    if(!phone){   msgEl.textContent = '전화번호를 입력해주세요.';  phoneEl.focus();   return; }
+    if(!content){ msgEl.textContent = '공지 내용을 입력해주세요.'; contentEl.focus(); return; }
+
+    msgEl.style.color = 'rgba(40,50,90,0.6)';
+    msgEl.textContent = '등록 중…';
+    if(btn) btn.disabled = true;
+
+    fetch(GSURL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'data=' + encodeURIComponent(JSON.stringify({
+        action: 'addNotice', name: name, phone: phone, content: content
+      }))
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(btn) btn.disabled = false;
+      if(res.result === 'ok'){
+        nameEl.value=''; phoneEl.value=''; contentEl.value='';
+        msgEl.style.color=''; msgEl.textContent='';
+        toggleNoticeForm();
+        fetchNotices();
+      } else {
+        msgEl.style.color = '#c00';
+        msgEl.textContent = res.message || '등록에 실패했습니다.';
+      }
+    })
+    .catch(function(){
+      if(btn) btn.disabled = false;
+      msgEl.style.color = '#c00';
+      msgEl.textContent = '네트워크 오류가 발생했습니다.';
+    });
+  }
+  window.submitNotice = submitNotice;
+
+  fetchNotices();
+})();
+
+// ============================================================
 // 사역팀 신청 현황 (공개 집계 — 이름 등 개인정보 미포함)
 // ============================================================
 (function(){
@@ -829,9 +1000,17 @@ window.addEventListener('load', function(){ loadNameList(); });
     teamStatData = data.teams;
     var html = '';
     data.teams.forEach(function(t, i){
-      var maleHtml   = buildGenderNamesHtml('남성', t.maleNames || []);
-      var femaleHtml = buildGenderNamesHtml('여성', t.femaleNames || []);
-      var namesHtml = (maleHtml + femaleHtml) || '<span style="font-size:11px;color:rgba(80,90,130,0.5);">신청자 없음</span>';
+      var namesHtml;
+      if(t.name === '어린이(청소년)팀'){
+        namesHtml = buildGenderNamesHtml('성인 남성', t.adultMaleNames || [])
+          + buildGenderNamesHtml('성인 여성', t.adultFemaleNames || [])
+          + buildGenderNamesHtml('청소년 남성', t.youthMaleNames || [])
+          + buildGenderNamesHtml('청소년 여성', t.youthFemaleNames || []);
+      } else {
+        namesHtml = buildGenderNamesHtml('남성', t.maleNames || [])
+          + buildGenderNamesHtml('여성', t.femaleNames || []);
+      }
+      namesHtml = namesHtml || '<span style="font-size:11px;color:rgba(80,90,130,0.5);">신청자 없음</span>';
       var leaderHtml = t.leader
         ? '<div class="team-leader-info">' + t.leader.split(',').map(function(n){ return teamEsc(n.trim()); }).join('<br>') + '</div>'
         : '';
@@ -918,6 +1097,24 @@ window.addEventListener('load', function(){ loadNameList(); });
     else setOffline();
   }, 30000);
 })();
+
+// ============================================================
+// 신청하기 토글
+// ============================================================
+function toggleApplyForm(){
+  var wrap  = document.getElementById('applyFormWrap');
+  var arrow = document.getElementById('applyToggleArrow');
+  if(!wrap) return;
+  var willShow = wrap.className.indexOf('open') < 0;
+  wrap.className = 'apply-form-wrap' + (willShow ? ' open' : '');
+  if(arrow) arrow.className = 'apply-toggle-arrow' + (willShow ? ' open' : '');
+}
+function openApplyForm(){
+  var wrap  = document.getElementById('applyFormWrap');
+  var arrow = document.getElementById('applyToggleArrow');
+  if(wrap)  wrap.className  = 'apply-form-wrap open';
+  if(arrow) arrow.className = 'apply-toggle-arrow open';
+}
 
 // ============================================================
 // 불러오기 (기존 신청자 조회)
@@ -1089,6 +1286,7 @@ function applyLookup(i){
 
   // ④ 팝업 먼저 닫기 후 렌더링
   closeLookup();
+  openApplyForm();
   render();
 
   // ⑤ 완료 배너
@@ -1887,6 +2085,7 @@ document.getElementById('savestat').textContent='작성 중';
 function doRestore(){
 document.getElementById('restovl').className='restovl';
 if(!restData) return;
+openApplyForm();
 isCouple=restData.isCouple;
 setAppType(restData.appType||( restData.isFamily?'family':'individual' ));
 document.getElementById('cbtnyes').className='couple-btn'+(isCouple===true?' on':'');
@@ -1905,6 +2104,7 @@ document.getElementById('savestat').textContent='저장됨: '+(restData.savedAt|
 
 function noRestore(){
 document.getElementById('restovl').className='restovl';
+openApplyForm();
 clearSave(); render();
 }
 
