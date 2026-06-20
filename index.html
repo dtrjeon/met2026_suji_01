@@ -234,11 +234,23 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
 .team-stat-table td{padding:7px 10px;border-bottom:1px solid rgba(0,0,20,0.06);white-space:nowrap;}
 .team-stat-table tr:last-child td{border-bottom:none;}
 .team-stat-table td.tname{font-weight:700;color:#1a1e3a;white-space:normal;}
+.team-leader-info{font-size:9px;color:#5a6a9a;font-weight:600;margin-top:2px;line-height:1.5;}
 .team-stat-table td.tcnt{text-align:center;font-family:'Bebas Neue',sans-serif;font-size:16px;color:#2050c8;}
 .team-stat-table td.tgender{text-align:center;font-size:10px;color:rgba(40,50,90,0.7);}
 .team-stat-empty,.team-stat-loading{padding:16px;text-align:center;font-size:11px;color:rgba(80,90,130,0.5);background:#fff;}
 .team-stat-row{cursor:pointer;-webkit-tap-highlight-color:rgba(32,80,200,0.08);}
 .team-stat-row:active{background:rgba(32,80,200,0.05);}
+.team-stat-hd{cursor:pointer;-webkit-tap-highlight-color:rgba(32,80,200,0.08);}
+.team-stat-hd:active{opacity:0.7;}
+.team-stat-sec-arrow{display:inline-block;font-size:10px;transition:transform .15s;}
+.team-stat-sec-arrow.open{transform:rotate(180deg);}
+.team-stat-body{display:none;}
+.team-stat-body.open{display:block;}
+.team-gender-block{margin-bottom:6px;}
+.team-gender-block:last-child{margin-bottom:0;}
+.team-gender-label{font-size:10px;font-weight:700;color:rgba(40,50,90,0.65);margin-bottom:4px;}
+.team-name-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:5px;}
+.team-name-row:last-child{margin-bottom:0;}
 .team-arrow{display:inline-block;font-size:9px;color:rgba(32,80,200,0.5);margin-left:4px;transition:transform .15s;}
 .team-arrow.open{transform:rotate(180deg);}
 .team-detail-row td{background:#f7f9ff;padding:10px 12px;border-bottom:1px solid rgba(0,0,20,0.06);}
@@ -444,17 +456,19 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
 
   <!-- 사역팀 신청 현황 -->
   <div class="team-stat" id="teamStatBox">
-    <div class="team-stat-hd">
-      <div class="team-stat-title">📊 사역팀 신청 현황</div>
+    <div class="team-stat-hd" onclick="toggleTeamStatSection()">
+      <div class="team-stat-title">📊 사역팀 신청 현황 <span class="team-stat-sec-arrow" id="teamStatSecArrow">▾</span></div>
       <div class="team-stat-upd" id="teamStatUpd"></div>
     </div>
-    <div class="team-stat-wrap">
-      <table class="team-stat-table">
-        <thead><tr><th>사역팀</th><th class="center">신청인원</th><th class="center">남 / 여</th></tr></thead>
-        <tbody id="teamStatBody">
-          <tr><td colspan="3" class="team-stat-loading">불러오는 중…</td></tr>
-        </tbody>
-      </table>
+    <div class="team-stat-body" id="teamStatBodyWrap">
+      <div class="team-stat-wrap">
+        <table class="team-stat-table">
+          <thead><tr><th>사역팀</th><th class="center">신청인원</th><th class="center">남 / 여</th></tr></thead>
+          <tbody id="teamStatBody">
+            <tr><td colspan="3" class="team-stat-loading">불러오는 중…</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -761,7 +775,23 @@ window.addEventListener('load', function(){ loadNameList(); });
 (function(){
   function teamEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+  function teamChunk(arr, size){
+    var out=[];
+    for(var i=0;i<arr.length;i+=size) out.push(arr.slice(i,i+size));
+    return out;
+  }
+
   var teamStatData = [];
+  var teamSectionOpen = false;
+
+  function toggleTeamStatSection(){
+    teamSectionOpen = !teamSectionOpen;
+    var wrap  = document.getElementById('teamStatBodyWrap');
+    var arrow = document.getElementById('teamStatSecArrow');
+    if(wrap)  wrap.className  = 'team-stat-body' + (teamSectionOpen ? ' open' : '');
+    if(arrow) arrow.className = 'team-stat-sec-arrow' + (teamSectionOpen ? ' open' : '');
+  }
+  window.toggleTeamStatSection = toggleTeamStatSection;
 
   function toggleTeamDetail(idx){
     var row   = document.getElementById('teamDetail-'+idx);
@@ -772,6 +802,21 @@ window.addEventListener('load', function(){ loadNameList(); });
     if(arrow) arrow.className = 'team-arrow' + (willShow ? ' open' : '');
   }
   window.toggleTeamDetail = toggleTeamDetail;
+
+  // 남/여로 나눠 가나다순 정렬된 이름을 5명씩 줄바꿈하여 렌더링
+  function buildGenderNamesHtml(label, names){
+    if(!names || !names.length) return '';
+    var rows = teamChunk(names, 5);
+    var rowsHtml = rows.map(function(rowNames){
+      return '<div class="team-name-row">' + rowNames.map(function(n){
+        return '<span class="team-name-chip">'+teamEsc(n)+'</span>';
+      }).join('') + '</div>';
+    }).join('');
+    return '<div class="team-gender-block">'
+      + '<div class="team-gender-label">'+label+' ('+names.length+')</div>'
+      + rowsHtml
+      + '</div>';
+  }
 
   function renderTeamStat(data){
     var body = document.getElementById('teamStatBody');
@@ -784,12 +829,14 @@ window.addEventListener('load', function(){ loadNameList(); });
     teamStatData = data.teams;
     var html = '';
     data.teams.forEach(function(t, i){
-      var names = t.names || [];
-      var namesHtml = names.length
-        ? '<div class="team-detail-wrap">' + names.map(function(n){ return '<span class="team-name-chip">'+teamEsc(n)+'</span>'; }).join('') + '</div>'
-        : '<span style="font-size:11px;color:rgba(80,90,130,0.5);">신청자 없음</span>';
+      var maleHtml   = buildGenderNamesHtml('남성', t.maleNames || []);
+      var femaleHtml = buildGenderNamesHtml('여성', t.femaleNames || []);
+      var namesHtml = (maleHtml + femaleHtml) || '<span style="font-size:11px;color:rgba(80,90,130,0.5);">신청자 없음</span>';
+      var leaderHtml = t.leader
+        ? '<div class="team-leader-info">' + t.leader.split(',').map(function(n){ return teamEsc(n.trim()); }).join('<br>') + '</div>'
+        : '';
       html += '<tr class="team-stat-row" onclick="toggleTeamDetail('+i+')">'
-        +'<td class="tname">'+teamEsc(t.name)+'<span class="team-arrow" id="teamArrow-'+i+'">▾</span></td>'
+        +'<td class="tname">'+teamEsc(t.name)+'<span class="team-arrow" id="teamArrow-'+i+'">▾</span>'+leaderHtml+'</td>'
         +'<td class="tcnt">'+t.total+'</td>'
         +'<td class="tgender">남 '+t.male+' · 여 '+t.female+'</td>'
         +'</tr>'
