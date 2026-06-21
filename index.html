@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <meta name="theme-color" content="#fdf9f4"/>
-<title>MET2026 블레싱 삼척 공지사항(수지2)</title>
+<title>블레싱 삼척 안내 (수지2)</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Bebas+Neue&display=swap" rel="stylesheet"/>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -238,7 +238,7 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
 .notice-box-btns{display:flex;gap:6px;flex-shrink:0;}
 .notice-add-btn{padding:6px 11px;background:#fff;border:1px solid rgba(32,80,200,0.3);border-radius:20px;font-size:11px;font-weight:700;color:#1a3a9e;cursor:pointer;-webkit-appearance:none;font-family:'Noto Sans KR',sans-serif;touch-action:manipulation;min-height:30px;white-space:nowrap;}
 .notice-add-btn:active{background:rgba(32,80,200,0.1);}
-.notice-lookup-btn{flex:0 0 auto;padding:0 16px;background:linear-gradient(135deg,#2a5cd8,#1a3ab0);border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;-webkit-appearance:none;font-family:'Noto Sans KR',sans-serif;touch-action:manipulation;}
+.notice-lookup-btn{padding:11px 16px;background:linear-gradient(135deg,#2a5cd8,#1a3ab0);border:none;border-radius:6px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;-webkit-appearance:none;font-family:'Noto Sans KR',sans-serif;touch-action:manipulation;width:100%;}
 .notice-edit-item{background:#fff;border:1px solid rgba(32,80,200,0.18);border-radius:8px;padding:10px 12px;margin-top:8px;}
 .notice-edit-meta{font-size:10px;color:rgba(40,50,90,0.55);margin-bottom:6px;}
 .notice-edit-item textarea{width:100%;min-height:60px;margin-bottom:8px;}
@@ -249,9 +249,17 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
 .notice-item-meta{font-size:10px;color:rgba(40,50,90,0.55);margin-top:6px;}
 .notice-empty{font-size:11px;color:rgba(80,90,130,0.5);text-align:center;padding:10px;}
 .notice-form{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(32,80,200,0.25);}
-.notice-form-row{display:flex;gap:8px;margin-bottom:8px;}
-.notice-form-row input{flex:1;min-width:0;}
+.notice-form-row{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
+.notice-form-row input{width:100%;min-width:0;}
 .notice-form textarea{width:100%;min-height:64px;margin-bottom:8px;}
+.notice-format-bar{display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;}
+.notice-fmt-btn{padding:5px 11px;border:1px solid rgba(0,0,20,0.15);border-radius:6px;background:#fff;font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none;font-family:'Noto Sans KR',sans-serif;touch-action:manipulation;color:#333;}
+.notice-fmt-btn:active{background:rgba(0,0,20,0.06);}
+.notice-fmt-btn.bold{font-weight:900;}
+.notice-fmt-btn.c-red{color:#d32f2f;border-color:rgba(211,47,47,0.4);}
+.notice-fmt-btn.c-blue{color:#1a3a9e;border-color:rgba(26,58,158,0.4);}
+.notice-fmt-btn.c-orange{color:#b85c00;border-color:rgba(184,92,0,0.4);}
+.notice-fmt-hint{font-size:10px;color:rgba(80,90,130,0.5);margin-bottom:6px;}
 .notice-form-btns{display:flex;gap:8px;}
 .notice-form-btns button{flex:1;padding:10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;-webkit-appearance:none;font-family:'Noto Sans KR',sans-serif;touch-action:manipulation;border:none;min-height:40px;}
 .notice-cancel-btn{background:#f0f2f8;color:rgba(20,30,70,0.7);}
@@ -261,9 +269,9 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
 
 /* 사역팀 신청 현황 */
 .team-stat{margin-bottom:14px;}
-.team-stat-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.team-stat-title{font-size:11px;font-weight:700;letter-spacing:1px;color:#1a3a9e;display:flex;align-items:center;gap:5px;}
-.team-stat-upd{font-size:9px;color:rgba(80,90,130,0.55);}
+.team-stat-hd{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:rgba(32,80,200,0.06);border:1.5px solid rgba(32,80,200,0.2);border-radius:10px;margin-bottom:10px;}
+.team-stat-title{font-size:13px;font-weight:800;color:#1a3a9e;display:flex;align-items:center;gap:6px;}
+.team-stat-upd{font-size:10px;color:rgba(80,90,130,0.55);}
 .team-stat-wrap{overflow-x:auto;border-radius:10px;border:1px solid rgba(32,80,200,0.15);box-shadow:0 2px 8px rgba(0,0,30,0.04);-webkit-overflow-scrolling:touch;}
 .team-stat-table{width:100%;border-collapse:collapse;font-size:11px;background:#fff;}
 .team-stat-table th{padding:8px 10px;background:rgba(32,80,200,0.07);color:#1a3a9e;font-size:10px;font-weight:700;text-align:left;white-space:nowrap;border-bottom:1px solid rgba(32,80,200,0.15);}
@@ -508,6 +516,13 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
         <input type="text" id="noticeName" placeholder="이름" maxlength="20"/>
         <input type="tel" id="noticePhone" placeholder="전화번호 (예: 010-1234-5678)" maxlength="20" inputmode="tel"/>
       </div>
+      <div class="notice-format-bar">
+        <button type="button" class="notice-fmt-btn bold" onclick="wrapNoticeText('**','**')">굵게</button>
+        <button type="button" class="notice-fmt-btn c-red" onclick="wrapNoticeText('[red]','[/red]')">빨강</button>
+        <button type="button" class="notice-fmt-btn c-blue" onclick="wrapNoticeText('[blue]','[/blue]')">파랑</button>
+        <button type="button" class="notice-fmt-btn c-orange" onclick="wrapNoticeText('[orange]','[/orange]')">주황</button>
+      </div>
+      <div class="notice-fmt-hint">강조할 글자를 선택한 뒤 버튼을 누르세요</div>
       <textarea id="noticeContent" placeholder="공지 내용을 입력하세요" maxlength="500"></textarea>
       <div class="notice-form-btns">
         <button type="button" class="notice-cancel-btn" onclick="toggleNoticeForm()">취소</button>
@@ -853,6 +868,38 @@ window.addEventListener('load', function(){ loadNameList(); });
 (function(){
   function noticeEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+  // 이스케이프된 텍스트에 한해 **굵게**, [red]/[blue]/[orange] 강조 마크업만 허용 변환
+  function noticeFormat(raw){
+    var s = noticeEsc(raw);
+    s = s.replace(/\[red\]([\s\S]+?)\[\/red\]/g,    '<span style="color:#d32f2f;font-weight:700;">$1</span>');
+    s = s.replace(/\[blue\]([\s\S]+?)\[\/blue\]/g,   '<span style="color:#1a3a9e;font-weight:700;">$1</span>');
+    s = s.replace(/\[orange\]([\s\S]+?)\[\/orange\]/g,'<span style="color:#b85c00;font-weight:700;">$1</span>');
+    s = s.replace(/\*\*([\s\S]+?)\*\*/g, '<b>$1</b>');
+    s = s.replace(/\n/g, '<br>');
+    return s;
+  }
+
+  // 작성/수정 textarea에서 선택한 글자를 마크업으로 감싸기
+  function wrapTextarea(ta, open, close){
+    if(!ta) return;
+    var start = ta.selectionStart, end = ta.selectionEnd;
+    var val = ta.value;
+    var selected = val.slice(start, end);
+    var insertText = selected ? (open + selected + close) : (open + close);
+    ta.value = val.slice(0, start) + insertText + val.slice(end);
+    var newPos = selected ? (start + insertText.length) : (start + open.length);
+    ta.focus();
+    ta.setSelectionRange(newPos, newPos);
+  }
+  function wrapNoticeText(open, close){
+    wrapTextarea(document.getElementById('noticeContent'), open, close);
+  }
+  window.wrapNoticeText = wrapNoticeText;
+  function wrapEditText(id, open, close){
+    wrapTextarea(document.getElementById('nedtext-'+id), open, close);
+  }
+  window.wrapEditText = wrapEditText;
+
   function renderNotices(data){
     var list = document.getElementById('noticeList');
     if(!list) return;
@@ -863,7 +910,7 @@ window.addEventListener('load', function(){ loadNameList(); });
     var html = '';
     data.data.forEach(function(n){
       html += '<div class="notice-item">'
-        +'<div class="notice-item-body">'+noticeEsc(n.content).replace(/\n/g,'<br>')+'</div>'
+        +'<div class="notice-item-body">'+noticeFormat(n.content)+'</div>'
         +'<div class="notice-item-meta">'+noticeEsc(n.name||'익명')+' · '+noticeEsc(n.time||'')+'</div>'
         +'</div>';
     });
@@ -1001,6 +1048,12 @@ window.addEventListener('load', function(){ loadNameList(); });
       res.data.forEach(function(n){
         html += '<div class="notice-edit-item" id="ned-'+noticeEsc(n.id)+'">'
           +'<div class="notice-edit-meta">'+noticeEsc(n.name||'')+' · '+noticeEsc(n.time||'')+'</div>'
+          +'<div class="notice-format-bar">'
+          +'<button type="button" class="notice-fmt-btn bold" onclick="wrapEditText(\''+noticeEsc(n.id)+'\',\'**\',\'**\')">굵게</button>'
+          +'<button type="button" class="notice-fmt-btn c-red" onclick="wrapEditText(\''+noticeEsc(n.id)+'\',\'[red]\',\'[/red]\')">빨강</button>'
+          +'<button type="button" class="notice-fmt-btn c-blue" onclick="wrapEditText(\''+noticeEsc(n.id)+'\',\'[blue]\',\'[/blue]\')">파랑</button>'
+          +'<button type="button" class="notice-fmt-btn c-orange" onclick="wrapEditText(\''+noticeEsc(n.id)+'\',\'[orange]\',\'[/orange]\')">주황</button>'
+          +'</div>'
           +'<textarea id="nedtext-'+noticeEsc(n.id)+'" maxlength="500">'+noticeEsc(n.content||'')+'</textarea>'
           +'<div class="notice-form-btns">'
           +'<button type="button" class="notice-cancel-btn" onclick="document.getElementById(\'ned-'+noticeEsc(n.id)+'\').remove()">닫기</button>'
