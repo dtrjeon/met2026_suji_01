@@ -35,6 +35,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .pw-err{font-size:12px;color:var(--red);text-align:center;margin-top:10px;min-height:18px;font-weight:600;}
 .pw-spinner{display:none;text-align:center;margin-top:10px;font-size:12px;color:var(--text3);}
 .pw-spinner.show{display:block;}
+.pw-remember{display:flex;align-items:center;gap:7px;margin:10px 0 2px;cursor:pointer;user-select:none;-webkit-user-select:none;}
+.pw-remember input[type=checkbox]{width:16px;height:16px;accent-color:var(--primary);cursor:pointer;flex-shrink:0;}
+.pw-remember-lbl{font-size:12px;color:var(--text2);font-weight:500;}
 
 /* ── 헤더 ── */
 .hd{background:linear-gradient(135deg,#1a2a6c,#1a3ab0);color:#fff;padding:env(safe-area-inset-top) 0 0;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(26,42,108,0.3);}
@@ -333,7 +336,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .date-sheet{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:20px 20px calc(20px + env(safe-area-inset-bottom));box-shadow:0 -4px 24px rgba(0,0,0,0.15);}
 .date-sheet-title{font-size:13px;font-weight:700;color:var(--primary);margin-bottom:14px;text-align:center;letter-spacing:.5px;}
 .date-sheet-name{font-size:12px;color:var(--text2);text-align:center;margin-bottom:16px;}
-.date-sheet-input{width:100%;padding:13px 14px;border:2px solid var(--border);border-radius:10px;font-size:16px;color:var(--text);outline:none;background:#f7f9ff;font-family:'Noto Sans KR',sans-serif;box-sizing:border-box;}
+.date-sheet-input{width:100%;padding:13px 14px;border:2px solid var(--border);border-radius:10px;font-size:16px;color:var(--text);outline:none;background:#f7f9ff;font-family:'Noto Sans KR',sans-serif;box-sizing:border-box;-webkit-appearance:none;appearance:none;}
 .date-sheet-input:focus{border-color:var(--primary);}
 .date-sheet-btns{display:flex;gap:8px;margin-top:14px;}
 .date-sheet-cancel{flex:1;padding:12px;background:#f0f2f8;border:none;border-radius:8px;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
@@ -434,6 +437,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
         autocomplete="current-password" onkeydown="if(event.key==='Enter')tryLogin()"/>
       <span class="pw-eye" id="pwEye" onclick="togglePwEye()">👁</span>
     </div>
+    <label class="pw-remember">
+      <input type="checkbox" id="pwRemember"/>
+      <span class="pw-remember-lbl">아이디·비밀번호 저장</span>
+    </label>
     <button class="pw-btn" onclick="tryLogin()">로그인</button>
     <div class="pw-err" id="pwErr"></div>
     <div class="pw-spinner" id="pwSpinner">⏳ 확인 중…</div>
@@ -540,7 +547,12 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   <div class="miss-panel" id="missPanel"></div>
 
   <!-- 회계 패널 -->
-  <div class="acct-panel" id="acctPanel"></div>
+  <div class="acct-panel" id="acctPanel">
+    <div id="acctSearchWrap" style="display:none;padding:0 0 8px;">
+      <div class="acct-search">🔍 <input type="text" id="acctSearchInput" placeholder="이름, 목장 검색…" oninput="setAcctSearch(this.value)" autocorrect="off" autocapitalize="off" spellcheck="false"/></div>
+    </div>
+    <div id="acctContent"></div>
+  </div>
 
   <!-- 가족현황 패널 -->
   <div class="family-panel" id="familyPanel"></div>
@@ -604,7 +616,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   <div class="date-sheet">
     <div class="date-sheet-title">📅 납입일 등록</div>
     <div class="date-sheet-name" id="dateSheetName"></div>
-    <input type="text" class="date-sheet-input" id="dateSheetInput" placeholder="예) 6/15" inputmode="numeric" maxlength="5"/>
+    <input type="date" class="date-sheet-input" id="dateSheetInput" min="2026-01-01" max="2026-12-31"/>
     <div class="date-sheet-btns">
       <button class="date-sheet-clear" onclick="confirmClearDate()">삭제</button>
       <button class="date-sheet-cancel" onclick="closeDateSheet()">취소</button>
@@ -732,6 +744,7 @@ function tryLogin() {
     _pw = 'test';
     sessionStorage.setItem('admin_user', JSON.stringify({name:user.name, phone:user.phone}));
     if (user.role === 'super') sessionStorage.setItem('super_user', JSON.stringify({name:user.name, phone:user.phone}));
+    saveLoginInfo(name, phone);
     showApp({ result:'ok', data: TEST_DATA, updated: '테스트 데이터' });
     return;
   }
@@ -750,6 +763,7 @@ function tryLogin() {
         _pw = name + ':' + phone;
         sessionStorage.setItem('admin_user', JSON.stringify({name:user.name, phone:user.phone}));
         if (user.role === 'super') sessionStorage.setItem('super_user', JSON.stringify({name:user.name, phone:user.phone}));
+        saveLoginInfo(name, phone);
         showApp(res);
       } else {
         setErr('오류: ' + (res.message || '알 수 없는 오류'));
@@ -763,6 +777,25 @@ function tryLogin() {
 }
 
 function setErr(msg){ document.getElementById('pwErr').textContent = msg; }
+
+// ── 로그인 정보 저장/복원 (localStorage) ──
+function saveLoginInfo(name, phone) {
+  if (document.getElementById('pwRemember').checked) {
+    localStorage.setItem('saved_login', JSON.stringify({name:name, phone:phone}));
+  } else {
+    localStorage.removeItem('saved_login');
+  }
+}
+function loadLoginInfo() {
+  try {
+    var saved = localStorage.getItem('saved_login');
+    if (!saved) return;
+    var info = JSON.parse(saved);
+    if (info.name)  document.getElementById('pwName').value  = info.name;
+    if (info.phone) document.getElementById('pwPhone').value = info.phone;
+    document.getElementById('pwRemember').checked = true;
+  } catch(e) {}
+}
 
 function goSuperAdmin(){
   location.href = 'super-admin.html';
@@ -811,8 +844,11 @@ function logout() {
   allData = []; filtered = [];
   document.getElementById('pwScreen').className = 'pw-screen';
   document.getElementById('app').className = 'app';
-  document.getElementById('pwName').value = '';
-  document.getElementById('pwPhone').value = '';
+  // 저장 체크 OFF 상태면 입력창 비우기
+  if (!document.getElementById('pwRemember').checked) {
+    document.getElementById('pwName').value  = '';
+    document.getElementById('pwPhone').value = '';
+  }
   setErr('');
 }
 
@@ -1875,6 +1911,7 @@ function switchTab(tab) {
   document.getElementById('missPanel').className       = 'miss-panel'+(tab==='miss'?' show':'');
   document.getElementById('missSearchWrap').style.display = tab==='miss'?'block':'none';
   document.getElementById('acctPanel').className       = 'acct-panel'+(tab==='acct'?' show':'');
+  document.getElementById('acctSearchWrap').style.display = tab==='acct'?'':'none';
   var familyPanel = document.getElementById('familyPanel');
   if(familyPanel) familyPanel.className = 'family-panel'+(tab==='family'?' show':'');
   var editlogPanel = document.getElementById('editlogPanel');
@@ -2410,6 +2447,9 @@ function youthGrade(d) {
   },{passive:true});
 })();
 
+// ── 저장된 로그인 정보 복원 ──
+loadLoginInfo();
+
 // ── 세션 자동 복원 ──
 (function(){
   if (TEST_MODE) {
@@ -2729,7 +2769,7 @@ function renderAcct(){
     +'</div>';
 
   // ── 검색 ──
-  html+='<div class="acct-search">🔍 <input type="text" placeholder="이름, 목장 검색…" value="'+esc(acctFilter.search)+'" oninput="setAcctSearch(this.value)" autocorrect="off" autocapitalize="off" spellcheck="false"/></div>';
+  // 검색창은 고정 DOM(acctSearchInput) 사용 — 여기서 생성 안 함
 
   // ── 필터 적용 (검색 + 납부상태) ──
   function acctPassFilter(d){
@@ -2920,7 +2960,11 @@ function renderAcct(){
       +'<td style="text-align:center;font-size:11px;font-weight:700;color:#1a3a9e;white-space:nowrap;">'+fmtWon(vA)+'</td></tr>';
   });
   html+='</tbody></table></div></div>';
-  document.getElementById('acctPanel').innerHTML=html;
+  // 고정 검색창 표시
+  document.getElementById('acctSearchWrap').style.display='';
+  // 검색어 동기화 (외부에서 바뀌었을 경우 대비)
+  var si=document.getElementById('acctSearchInput'); if(si&&si!==document.activeElement) si.value=acctFilter.search;
+  document.getElementById('acctContent').innerHTML=html;
 }
 
 function cyclePaySt(rno){
@@ -2950,8 +2994,8 @@ function openDateSheet(rno, name, e) {
   _dateSheetRno = rno;
   document.getElementById('dateSheetName').textContent = name + ' 님';
   var cur = (payData[rno]||{}).date || '';
-  // 저장값이 YYYY-MM-DD 형태면 MM-DD만 표시
-  document.getElementById('dateSheetInput').value = cur.length === 10 ? cur.slice(5) : cur;
+  // YYYY-MM-DD 전체값을 date input에 설정
+  document.getElementById('dateSheetInput').value = cur.length === 10 ? cur : '';
   document.getElementById('dateSheetOvl').className = 'date-sheet-ovl show';
   setTimeout(function(){ document.getElementById('dateSheetInput').focus(); }, 120);
 }
@@ -2962,15 +3006,8 @@ function closeDateSheet() {
 function applyDateSheet() {
   var val = document.getElementById('dateSheetInput').value.trim();
   if(!val){ setPayDate(_dateSheetRno,''); closeDateSheet(); return; }
-  // MM/DD 또는 MM-DD 형식 허용
-  var normalized = val.replace('/','-');
-  if(!/^\d{1,2}-\d{2}$/.test(normalized)){
-    alert('날짜 형식이 올바르지 않습니다.\n예) 6/15');
-    return;
-  }
-  var parts = normalized.split('-');
-  var mm = parts[0].padStart(2,'0'), dd = parts[1].padStart(2,'0');
-  setPayDate(_dateSheetRno, '2026-' + mm + '-' + dd);
+  // type="date"의 값은 이미 YYYY-MM-DD 형식
+  setPayDate(_dateSheetRno, val);
   closeDateSheet();
 }
 function confirmClearDate() {
@@ -2981,14 +3018,6 @@ function confirmClearDate() {
 }
 // 숫자 입력 시 자동 하이픈 삽입
 (function(){
-  document.addEventListener('input', function(e){
-    if(e.target.id !== 'dateSheetInput') return;
-    var v = e.target.value.replace(/[^0-9\/]/g,'');
-    var d = v.replace(/[^0-9]/g,'');
-    if(d.length >= 3) v = d.slice(0,2)+'/'+d.slice(2,4);
-    else v = d;
-    e.target.value = v;
-  });
   document.addEventListener('keydown', function(e){
     if(e.target.id === 'dateSheetInput' && e.key === 'Enter') applyDateSheet();
   });
