@@ -2200,28 +2200,101 @@ function clearDupSel() {
 function confirmDeleteDup() {
   var rnos = Object.keys(dupSelected).filter(function(k){ return dupSelected[k]; });
   if(!rnos.length) return;
-  if(!confirm(rnos.length+'건을 구글시트에서 삭제합니다.\n이 작업은 되돌릴 수 없습니다.')) return;
-  var btn = document.getElementById('dupDelBtn');
-  if(btn){ btn.disabled=true; btn.textContent='삭제 중...'; }
-  var ps = 'data='+encodeURIComponent(JSON.stringify({
-    action: 'deleteRows', rnos: rnos, pw: _pw
-  }));
-  fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:ps})
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if(data.result==='ok'){
-        alert('✅ '+data.deleted+'건이 삭제되었습니다.');
-        dupSelected={};
-        loadData();
-      } else {
-        alert('❌ 삭제 실패: '+(data.message||''));
-        if(btn){ btn.disabled=false; btn.textContent='선택 항목 삭제'; }
-      }
-    })
-    .catch(function(){
-      alert('❌ 네트워크 오류가 발생했습니다.');
-      if(btn){ btn.disabled=false; btn.textContent='선택 항목 삭제'; }
+
+  // ── 삭제 대상 중 납입 정보가 있는지 확인 ──
+  var payMigrations = []; // { fromRno, toRno, pay }
+  rnos.forEach(function(delRno) {
+    var pay = payData[delRno];
+    if(!pay || !pay.status || pay.status === 'unpaid') return; // 납입 정보 없으면 패스
+
+    // 같은 이름의 생존자(삭제 안 되는 rno) 찾기
+    var delMember = allData.find(function(d){ return d.rno === delRno; });
+    if(!delMember) return;
+    var survivors = allData.filter(function(d){
+      return d.name === delMember.name && rnos.indexOf(d.rno) < 0; // 삭제 목록에 없는 동명인
     });
+    if(!survivors.length) return;
+
+    // 생존자 중 납입 정보가 없는 첫 번째에 복사 예약
+    var target = survivors.find(function(s){ var p=payData[s.rno]; return !p||!p.status||p.status==='unpaid'; });
+    if(!target) target = survivors[0]; // 모두 납입 정보 있으면 첫 번째에 덮어쓰기
+    payMigrations.push({ fromRno: delRno, toRno: target.rno, toName: target.name, pay: pay });
+  });
+
+  // ── 확인 메시지 구성 ──
+  var msg = rnos.length+'건을 구글시트에서 삭제합니다.\n이 작업은 되돌릴 수 없습니다.';
+  if(payMigrations.length > 0) {
+    msg += '\n\n💰 납입 정보 자동 복사 예정:';
+    payMigrations.forEach(function(m){
+      var st = m.pay.status==='paid'?'납부':m.pay.status==='exempt'?'면제':'미납';
+      var dt = m.pay.date ? ' ('+m.pay.date.slice(5).replace('-','/')+')'  : '';
+      msg += '\n  • '+st+dt+' → '+m.toName+' ('+m.toRno+')';
+    });
+  }
+  if(!confirm(msg)) return;
+
+  var btn = document.getElementById('dupDelBtn');
+  if(btn){ btn.disabled=true; btn.textContent='처리 중...'; }
+
+  // ── 납입 정보 복사 먼저 실행 (있을 경우) ──
+  function doDelete() {
+    var ps = 'data='+encodeURIComponent(JSON.stringify({
+      action: 'deleteRows', rnos: rnos, pw: _pw
+    }));
+    fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:ps})
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if(data.result==='ok'){
+          // 로컬 payData에도 반영
+          rnos.forEach(function(rno){ delete payData[rno]; });
+          alert('✅ '+data.deleted+'건이 삭제되었습니다.'+(payMigrations.length?' (납입 정보 복사 완료)':''));
+          dupSelected={};
+          loadData();
+        } else {
+          alert('❌ 삭제 실패: '+(data.message||''));
+          if(btn){ btn.disabled=false; btn.textContent='선택 항목 삭제'; }
+        }
+      })
+      .catch(function(){
+        alert('❌ 네트워크 오류가 발생했습니다.');
+        if(btn){ btn.disabled=false; btn.textContent='선택 항목 삭제'; }
+      });
+  }
+
+  if(payMigrations.length === 0) {
+    doDelete();
+    return;
+  }
+
+  // 납입 정보 복사: savePay 순차 호출
+  var migDone = 0, migFail = 0;
+  function nextMig(i) {
+    if(i >= payMigrations.length) {
+      if(migFail > 0) {
+        alert('⚠️ 납입 정보 복사 '+migDone+'건 완료 / '+migFail+'건 실패\n삭제는 계속 진행합니다.');
+      }
+      doDelete();
+      return;
+    }
+    var m = payMigrations[i];
+    // 로컬 payData 업데이트
+    payData[m.toRno] = Object.assign({}, m.pay);
+    var toMember = allData.find(function(d){ return d.rno === m.toRno; });
+    var rows = [{
+      rno: m.toRno, name: toMember ? (toMember.name||'') : '',
+      status: m.pay.status||'unpaid', amount: m.pay.amount||0,
+      date: m.pay.date||'', memo: m.pay.memo||'',
+      amount_calc: toMember ? getFee(toMember) : 100000
+    }];
+    fetch(GAS_URL, {
+      method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:'data='+encodeURIComponent(JSON.stringify({ action:'savePay', pw:_pw, rows:rows }))
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){ if(res.result==='ok') migDone++; else migFail++; nextMig(i+1); })
+    .catch(function(){ migFail++; nextMig(i+1); });
+  }
+  nextMig(0);
 }
 // ── 확인필요 탭: 검색 후 삭제 ──
 var missSearchSelected = {};
@@ -3455,10 +3528,15 @@ function renderFamily(){
     var rep = members[0];
 
     html += '<div class="fam-group">';
+    // 해체 버튼: super 권한 + 실제 family_id 그룹만 (배우자 자동매칭 제외)
+    var unlinkBtn = (canEdit() && fid.indexOf('spouse-') !== 0)
+      ? '<button onclick="unlinkFamily(\''+esc(fid)+'\')" style="margin-left:auto;flex-shrink:0;padding:3px 10px;background:#fff;border:1.5px solid rgba(198,40,40,0.35);border-radius:6px;color:#c62828;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation;">✂️ 해체</button>'
+      : '';
     html += '<div class="fam-group-hd">'
       + '<span class="fam-group-id">'+(fid.indexOf('spouse-')===0?'💑 배우자매칭':esc(fid))+'</span>'
       + '<span class="fam-group-cnt">'+members.length+'명</span>'
       + (rep.moksang?'<span class="fam-group-moksang">'+esc(rep.moksang)+'</span>':'')
+      + unlinkBtn
       + '</div>';
 
     members.forEach(function(m){
@@ -3775,6 +3853,55 @@ function doLinkFamily() {
   .catch(function(e){
     showToast('⚠️ 네트워크 오류: ' + e.message);
     btn.textContent = '👨‍👩‍👧 가족으로 묶기'; btn.disabled = false;
+  });
+}
+
+
+// ── 가족 해체 ──
+function unlinkFamily(fid) {
+  if (!canEdit()) { showToast('슈퍼바이저 권한이 필요합니다'); return; }
+
+  var members = allData.filter(function(d){ return d.family_id === fid; });
+  if (!members.length) { showToast('해당 가족 그룹을 찾을 수 없습니다'); return; }
+
+  var names = members.map(function(d){ return d.name; }).join(', ');
+  if (!confirm('👨‍👩‍👧 가족 그룹 [' + fid + '] 을 해체합니다.\n\n대상: ' + names + ' (' + members.length + '명)\n\n해체된 구성원은 각각 개인으로 분리됩니다.\n계속하시겠습니까?')) return;
+
+  var pw = currentUser.name + ':' + currentUser.phone;
+  var rnos = members.map(function(d){ return d.rno; });
+
+  // 로딩 표시
+  var panel = document.getElementById('familyPanel');
+  if (panel) panel.style.opacity = '0.5';
+
+  fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'data=' + encodeURIComponent(JSON.stringify({
+      action: 'unlinkFamily',
+      fid: fid,
+      rnos: rnos,
+      pw: pw,
+      editor: currentUser.name
+    }))
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(res){
+    if (panel) panel.style.opacity = '';
+    if (res.result === 'ok') {
+      // 로컬 allData에서 family_id 즉시 제거 (화면 반응성)
+      allData.forEach(function(d){
+        if (rnos.indexOf(d.rno) >= 0) d.family_id = '';
+      });
+      showToast('✅ [' + fid + '] 가족 해체 완료 (' + members.length + '명 → 개인)');
+      renderFamily();
+    } else {
+      showToast('⚠️ ' + (res.message || '해체 실패'));
+    }
+  })
+  .catch(function(e){
+    if (panel) panel.style.opacity = '';
+    showToast('⚠️ 네트워크 오류: ' + e.message);
   });
 }
 
