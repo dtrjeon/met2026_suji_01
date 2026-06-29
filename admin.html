@@ -4258,33 +4258,38 @@ function renderAccomTable(){
       document.body.appendChild(fixedHdr);
     }
     fixedHdr.style.top = stickyTop + 'px';
+    fixedHdr.style.display = 'none';
 
-    // 원본 테이블의 thead 복제 → fixed 헤더에 삽입
     var origTable = document.querySelector('.accom-table');
     if(origTable){
+      // thead 복제
       var cloneTable = document.createElement('table');
-      cloneTable.style.cssText = 'width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;min-width:360px;';
+      cloneTable.style.cssText = 'border-collapse:separate;border-spacing:0;table-layout:fixed;';
       var cloneThead = origTable.querySelector('thead').cloneNode(true);
       cloneTable.appendChild(cloneThead);
       fixedHdr.innerHTML = '';
       fixedHdr.appendChild(cloneTable);
 
-      // 열 너비 동기화 함수
+      // 열 너비를 원본 tbody 첫 행의 각 td.offsetWidth 기준으로 맞춤
       function syncColWidths(){
-        var origCols = origTable.querySelectorAll('colgroup col');
-        var cloneTbl = fixedHdr.querySelector('table');
-        // colgroup 복제
-        var cg = cloneTbl.querySelector('colgroup');
-        if(cg) cg.remove();
-        var origCg = origTable.querySelector('colgroup');
-        if(origCg) cloneTbl.insertBefore(origCg.cloneNode(true), cloneTbl.firstChild);
-        // 테이블 너비 = tbl-wrap 너비
         var wrap = document.querySelector('.accom-tbl-wrap');
-        if(wrap){
-          cloneTbl.style.width = origTable.offsetWidth + 'px';
-          fixedHdr.style.width = wrap.offsetWidth + 'px';
-          fixedHdr.style.left  = wrap.getBoundingClientRect().left + 'px';
-        }
+        if(!wrap) return;
+        var wrapRect = wrap.getBoundingClientRect();
+        // fixed 헤더 위치/너비: tbl-wrap 기준
+        fixedHdr.style.left  = wrapRect.left + 'px';
+        fixedHdr.style.width = wrapRect.width + 'px';
+        // 원본 thead th의 실제 너비 → 복제 th에 적용
+        var origThs = origTable.querySelectorAll('thead th');
+        var cloneThs = cloneTable.querySelectorAll('thead th');
+        var totalW = 0;
+        origThs.forEach(function(th, i){
+          var w = th.offsetWidth;
+          totalW += w;
+          if(cloneThs[i]) cloneThs[i].style.width = w + 'px';
+        });
+        cloneTable.style.width = totalW + 'px';
+        // 가로 스크롤 위치 동기화
+        fixedHdr.scrollLeft = wrap.scrollLeft;
       }
       syncColWidths();
 
@@ -4296,25 +4301,24 @@ function renderAccomTable(){
         });
       }
 
-      // 세로 스크롤 → fixed 헤더 표시/숨김
+      // 세로 스크롤 → fixed 헤더 표시/숨김 + 위치 재보정
       var theadEl = origTable.querySelector('thead');
       function onPageScroll(){
         if(!theadEl || !origTable) return;
         var rect = theadEl.getBoundingClientRect();
         if(rect.top < stickyTop){
-          fixedHdr.style.display = 'block';
+          if(fixedHdr.style.display !== 'block'){
+            syncColWidths(); // 표시 직전 위치/폭 재계산
+            fixedHdr.style.display = 'block';
+          }
         } else {
           fixedHdr.style.display = 'none';
         }
-        // 가로 스크롤 위치 맞추기
-        var wrap3 = document.querySelector('.accom-tbl-wrap');
-        if(wrap3) fixedHdr.scrollLeft = wrap3.scrollLeft;
       }
-      // 기존 스크롤 리스너 제거 후 재등록
       if(window._accomScrollHandler) window.removeEventListener('scroll', window._accomScrollHandler);
       window._accomScrollHandler = onPageScroll;
       window.addEventListener('scroll', onPageScroll, {passive:true});
-      onPageScroll(); // 초기 실행
+      onPageScroll();
     }
   });
   bindAccomDrag();
