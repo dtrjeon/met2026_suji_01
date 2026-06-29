@@ -4231,7 +4231,27 @@ function renderAccom(){
     if(typeof loadData==='function') loadData();
     return;
   }
+  cleanAccomRooms();
   renderAccomTable();
+}
+
+// 명단(allData)에 없는 숙소자 자동 제거
+function cleanAccomRooms(){
+  if(!allData||!allData.length) return;
+  var nameSet={};
+  allData.forEach(function(d){ if(d.name) nameSet[d.name.trim()]=true; });
+  var removed=[];
+  ACCOM_ROOMS.forEach(function(r){
+    var before=r.members.length;
+    r.members=r.members.filter(function(m){
+      if(nameSet[m.trim()]) return true;
+      removed.push(m+'('+r.id+')');
+      return false;
+    });
+  });
+  if(removed.length){
+    console.log('[숙소배치] 명단 미등록으로 제거:', removed.join(', '));
+  }
 }
 
 function createAccomGhost(){
