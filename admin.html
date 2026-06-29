@@ -438,17 +438,17 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .accom-notice.red{background:#FFF1F2;color:#DC2626;border:1px solid #FCA5A5;}
 .accom-notice.amber{background:#FFFBEB;color:#D97706;border:1px solid #FCD34D;}
 .accom-notice.teal{background:#ECFDF5;color:#065F46;border:1px solid #6EE7B7;}
-.accom-tbl-wrap{overflow-x:auto;}
-.accom-table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:var(--shadow);min-width:460px;}
+.accom-tbl-wrap{overflow-x:auto;overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 220px);}
+.accom-table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:var(--shadow);min-width:560px;}
 .accom-table thead tr{background:var(--primary);}
-.accom-table thead th{color:#fff;font-size:11px;font-weight:700;padding:9px;text-align:center;white-space:nowrap;border-right:1px solid rgba(255,255,255,.15);}
+.accom-table thead th{color:#fff;font-size:11px;font-weight:700;padding:8px 6px;text-align:center;white-space:nowrap;border-right:1px solid rgba(255,255,255,.15);position:sticky;top:0;z-index:5;background:var(--primary);}
 .accom-table thead th:last-child{border-right:none;}
 .accom-table tbody tr{border-bottom:1px solid var(--border);}
 .accom-table tbody tr:last-child{border-bottom:none;}
 .accom-table tbody tr.accom-row-hidden{display:none;}
 .accom-table tbody tr:hover:not(.accom-divider){background:#F8FAFC;}
 .accom-table tbody tr.accom-changed{background:#FFFBEB;}
-.accom-table td{padding:8px 9px;vertical-align:middle;text-align:center;}
+.accom-table td{padding:6px 7px;vertical-align:middle;text-align:center;}
 .accom-table td.left{text-align:left;}
 .accom-room-id{font-size:14px;font-weight:800;}
 .accom-type-A .accom-room-id{color:#1E3A8A;}.accom-type-B .accom-room-id{color:#166534;}
@@ -464,7 +464,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .accom-g-badge.─{background:#F1F5F9;color:#94A3B8;}
 .accom-cap{font-size:12px;font-weight:700;}
 .accom-cap.full{color:#1E3A8A;}.accom-cap.part{color:#F59E0B;}.accom-cap.empty{color:#94A3B8;}.accom-cap.over{color:#DC2626;}
-.accom-team-cell{font-size:11px;color:#64748B;font-weight:600;}
+.accom-team-cell{font-size:11px;color:#64748B;font-weight:600;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;}
 .accom-members-cell{display:flex;flex-wrap:wrap;gap:4px;min-width:160px;padding:2px 0;}
 .accom-chip{padding:4px 9px;border-radius:13px;font-size:11px;font-weight:700;cursor:grab;border:1.5px solid transparent;transition:transform .1s,box-shadow .1s,opacity .15s;user-select:none;-webkit-user-select:none;touch-action:none;}
 .accom-chip:active{cursor:grabbing;}
@@ -475,6 +475,12 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .accom-chip.─{color:#94A3B8;font-style:italic;border:none;cursor:default;}
 .accom-chip.moved{outline:2px solid #F59E0B;outline-offset:1px;}
 .accom-chip.unreg{background:#E2E8F0 !important;color:#64748B !important;border-color:#CBD5E1 !important;opacity:.8;}
+/* 롱프레스 진행 중 표시 */
+.accom-chip.pressing{
+  transform:scale(1.1);
+  box-shadow:0 0 0 3px rgba(59,130,246,.4);
+  transition:transform .1s,box-shadow .1s;
+}
 .accom-members-cell.drag-over{background:#EFF6FF;border-radius:7px;outline:2px dashed #3B82F6;outline-offset:2px;}
 .accom-divider td{background:#EFF6FF;font-size:10px;font-weight:700;color:#1E3A8A;padding:5px 10px;text-align:left;border-top:2px solid #3B82F6;}
 #accomGhost{position:fixed;pointer-events:none;z-index:9999;padding:4px 11px;border-radius:13px;font-size:11px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.25);transform:translate(-50%,-50%);display:none;}
@@ -4121,12 +4127,9 @@ function renderAccom(){
   h+='<button class="accom-btn accom-btn-excel" onclick="accomExportExcel()">📥 엑셀 출력</button>';
   h+='<button class="accom-btn accom-btn-reset" onclick="accomReset()">✕ 초기화</button>';
   h+='</div>';
-  h+='<div class="accom-notices">';
-  h+='<div class="accom-notice red">※ 시설지원팀 32명 — 별도 교회 숙소 취침</div>';
-  h+='<div class="accom-notice amber">※ 개인(개별준비) 10명 — 숙소 미배정</div>';
-  h+='<div class="accom-notice teal">★ 드래그로 방 이동 | 팀명은 사역팀 자동 조회 | <span style="background:#E2E8F0;color:#64748B;padding:1px 6px;border-radius:5px;font-size:10px">회색</span>=미등록</div>';
-  h+='</div>';
-  h+='<div class="accom-tbl-wrap"><table class="accom-table"><thead><tr>';
+  h+='<div class="accom-tbl-wrap"><table class="accom-table">';
+  h+='<colgroup><col style="width:46px"><col style="width:54px"><col style="width:38px"><col style="width:44px"><col style="width:110px"><col></colgroup>';
+  h+='<thead><tr>';
   h+='<th>방번호</th><th>숙소타입</th><th>성별</th><th>인원</th><th>팀명</th>';
   h+='<th style="text-align:left;min-width:200px">숙소자 <span style="font-weight:400;opacity:.7">(드래그 이동)</span></th>';
   h+='</tr></thead><tbody id="accomTbody"></tbody></table></div>';
@@ -4221,15 +4224,79 @@ function applyAccomFilter(){
 function bindAccomDrag(){
   document.querySelectorAll('.accom-chip:not(.─)').forEach(function(chip){
     chip.addEventListener('mousedown',accomMouseDown);
-    chip.addEventListener('touchstart',accomTouchStart,{passive:false});
+    chip.addEventListener('touchstart',accomTouchStart,{passive:true}); // passive:true → 스크롤 우선
   });
 }
-function accomMouseDown(e){if(e.button!==0)return;accomStartDrag(e.currentTarget,e.clientX,e.clientY);document.addEventListener('mousemove',accomMouseMove);document.addEventListener('mouseup',accomMouseUp);e.preventDefault();}
+function accomMouseDown(e){
+  if(e.button!==0)return;
+  accomStartDrag(e.currentTarget,e.clientX,e.clientY);
+  document.addEventListener('mousemove',accomMouseMove);
+  document.addEventListener('mouseup',accomMouseUp);
+  e.preventDefault();
+}
 function accomMouseMove(e){accomMoveDrag(e.clientX,e.clientY);}
 function accomMouseUp(e){accomEndDrag(e.clientX,e.clientY);document.removeEventListener('mousemove',accomMouseMove);document.removeEventListener('mouseup',accomMouseUp);}
-function accomTouchStart(e){var t=e.touches[0];accomStartDrag(e.currentTarget,t.clientX,t.clientY);document.addEventListener('touchmove',accomTouchMove,{passive:false});document.addEventListener('touchend',accomTouchEnd);e.preventDefault();}
-function accomTouchMove(e){accomMoveDrag(e.touches[0].clientX,e.touches[0].clientY);e.preventDefault();}
-function accomTouchEnd(e){var t=e.changedTouches[0];accomEndDrag(t.clientX,t.clientY);document.removeEventListener('touchmove',accomTouchMove);document.removeEventListener('touchend',accomTouchEnd);}
+
+// 터치: 롱프레스(500ms) 후 드래그 시작, 그 전에 손가락 움직이면 스크롤로 처리
+var accomLongPressTimer=null;
+var accomTouchStartX=0, accomTouchStartY=0;
+var accomLongPressChip=null;
+var ACCOM_LONG_PRESS_MS=500; // 롱프레스 시간
+var ACCOM_MOVE_THRESHOLD=8;  // 이 픽셀 이상 움직이면 스크롤로 판단
+
+function accomTouchStart(e){
+  var t=e.touches[0];
+  accomTouchStartX=t.clientX;
+  accomTouchStartY=t.clientY;
+  accomLongPressChip=e.currentTarget;
+  accomLongPressChip.classList.add('pressing'); // 시각 피드백 시작
+  // 500ms 후 드래그 시작
+  accomLongPressTimer=setTimeout(function(){
+    accomLongPressTimer=null;
+    accomLongPressChip.classList.remove('pressing');
+    // 진동 피드백 (지원 기기)
+    if(navigator.vibrate) navigator.vibrate(40);
+    accomStartDrag(accomLongPressChip, accomTouchStartX, accomTouchStartY);
+    // 이제부터 touchmove/touchend 를 드래그로 처리
+    document.addEventListener('touchmove', accomTouchMove, {passive:false});
+    document.addEventListener('touchend', accomTouchEnd);
+  }, ACCOM_LONG_PRESS_MS);
+  // 손가락 움직임 감지 (스크롤 판단)
+  document.addEventListener('touchmove', accomTouchStartMove, {passive:true});
+  document.addEventListener('touchend', accomTouchStartEnd, {once:true});
+}
+function accomTouchStartMove(e){
+  if(!accomLongPressTimer) return;
+  var t=e.touches[0];
+  var dx=Math.abs(t.clientX-accomTouchStartX);
+  var dy=Math.abs(t.clientY-accomTouchStartY);
+  if(dx>ACCOM_MOVE_THRESHOLD||dy>ACCOM_MOVE_THRESHOLD){
+    clearTimeout(accomLongPressTimer);
+    accomLongPressTimer=null;
+    if(accomLongPressChip) accomLongPressChip.classList.remove('pressing');
+    document.removeEventListener('touchmove',accomTouchStartMove);
+  }
+}
+function accomTouchStartEnd(){
+  if(accomLongPressTimer){
+    clearTimeout(accomLongPressTimer);
+    accomLongPressTimer=null;
+    if(accomLongPressChip) accomLongPressChip.classList.remove('pressing');
+  }
+  document.removeEventListener('touchmove',accomTouchStartMove);
+}
+function accomTouchMove(e){
+  if(!accomDragging) return;
+  accomMoveDrag(e.touches[0].clientX,e.touches[0].clientY);
+  e.preventDefault();
+}
+function accomTouchEnd(e){
+  var t=e.changedTouches[0];
+  accomEndDrag(t.clientX,t.clientY);
+  document.removeEventListener('touchmove',accomTouchMove);
+  document.removeEventListener('touchend',accomTouchEnd);
+  document.removeEventListener('touchmove',accomTouchStartMove);
+}
 function accomStartDrag(chip,x,y){
   accomDragging={name:chip.dataset.name,fromId:chip.dataset.roomid,el:chip};
   chip.classList.add('dragging');
