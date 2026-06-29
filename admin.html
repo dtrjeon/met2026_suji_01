@@ -662,13 +662,15 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   </div>
 
   <!-- 검색 -->
-  <div class="search-wrap">
-    <div class="search-box">
+  <div class="search-wrap" style="display:flex;align-items:center;gap:8px;">
+    <div class="search-box" style="flex:1;">
       <span class="search-ico">🔍</span>
       <input type="text" id="searchInput" placeholder="이름, 목장, 사역팀 검색…"
         oninput="onSearch(this)" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <span class="search-clr" id="searchClr" onclick="clearSearch()">✕</span>
     </div>
+    <button onclick="exportListExcel()" title="명단 엑셀저장"
+      style="flex-shrink:0;padding:7px 10px;border:none;border-radius:10px;background:#166534;color:#fff;font-size:16px;cursor:pointer;line-height:1;">📊</button>
   </div>
 
   <!-- 결과 수 + 정렬 버튼 -->
@@ -1252,6 +1254,89 @@ function resetFilter() {
 }
 
 // ── 검색 ──
+function exportListExcel(){
+  // SheetJS 동적 로드
+  if(typeof XLSX==='undefined'){
+    var s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload=function(){_doListExcel();};
+    s.onerror=function(){alert('엑셀 라이브러리 로드 실패');};
+    document.head.appendChild(s);
+  } else {
+    _doListExcel();
+  }
+}
+
+function _doListExcel(){
+  // 현재 화면에 표시된 데이터 기준 (필터/검색 적용)
+  var sq=(document.getElementById('searchInput')||{}).value||'';
+  sq=sq.trim().toLowerCase();
+
+  // allData에서 현재 필터 조건 적용
+  var fs=document.getElementById('filterSched')?document.getElementById('filterSched').value:'';
+  var fa=document.getElementById('filterAccom')?document.getElementById('filterAccom').value:'';
+  var fm=document.getElementById('filterMteam')?document.getElementById('filterMteam').value:'';
+  var fv=document.getElementById('filterVillage')?document.getElementById('filterVillage').value:'';
+
+  var rows=allData.filter(function(d){
+    if(fs&&d.sched!==fs) return false;
+    if(fa&&d.accom!==fa) return false;
+    if(fm&&d.mteam!==fm) return false;
+    if(fv&&d.village!==fv) return false;
+    if(sq){
+      var hay=(d.name||'')+(d.moksang||'')+(d.mteam||'')+(d.pastor||'')+(d.village||'');
+      if(hay.toLowerCase().indexOf(sq)<0) return false;
+    }
+    return true;
+  });
+
+  var HDR='FF1E3A8A';
+  function cs(bg,bold,ha){
+    return {
+      fill:{patternType:'solid',fgColor:{argb:bg||'FFFFFFFF'}},
+      font:{bold:!!bold,name:'맑은 고딕',sz:10,color:{argb:bg===HDR?'FFFFFFFF':'FF1E293B'}},
+      alignment:{horizontal:ha||'left',vertical:'center'},
+      border:{
+        top:{style:'thin',color:{argb:'FFD1D5DB'}},bottom:{style:'thin',color:{argb:'FFD1D5DB'}},
+        left:{style:'thin',color:{argb:'FFD1D5DB'}},right:{style:'thin',color:{argb:'FFD1D5DB'}}
+      }
+    };
+  }
+
+  var wb=XLSX.utils.book_new(), ws={};
+  var headers=['번호','관리번호','이름','성별','전화번호','마을','목자명','목장','사역팀','참여일정','차량','숙소','비고'];
+  ws['!cols']=[{wch:5},{wch:12},{wch:8},{wch:5},{wch:14},{wch:8},{wch:8},{wch:14},{wch:14},{wch:12},{wch:6},{wch:10},{wch:12}];
+
+  headers.forEach(function(h,ci){
+    ws[XLSX.utils.encode_cell({r:0,c:ci})]={v:h,t:'s',s:cs(HDR,true,'center')};
+  });
+
+  rows.forEach(function(d,ri){
+    var er=ri+1;
+    var rowBg=ri%2===0?'FFFFFFFF':'FFF8FAFC'; // 교대 배경
+    var vals=[
+      ri+1, d.rno||'', d.name||'', d.gender||'', d.phone||'',
+      d.village||'', d.pastor||'', d.moksang||'', d.mteam||'',
+      d.sched||'', d.trans||'', d.accom||'', d.note||''
+    ];
+    vals.forEach(function(v,ci){
+      var ha=ci===0?'center':'left';
+      ws[XLSX.utils.encode_cell({r:er,c:ci})]={v:v,t:typeof v==='number'?'n':'s',s:cs(rowBg,false,ha)};
+    });
+  });
+
+  ws['!rows']=[{hpt:21.75}];
+  for(var i=0;i<rows.length;i++) ws['!rows'].push({hpt:18});
+  ws['!ref']=XLSX.utils.encode_range({r:0,c:0},{r:rows.length,c:headers.length-1});
+
+  var now=new Date();
+  var stamp=now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')
+    +'_'+String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
+  var fname='MET2026_블레싱삼척_명단_'+stamp+'.xlsx';
+  XLSX.utils.book_append_sheet(wb,ws,'명단');
+  XLSX.writeFile(wb,fname,{bookType:'xlsx',type:'binary',cellStyles:true});
+}
+
 function onSearch(el){
   document.getElementById('searchClr').style.display = el.value ? 'block' : 'none';
   applyFilter();
