@@ -1983,7 +1983,7 @@ function buildCard(m,i){
     +'<div class="g2" style="margin-bottom:12px;">'
     +'<div class="fld"><div class="lbl">차량 <span class="req">*</span></div>'+transH+'</div>'
     +'<div class="fld"><div class="lbl">숙소 <span class="req">*</span></div><div class="rg">'
-    +['단체(교회준비)','개인(개별준비)'].map(function(a){return'<div class="rb"><input type="radio" id="a'+m.uid+'_'+a+'" name="a'+m.uid+'" value="'+a+'"'+(m.accom===a?' checked':'')+'><label for="a'+m.uid+'_'+a+'" style="font-size:11px;word-break:keep-all;line-height:1.3;">'+a+'</label></div>';}).join('')
+    +['단체(교회준비)','개인(개별준비)','불필요'].map(function(a){return'<div class="rb"><input type="radio" id="a'+m.uid+'_'+a+'" name="a'+m.uid+'" value="'+a+'"'+(m.accom===a?' checked':'')+'><label for="a'+m.uid+'_'+a+'" style="font-size:11px;word-break:keep-all;line-height:1.3;">'+a+'</label></div>';}).join('')
     +'</div></div></div>'
     +'<div class="fld"><div class="lbl">비고</div>'
     +'<textarea id="m'+m.uid+'_note" placeholder="자녀인 경우 학년 명기 (초3, 중1 등)" autocorrect="off" autocapitalize="off">'+m.note+'</textarea>'
