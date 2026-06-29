@@ -4269,12 +4269,12 @@ function renderAccom(){
   h+='<button class="accom-tab" data-f="여유" onclick="setAccomFilter(this.dataset.f,this)">⬜ 여유</button>';
   h+='</div>';
   h+='<input class="accom-search" type="text" placeholder="🔍 이름·팀 검색" oninput="setAccomSearch(this.value)">';
+  h+='<button class="accom-btn" style="background:#0891B2;color:#fff;flex-shrink:0" onclick="loadAccomFromSheet()">🔄 불러오기</button>';
   h+='</div>';
   h+='<div class="accom-change-bar" id="accomChangeBar">';
   h+='<span class="accom-change-msg" id="accomChangeMsg"></span>';
   h+='<button class="accom-btn accom-btn-undo" onclick="accomUndo()">↩ 되돌리기</button>';
   h+='<button class="accom-btn accom-btn-save" onclick="accomSave()">💾 저장</button>';
-  h+='<button class="accom-btn" style="background:#0891B2;color:#fff" onclick="loadAccomFromSheet()">🔄 불러오기</button>';
   h+='<button class="accom-btn" style="background:#7C3AED;color:#fff" onclick="accomDebug()">🔍 진단</button>';
   h+='<button class="accom-btn accom-btn-excel" onclick="accomExportExcel()">📊 엑셀저장</button>';
   h+='<button class="accom-btn accom-btn-reset" onclick="accomReset()">✕ 초기화</button>';
@@ -4299,8 +4299,11 @@ function renderAccom(){
     if(typeof loadData==='function') loadData();
     return;
   }
+  // 기본값으로 먼저 표시 후 GAS에서 최신 데이터 자동 불러오기
   cleanAccomRooms();
   renderAccomTable();
+  // GAS 숙소 시트 자동 로드 (저장된 데이터가 있으면 덮어씀)
+  loadAccomFromSheet();
 }
 
 // 명단(allData)에 없는 숙소자 자동 제거
