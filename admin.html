@@ -416,20 +416,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
 /* ── 숙소배치 패널 ── */
 /* ── 숙소배치 패널 ── */
-.accom-panel{
-  display:none;
-  flex-direction:column;
-  /* 헤더(약50px) + 탭바(약54px) = 104px 아래부터 채움 */
-  position:fixed;
-  top:calc(50px + env(safe-area-inset-top) + 54px);
-  left:0;right:0;
-  bottom:0;
-  background:#F1F5F9;
-  z-index:80;
-  overflow:hidden;
-}
-.accom-panel.show{display:flex;}
-.accom-toolbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:10px 12px 6px;flex-shrink:0;background:#F1F5F9;}
+.accom-panel{display:none;padding:10px 12px 80px;}
+.accom-panel.show{display:block;}
+.accom-toolbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;}
 .accom-tabs{display:flex;gap:4px;flex-wrap:nowrap;overflow-x:auto;}
 .accom-tab{padding:5px 11px;border-radius:14px;border:1.5px solid var(--border);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;background:#fff;transition:all .15s;font-family:inherit;}
 .accom-tab.active{background:var(--primary);color:#fff;border-color:var(--primary);}
@@ -438,7 +427,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .accom-tab.f혼합{border-color:#065F46;color:#065F46;}.accom-tab.f혼합.active{background:#065F46;color:#fff;}
 .accom-search{flex:1;min-width:100px;padding:6px 12px;border:1.5px solid var(--border);border-radius:14px;font-family:inherit;font-size:12px;outline:none;}
 .accom-search:focus{border-color:var(--primary);}
-.accom-change-bar{display:none;background:#FEF9C3;border-bottom:1px solid #FDE047;padding:7px 12px;align-items:center;gap:6px;flex-wrap:wrap;flex-shrink:0;}
+.accom-change-bar{display:none;background:#FEF9C3;border:1px solid #FDE047;border-radius:8px;padding:8px 12px;margin-bottom:8px;align-items:center;gap:6px;flex-wrap:wrap;}
 .accom-change-bar.show{display:flex;}
 .accom-change-msg{font-size:12px;font-weight:700;color:#854D0E;flex:1;}
 .accom-btn{padding:5px 11px;border-radius:7px;border:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;}
@@ -448,16 +437,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .accom-btn-reset{background:#FEE2E2;color:#DC2626;}
 .accom-notices{display:none;}
 .accom-notice{display:none;}
-.accom-tbl-wrap{
-  flex:1;
-  overflow-x:auto;
-  overflow-y:auto;
-  -webkit-overflow-scrolling:touch;
-  padding:0 12px 20px;
-}
+.accom-tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .accom-table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border-radius:10px;overflow:hidden;box-shadow:var(--shadow);min-width:360px;}
 .accom-table thead tr{background:var(--primary);}
-.accom-table thead th{color:#fff;font-size:11px;font-weight:700;padding:8px 5px;text-align:center;white-space:nowrap;border-right:1px solid rgba(255,255,255,.15);position:sticky;top:0;z-index:5;background:var(--primary);}
+.accom-table thead th{color:#fff;font-size:11px;font-weight:700;padding:8px 5px;text-align:center;white-space:nowrap;border-right:1px solid rgba(255,255,255,.15);position:sticky;top:calc(50px + env(safe-area-inset-top) + 54px);z-index:5;background:var(--primary);}
 .accom-table thead th:last-child{border-right:none;}
 .accom-table tbody tr{border-bottom:1px solid var(--border);}
 .accom-table tbody tr:last-child{border-bottom:none;}
@@ -655,7 +638,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   <div class="editlog-panel" id="editlogPanel"></div>
 
   <!-- 숙소배치 패널 (전태룡 전용) -->
-  <div class="accom-panel" id="accomPanel"></div>
+  <div class="accom-panel" id="accomPanel" style="display:none"></div>
 
 
   <!-- 새로고침 -->
@@ -988,8 +971,8 @@ function processData(res, returnTab) {
   // 저장 후 원래 탭으로 복귀 (miss/family 등)
   if(returnTab && canTab(returnTab)) switchTab(returnTab);
   // 숙소배치 탭이 열려 있으면 allData 로드 완료 후 테이블 재렌더링
-  if(document.getElementById('accomPanel') &&
-     document.getElementById('accomPanel').classList.contains('show')){
+  var _ap=document.getElementById('accomPanel');
+  if(_ap&&_ap.style.display==='block'){
     renderAccomTable();
   }
 }
@@ -2025,7 +2008,7 @@ function switchTab(tab) {
   var tabAccom = document.getElementById('tabAccom');
   if(tabAccom) tabAccom.className = 'tab'+(tab==='accom'?' active':'');
   var accomPanel = document.getElementById('accomPanel');
-  if(accomPanel) accomPanel.classList.toggle('show', tab==='accom');
+  if(accomPanel) accomPanel.style.display = tab==='accom'?'block':'none';
   if(tab==='miss')    renderMissing();
   if(tab==='acct')    renderAcct();
   if(tab==='family')  renderFamily();
@@ -4150,7 +4133,7 @@ function renderAccom(){
   h+='<button class="accom-btn accom-btn-reset" onclick="accomReset()">✕ 초기화</button>';
   h+='</div>';
   h+='<div class="accom-tbl-wrap"><table class="accom-table">';
-  h+='<colgroup><col style="width:42px"><col style="width:50px"><col style="width:34px"><col style="width:34px"><col style="width:76px"><col></colgroup>';
+  h+='<colgroup><col style="width:42px"><col style="width:50px"><col style="width:15px"><col style="width:15px"><col style="width:76px"><col></colgroup>';
   h+='<thead><tr>';
   h+='<th>방번호</th><th>숙소타입</th><th>성별</th><th>인원</th><th>팀명</th>';
   h+='<th style="text-align:left;min-width:200px">숙소자 <span style="font-weight:400;opacity:.7">(길게 눌러 이동)</span></th>';
