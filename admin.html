@@ -449,7 +449,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .accom-table tbody tr.accom-changed{background:#FFFBEB;}
 .accom-table td{padding:6px 7px;vertical-align:middle;text-align:center;}
 .accom-table td.left{text-align:left;}
-.accom-room-id{font-size:14px;font-weight:800;}
+.accom-room-id{font-size:11px;font-weight:800;}
 .accom-type-A .accom-room-id{color:#1E3A8A;}.accom-type-B .accom-room-id{color:#166534;}
 .accom-type-C .accom-room-id{color:#854D0E;}.accom-type-D .accom-room-id{color:#9A3412;}
 .accom-type-E .accom-room-id{color:#5B21B6;}.accom-type-F .accom-room-id{color:#9F1239;}
@@ -4216,8 +4216,8 @@ function renderAccomTable(){
   requestAnimationFrame(function(){
     var hd  = document.querySelector('.hd');
     var tab = document.querySelector('.tab-bar');
-    var stickyTop = (hd?hd.getBoundingClientRect().height:50) +
-                    (tab?tab.getBoundingClientRect().height:54);
+    var stickyTop = (hd ? hd.offsetHeight : 50) +
+                    (tab ? tab.offsetHeight : 54);
     document.querySelectorAll('.accom-table thead th').forEach(function(th){
       th.style.top = stickyTop + 'px';
     });
