@@ -537,9 +537,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .accom-chip{padding:3px 7px;border-radius:11px;font-size:11px;font-weight:700;cursor:grab;border:0.5px solid transparent;transition:transform .1s,box-shadow .1s,opacity .15s;user-select:none;-webkit-user-select:none;touch-action:none;white-space:nowrap;}
 .accom-chip:active{cursor:grabbing;}
 .accom-chip.dragging{opacity:.35;transform:scale(.92);}
-.accom-chip.여{background:#FFF0F6;color:#000000;border-color:#F472B6;}
-.accom-chip.남{background:#DBEAFE;color:#1E3A8A;border-color:#60A5FA;}
-.accom-chip.아이{background:#FEF9C3;color:#854D0E;border-color:#FACC15;}
+.accom-chip.여{background:#FFF0F6;color:#000000;border-color:#6B7280;}
+.accom-chip.남{background:#DBEAFE;color:#1E3A8A;border-color:#6B7280;}
+.accom-chip.아이{background:#FEF9C3;color:#854D0E;border-color:#6B7280;}
 .accom-chip.─{color:#94A3B8;font-style:italic;border:none;cursor:default;}
 .accom-chip.moved{outline:2px solid #F59E0B;outline-offset:1px;}
 .accom-chip.unreg{background:#E2E8F0 !important;color:#64748B !important;border-color:#CBD5E1 !important;opacity:.8;}
@@ -4185,19 +4185,20 @@ function accomIsChild(name){
 }
 
 // 사역팀별 칩 아웃라인 색상
+// 사역팀 아웃라인: 진회색 통일
 var ACCOM_TEAM_COLORS={
-  '전도팀':        '#2563EB',
-  '장금이팀':      '#7C3AED',
-  '장수사진/메이크업팀': '#0891B2',
-  '맛사지팀':      '#059669',
-  '간식팀':        '#D97706',
-  '어린이(청소년)팀': '#EA580C',
-  '의료팀':        '#DC2626',
-  '이미용팀':      '#DB2777',
-  '바자회팀':      '#65A30D',
-  '시설지원팀':    '#475569',
-  '중보기도팀':    '#9333EA',
-  '미지정':        '#94A3B8',
+  '전도팀':        '#4B5563',
+  '장금이팀':      '#4B5563',
+  '장수사진/메이크업팀': '#4B5563',
+  '맛사지팀':      '#4B5563',
+  '간식팀':        '#4B5563',
+  '어린이(청소년)팀': '#4B5563',
+  '의료팀':        '#4B5563',
+  '이미용팀':      '#4B5563',
+  '바자회팀':      '#4B5563',
+  '시설지원팀':    '#4B5563',
+  '중보기도팀':    '#4B5563',
+  '미지정':        '#9CA3AF',
 };
 function accomTeamColor(name){
   var d=allData.find(function(x){return x.name&&x.name.trim()===name.trim();});
@@ -4276,13 +4277,13 @@ function renderAccom(){
   h+='</div>';
   h+='<input class="accom-search" type="text" placeholder="🔍 이름·팀 검색" oninput="setAccomSearch(this.value)">';
   h+='<button class="accom-btn" style="background:#0891B2;color:#fff;flex-shrink:0" onclick="loadAccomFromSheet()">🔄 불러오기</button>';
+  h+='<button class="accom-btn accom-btn-excel" style="flex-shrink:0" onclick="accomExportExcel()">📊 엑셀저장</button>';
   h+='</div>';
   h+='<div class="accom-change-bar" id="accomChangeBar">';
   h+='<span class="accom-change-msg" id="accomChangeMsg"></span>';
   h+='<button class="accom-btn accom-btn-undo" onclick="accomUndo()">↩ 되돌리기</button>';
   h+='<button class="accom-btn accom-btn-save" onclick="accomSave()">💾 저장</button>';
   h+='<button class="accom-btn" style="background:#7C3AED;color:#fff" onclick="accomDebug()">🔍 진단</button>';
-  h+='<button class="accom-btn accom-btn-excel" onclick="accomExportExcel()">📊 엑셀저장</button>';
   h+='<button class="accom-btn accom-btn-reset" onclick="accomReset()">✕ 초기화</button>';
   h+='</div>';
   h+='<div class="accom-summary" id="accomSummary"></div>';
@@ -4974,55 +4975,110 @@ function _doExportExcel(){
     D01:'침구3',D02:'침구3',D03:'침구3',D04:'침구3',D05:'침구3',
     F01:'트윈1, 싱글1, 침구3',F02:'트윈1, 싱글1, 침구3',E01:'침구5'
   };
-  var TYPE_BG={A:'FFDBEAFE',B:'FFDCFCE7',C:'FFD6E3BC',D:'FFFFEDD5',E:'FFEDE9FE',F:'FFFFE4E6'};
-  var GENDER_BG={'여':'FFFFF0F6','남':'FFEFF6FF','가족':'FFFFF0F6','─':'FFF8FAFC','혼합':'FFECFDF5'};
-  var HDR='FF1E3A8A',CAP='FFFFF0F6',REM='FFDBEAFE';
-  function cs(bg,bold,ha,wrap){
+  // 구글시트와 동일한 타입별 배경색 (ARGB)
+  var TYPE_BG={A:'FFDBEAFE',B:'FFDCFCE7',C:'FFFFF0F6',D:'FFFFEDD5',E:'FFEDE9FE',F:'FFFFE4E6'};
+  // C타입은 FEF08A였으나 구글시트 실제 #D6E3BC 계열로 수정
+  var GENDER_BG={'여':'FFFFF0F6','남':'FFEFF6FF','가족':'FFFFF9C3','─':'FFF8FAFC','혼합':'FFECFDF5'};
+  var HDR='FF1E3A8A', CAP='FFFFF0F6', REM='FFDBEAFE';
+
+  function cs(bg,bold,ha,wrap,sz){
     return {
       fill:{patternType:'solid',fgColor:{argb:bg||'FFFFFFFF'}},
-      font:{bold:!!bold,name:'맑은 고딕',sz:10,color:{argb:bg===HDR?'FFFFFFFF':'FF000000'}},
+      font:{bold:!!bold,name:'맑은 고딕',sz:sz||10,
+            color:{argb:bg===HDR?'FFFFFFFF':'FF1E293B'}},
       alignment:{horizontal:ha||'left',vertical:'center',wrapText:!!wrap},
-      border:{top:{style:'thin',color:{argb:'FFCBD5E1'}},bottom:{style:'thin',color:{argb:'FFCBD5E1'}},
-              left:{style:'thin',color:{argb:'FFCBD5E1'}},right:{style:'thin',color:{argb:'FFCBD5E1'}}}
+      border:{
+        top:{style:'thin',color:{argb:'FFD1D5DB'}},
+        bottom:{style:'thin',color:{argb:'FFD1D5DB'}},
+        left:{style:'thin',color:{argb:'FFD1D5DB'}},
+        right:{style:'thin',color:{argb:'FFD1D5DB'}}
+      }
     };
   }
-  var wb=XLSX.utils.book_new(),ws={};
-  ws['!cols']=[{wch:8},{wch:10},{wch:7},{wch:7},{wch:7},{wch:6},{wch:24},{wch:44},{wch:16}];
+
+  var wb=XLSX.utils.book_new(), ws={};
+
+  // 구글시트 열너비와 동일 (pt→wch 근사값)
+  ws['!cols']=[
+    {wch:9},   // A: 방번호    (GS: 70px)
+    {wch:10},  // B: 숙소타입  (GS: 80px)
+    {wch:6},   // C: 성별      (GS: 50px)
+    {wch:6},   // D: 인원      (GS: 50px)
+    {wch:7},   // E: 총인원    (GS: 55px)
+    {wch:5},   // F: 잔여      (GS: 45px)
+    {wch:22},  // G: 팀명      (GS: 180px)
+    {wch:44},  // H: 숙소자    (GS: 320px)
+    {wch:15},  // I: 수정      (GS: 120px)
+  ];
+
+  // 헤더 행 (구글시트와 동일)
   var hdrs=['방번호','숙소타입','성별','인원','총인원','잔여','팀명','숙소자','수정'];
-  hdrs.forEach(function(h,ci){ws[XLSX.utils.encode_cell({r:0,c:ci})]={v:h,t:'s',s:cs(HDR,true,'center')};});
+  hdrs.forEach(function(h,ci){
+    ws[XLSX.utils.encode_cell({r:0,c:ci})]={v:h,t:'s',s:cs(HDR,true,'center',false,10)};
+  });
+
+  // 데이터 행 (구글시트 저장 순서와 동일)
   var order=['A01','A02','A03','A04','A05','A06','A07','A08','A09','A10','A11',
     'B01','B02','B03','B04','B05','C01','C02',
     'D01','D02','D03','D04','D05','F01','F02','E01'];
+
   order.forEach(function(rid,ri){
     var r=ACCOM_ROOMS.find(function(x){return x.id===rid;});
     if(!r) return;
-    var er=ri+1,tbg=TYPE_BG[r.type]||'FFFFFFFF',gbg=GENDER_BG[r.gender]||CAP,cnt=r.members.length;
+    var er=ri+1;
+    var tbg=TYPE_BG[r.type]||'FFFFFFFF';
+    var gbg=GENDER_BG[r.gender]||CAP;
+    var cnt=r.members.length;
     var team=cnt===0?'(여유)':accomGetTeam(r.members);
+    var membersStr=r.members.join(', ');
+
+    // A: 방번호 - 볼드, 가운데
     ws[XLSX.utils.encode_cell({r:er,c:0})]={v:r.id,       t:'s',s:cs(tbg,true,'center')};
+    // B: 숙소타입 - 가운데
     ws[XLSX.utils.encode_cell({r:er,c:1})]={v:r.typeName, t:'s',s:cs(tbg,false,'center')};
+    // C: 성별 - 볼드, 가운데, 성별색
     ws[XLSX.utils.encode_cell({r:er,c:2})]={v:r.gender,   t:'s',s:cs(gbg,true,'center')};
+    // D: 인원 - 볼드, 가운데
     ws[XLSX.utils.encode_cell({r:er,c:3})]={v:cnt||'',    t:cnt?'n':'s',s:cs(CAP,true,'center')};
+    // E: 총인원 - 볼드, 가운데
     ws[XLSX.utils.encode_cell({r:er,c:4})]={v:r.cap,      t:'n',s:cs(CAP,true,'center')};
+    // F: 잔여 - 수식, 가운데
     ws[XLSX.utils.encode_cell({r:er,c:5})]={f:'E'+(er+1)+'-D'+(er+1),t:'n',s:cs(REM,true,'center')};
+    // G: 팀명
     ws[XLSX.utils.encode_cell({r:er,c:6})]={v:team,       t:'s',s:cs(tbg,false,'left')};
-    ws[XLSX.utils.encode_cell({r:er,c:7})]={v:r.members.join(', '),t:'s',s:cs(tbg,false,'left',true)};
+    // H: 숙소자 - 줄바꿈 허용
+    ws[XLSX.utils.encode_cell({r:er,c:7})]={v:membersStr, t:'s',s:cs(tbg,false,'left',true)};
+    // I: 수정(침구)
     ws[XLSX.utils.encode_cell({r:er,c:8})]={v:META[r.id]||'',t:'s',s:cs(tbg,false,'center')};
   });
+
+  // 합계행 (구글시트와 동일)
   var sr=order.length+1;
   ws[XLSX.utils.encode_cell({r:sr,c:3})]={f:'SUM(D2:D'+sr+')',t:'n',s:cs(CAP,true,'center')};
   ws[XLSX.utils.encode_cell({r:sr,c:4})]={f:'SUM(E2:E'+sr+')',t:'n',s:cs(CAP,true,'center')};
   ws[XLSX.utils.encode_cell({r:sr,c:5})]={f:'E'+(sr+1)+'-D'+(sr+1),t:'n',s:cs(REM,true,'center')};
-  ws['!rows']=[{hpt:21.75}];
-  for(var i=0;i<order.length+1;i++) ws['!rows'].push({hpt:19.5});
+
+  // 행 높이 (구글시트와 동일)
+  ws['!rows']=[{hpt:21.75}]; // 헤더
+  for(var i=0;i<order.length;i++) ws['!rows'].push({hpt:19.5}); // 데이터
+  ws['!rows'].push({hpt:19.5}); // 합계
+
   ws['!ref']=XLSX.utils.encode_range({r:0,c:0},{r:sr,c:8});
+
+  // 파일명 (날짜시각)
   var now=new Date();
-  var stamp=now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')
-    +'_'+String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
+  var stamp=now.getFullYear()
+    +String(now.getMonth()+1).padStart(2,'0')
+    +String(now.getDate()).padStart(2,'0')+'_'
+    +String(now.getHours()).padStart(2,'0')
+    +String(now.getMinutes()).padStart(2,'0');
   var fname='MET2026_삼척숙소배치표_'+stamp+'.xlsx';
+
   XLSX.utils.book_append_sheet(wb,ws,'숙소배치표(남녀분리)');
   XLSX.writeFile(wb,fname,{bookType:'xlsx',type:'binary',cellStyles:true});
   accomShowToast('📊 '+fname+' 저장 완료');
 }
+
 function accomDebug(){
   // 회색칩(미등록) 이름 수집
   var allNames = [];
