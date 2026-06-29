@@ -4158,16 +4158,84 @@ var ACCOM_ROOMS=[
   {id:'F02',type:'F',typeName:'가족실',cap:6,gender:'남',members:['유원종','정지원','김현호']},
   {id:'E01',type:'E',typeName:'온돌특실',cap:5,gender:'─',members:[]},
 ];
+// ACCOM_KIDS/MALES는 하드코딩 대신 allData의 note 필드로 동적 판별
+// note에 초1~초6, 중1~중3, 고1~고3, 유치, 유아 포함 → 자녀
 var ACCOM_KIDS=['박준서','박민서','한지호','고승유','이로운','고온조','윤상호','고석훈','정지원','김현호','고은송','모예은','이석진'];
 var ACCOM_MALES=['이덕우','도승재','손오성','이상훈','임동우','한지호','유원종','박준서','박민서','김현호','고석훈','고승유','정지원','윤상호','이로운','고온조','이석진'];
 var accomHistory=[], accomChangedRows=new Set();
 var accomFilter='전체', accomSearch='';
 var accomDragging=null, accomOverCell=null;
 
+// 자녀 여부: allData note 필드 기반 (초/중/고/유치/유아)
+function accomIsChild(name){
+  var d=allData.find(function(x){return x.name&&x.name.trim()===name.trim();});
+  if(!d) return ACCOM_KIDS.indexOf(name)>=0; // fallback
+  var note=(d.note||'').trim();
+  return /초[1-6]|중[1-3]|고[1-3]|유치|유아|어린이/.test(note);
+}
+
+// 사역팀별 칩 아웃라인 색상
+var ACCOM_TEAM_COLORS={
+  '전도팀':        '#2563EB',
+  '장금이팀':      '#7C3AED',
+  '장수사진/메이크업팀': '#0891B2',
+  '맛사지팀':      '#059669',
+  '간식팀':        '#D97706',
+  '어린이(청소년)팀': '#EA580C',
+  '의료팀':        '#DC2626',
+  '이미용팀':      '#DB2777',
+  '바자회팀':      '#65A30D',
+  '시설지원팀':    '#475569',
+  '중보기도팀':    '#9333EA',
+  '미지정':        '#94A3B8',
+};
+function accomTeamColor(name){
+  var d=allData.find(function(x){return x.name&&x.name.trim()===name.trim();});
+  var t=d?d.mteam:'';
+  return ACCOM_TEAM_COLORS[t]||'#CBD5E1';
+}
+
 function accomChipClass(name,rg){
-  if(ACCOM_KIDS.indexOf(name)>=0) return '아이';
+  if(accomIsChild(name)) return '아이';
   if(ACCOM_MALES.indexOf(name)>=0) return '남';
-  return '여';
+  // allData gender 우선
+  var d=allData.find(function(x){return x.name&&x.name.trim()===name.trim();});
+  if(d&&d.gender==='남') return '남';
+  if(d&&d.gender==='여') return '여';
+  return rg==='남'?'남':'여';
+}
+
+// GAS 숙소 시트에서 최신 배치 불러오기
+function loadAccomFromSheet(callback){
+  if(!currentUser) return;
+  var pw=currentUser.name+':'+currentUser.phone;
+  accomShowToast('⏳ 최신 숙소 데이터 불러오는 중...');
+  fetch(GAS_URL+'?action=getRoomData&pw='+encodeURIComponent(pw))
+    .then(function(r){return r.json();})
+    .then(function(j){
+      if(j.result==='ok'&&j.rooms&&j.rooms.length){
+        // ACCOM_ROOMS 갱신
+        j.rooms.forEach(function(rd){
+          var room=ACCOM_ROOMS.find(function(r){return r.id===rd.id;});
+          if(room){
+            room.members=rd.members||[];
+            if(rd.gender) room.gender=rd.gender;
+          }
+        });
+        accomHistory=[];
+        accomChangedRows=new Set();
+        cleanAccomRooms();
+        renderAccomTable();
+        accomUpdateChangeBar();
+        accomShowToast('✅ 최신 숙소 배치 불러오기 완료 ('+(j.savedAt||'')+')');
+        if(callback) callback();
+      } else {
+        accomShowToast('ℹ️ 저장된 숙소 데이터 없음 (기본값 사용)');
+      }
+    })
+    .catch(function(){
+      accomShowToast('⚠️ 불러오기 실패 — 기본값 사용');
+    });
 }
 function accomGetTeam(members){
   var teams=[];
@@ -4206,6 +4274,7 @@ function renderAccom(){
   h+='<span class="accom-change-msg" id="accomChangeMsg"></span>';
   h+='<button class="accom-btn accom-btn-undo" onclick="accomUndo()">↩ 되돌리기</button>';
   h+='<button class="accom-btn accom-btn-save" onclick="accomSave()">💾 저장</button>';
+  h+='<button class="accom-btn" style="background:#0891B2;color:#fff" onclick="loadAccomFromSheet()">🔄 불러오기</button>';
   h+='<button class="accom-btn" style="background:#7C3AED;color:#fff" onclick="accomDebug()">🔍 진단</button>';
   h+='<button class="accom-btn accom-btn-excel" onclick="accomExportExcel()">📊 엑셀저장</button>';
   h+='<button class="accom-btn accom-btn-reset" onclick="accomReset()">✕ 초기화</button>';
@@ -4293,10 +4362,14 @@ function renderAccomTable(){
         chips+='<div class="accom-members-row">';
         rowSlice.forEach(function(m){
           var cc=accomChipClass(m,r.gender);
-          var kid=ACCOM_KIDS.indexOf(m)>=0?'👦':'';
+          var isKid=accomIsChild(m);
+          var kid=isKid?'🎒':'';
           var unreg=!accomIsRegistered(m);
-          var title=unreg?'사역팀 미등록':'';
-          chips+='<span class="accom-chip '+cc+(isChanged?' moved':'')+(unreg?' unreg':'')+'" data-name="'+m+'" data-roomid="'+r.id+'" title="'+title+'">'+m+kid+'</span>';
+          var teamColor=accomTeamColor(m);
+          var dInfo=allData.find(function(x){return x.name&&x.name.trim()===m.trim();});
+          var title=unreg?'사역팀 미등록':(dInfo?(dInfo.mteam||'')+(dInfo.note?' ('+dInfo.note+')':''):'');
+          var style=unreg?'':'border-color:'+teamColor+';border-width:2px;';
+          chips+='<span class="accom-chip '+cc+(isChanged?' moved':'')+(unreg?' unreg':'')+'" data-name="'+m+'" data-roomid="'+r.id+'" title="'+title+'" style="'+style+'">'+m+kid+'</span>';
         });
         chips+='</div>';
       }
