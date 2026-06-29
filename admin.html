@@ -4381,7 +4381,7 @@ function renderAccomTable(){
           var teamColor=accomTeamColor(m);
           var dInfo=allData.find(function(x){return x.name&&x.name.trim()===m.trim();});
           var title=unreg?'사역팀 미등록':(dInfo?(dInfo.mteam||'')+(dInfo.note?' ('+dInfo.note+')':''):'');
-          var style=unreg?'':'border-color:'+teamColor+';border-width:0.5px;';
+          var style=unreg?'':'border-color:'+teamColor+';border-width:0.1px;';
           chips+='<span class="accom-chip '+cc+(isChanged?' moved':'')+(unreg?' unreg':'')+'" data-name="'+m+'" data-roomid="'+r.id+'" title="'+title+'" style="'+style+'">'+m+kid+'</span>';
         });
         chips+='</div>';
