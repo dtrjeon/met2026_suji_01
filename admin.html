@@ -4128,14 +4128,16 @@ function accomChipClass(name,rg){
 function accomGetTeam(members){
   var teams=[];
   members.forEach(function(m){
-    var d=allData.find(function(x){return x.name===m;});
+    var mTrim=m.trim();
+    var d=allData.find(function(x){return x.name&&x.name.trim()===mTrim;});
     var t=(d&&d.mteam&&d.mteam.trim()&&d.mteam!=='-')?d.mteam:'';
     if(t&&teams.indexOf(t)<0) teams.push(t);
   });
   return teams.length?teams.join(' / '):'─';
 }
 function accomIsRegistered(name){
-  return allData.some(function(x){return x.name===name;});
+  var n=name.trim();
+  return allData.some(function(x){return x.name&&x.name.trim()===n;});
 }
 
 function renderAccom(){
@@ -4160,6 +4162,7 @@ function renderAccom(){
   h+='<span class="accom-change-msg" id="accomChangeMsg"></span>';
   h+='<button class="accom-btn accom-btn-undo" onclick="accomUndo()">↩ 되돌리기</button>';
   h+='<button class="accom-btn accom-btn-save" onclick="accomSave()">💾 저장</button>';
+  h+='<button class="accom-btn" style="background:#7C3AED;color:#fff" onclick="accomDebug()">🔍 진단</button>';
   h+='<button class="accom-btn accom-btn-excel" onclick="accomExportExcel()">📥 엑셀 출력</button>';
   h+='<button class="accom-btn accom-btn-reset" onclick="accomReset()">✕ 초기화</button>';
   h+='</div>';
@@ -4571,6 +4574,23 @@ function _doExportExcel(){
   XLSX.writeFile(wb,'MET2026_삼척숙소배치표_'+stamp+'.xlsx',{bookType:'xlsx',type:'binary',cellStyles:true});
   accomShowToast('📥 다운로드 완료');
 }
+function accomDebug(){
+  // 회색칩(미등록) 이름 수집
+  var allNames = [];
+  ACCOM_ROOMS.forEach(function(r){ r.members.forEach(function(m){ if(allNames.indexOf(m)<0) allNames.push(m); }); });
+  var notFound = allNames.filter(function(m){ return !accomIsRegistered(m); });
+  // allData name 목록 (공백 포함 원본)
+  var dataNames = allData.map(function(x){ return JSON.stringify(x.name); }).join(', ');
+  var msg = '=== 회색칩 이름 (' + notFound.length + '개) ===\n';
+  msg += notFound.map(function(m){
+    var raw = allData.find(function(x){ return x.name && x.name.indexOf(m.trim().slice(0,2))>=0; });
+    return m + ' (allData유사: ' + (raw ? JSON.stringify(raw.name) : '없음') + ')';
+  }).join('\n');
+  msg += '\n\n=== allData 총 ' + allData.length + '명 ===\n';
+  msg += '처음10명: ' + allData.slice(0,10).map(function(x){ return JSON.stringify(x.name); }).join(', ');
+  alert(msg);
+}
+
 var accomToastTimer;
 function accomShowToast(msg){
   var el=document.getElementById('accomToast');
