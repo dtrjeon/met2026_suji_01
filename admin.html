@@ -482,8 +482,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .accom-cap.full{color:#1E3A8A;}.accom-cap.part{color:#F59E0B;}.accom-cap.empty{color:#94A3B8;}.accom-cap.over{color:#DC2626;}
 .accom-team-cell{font-size:10px;color:#64748B;font-weight:600;white-space:normal;word-break:keep-all;line-height:1.4;width:76px;}
 .accom-members-cell{display:flex;flex-direction:column;gap:3px;padding:2px 0;}
-.accom-members-row{display:flex;flex-wrap:nowrap;gap:4px;}
-.accom-chip{padding:4px 9px;border-radius:13px;font-size:11px;font-weight:700;cursor:grab;border:1.5px solid transparent;transition:transform .1s,box-shadow .1s,opacity .15s;user-select:none;-webkit-user-select:none;touch-action:none;}
+.accom-members-row{display:flex;flex-wrap:nowrap;gap:3px;align-items:center;}
+.accom-chip{padding:3px 7px;border-radius:11px;font-size:11px;font-weight:700;cursor:grab;border:1.5px solid transparent;transition:transform .1s,box-shadow .1s,opacity .15s;user-select:none;-webkit-user-select:none;touch-action:none;white-space:nowrap;}
 .accom-chip:active{cursor:grabbing;}
 .accom-chip.dragging{opacity:.35;transform:scale(.92);}
 .accom-chip.여{background:#FFF0F6;color:#BE185D;border-color:#FBCFE8;}
@@ -4150,7 +4150,7 @@ function renderAccom(){
   h+='<button class="accom-btn accom-btn-reset" onclick="accomReset()">✕ 초기화</button>';
   h+='</div>';
   h+='<div class="accom-tbl-wrap"><table class="accom-table">';
-  h+='<colgroup><col style="width:42px"><col style="width:50px"><col style="width:34px"><col style="width:30px"><col style="width:76px"><col></colgroup>';
+  h+='<colgroup><col style="width:42px"><col style="width:50px"><col style="width:34px"><col style="width:34px"><col style="width:76px"><col></colgroup>';
   h+='<thead><tr>';
   h+='<th>방번호</th><th>숙소타입</th><th>성별</th><th>인원</th><th>팀명</th>';
   h+='<th style="text-align:left;min-width:200px">숙소자 <span style="font-weight:400;opacity:.7">(길게 눌러 이동)</span></th>';
