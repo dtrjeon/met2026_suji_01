@@ -66,7 +66,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .filter-reset{flex-shrink:0;padding:5px 12px;background:#fff;border:1px solid rgba(0,0,20,0.15);border-radius:6px;font-size:11px;font-weight:700;color:var(--text3);-webkit-appearance:none;outline:none;cursor:pointer;min-height:32px;touch-action:manipulation;font-family:'Noto Sans KR',sans-serif;}
 
 /* 검색 */
-.search-wrap{padding:8px 16px 6px;background:#fff;border-bottom:1px solid var(--border);}
+.search-wrap{background:#fff;border-bottom:1px solid var(--border);}
 .search-box{display:flex;align-items:center;background:#f0f4ff;border:1px solid var(--border);border-radius:8px;padding:7px 12px;gap:8px;}
 .search-box input{flex:1;border:none;background:transparent;font-size:13px;color:var(--text);outline:none;-webkit-appearance:none;font-family:'Noto Sans KR',sans-serif;}
 .search-box input::placeholder{color:var(--text3);}
@@ -662,15 +662,15 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   </div>
 
   <!-- 검색 -->
-  <div class="search-wrap" style="display:flex;align-items:center;gap:8px;">
-    <div class="search-box" style="flex:1;">
+  <div class="search-wrap" style="display:flex;align-items:center;gap:8px;padding:8px 16px 6px;">
+    <div class="search-box" style="flex:1;min-width:0;">
       <span class="search-ico">🔍</span>
       <input type="text" id="searchInput" placeholder="이름, 목장, 사역팀 검색…"
         oninput="onSearch(this)" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <span class="search-clr" id="searchClr" onclick="clearSearch()">✕</span>
     </div>
     <button onclick="exportListExcel()" title="명단 엑셀저장"
-      style="flex-shrink:0;padding:7px 10px;border:none;border-radius:10px;background:#166534;color:#fff;font-size:16px;cursor:pointer;line-height:1;">📊</button>
+      style="flex-shrink:0;width:36px;height:36px;border:none;border-radius:10px;background:#166534;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">📊</button>
   </div>
 
   <!-- 결과 수 + 정렬 버튼 -->
