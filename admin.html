@@ -534,10 +534,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .accom-team-cell{font-size:10px;color:#64748B;font-weight:600;white-space:normal;word-break:keep-all;line-height:1.4;width:76px;}
 .accom-members-cell{display:flex;flex-direction:column;gap:3px;padding:2px 0;}
 .accom-members-row{display:flex;flex-wrap:nowrap;gap:3px;align-items:center;}
-.accom-chip{padding:3px 7px;border-radius:11px;font-size:11px;font-weight:700;cursor:grab;border:1.5px solid transparent;transition:transform .1s,box-shadow .1s,opacity .15s;user-select:none;-webkit-user-select:none;touch-action:none;white-space:nowrap;}
+.accom-chip{padding:3px 7px;border-radius:11px;font-size:11px;font-weight:700;cursor:grab;border:0.75px solid transparent;transition:transform .1s,box-shadow .1s,opacity .15s;user-select:none;-webkit-user-select:none;touch-action:none;white-space:nowrap;}
 .accom-chip:active{cursor:grabbing;}
 .accom-chip.dragging{opacity:.35;transform:scale(.92);}
-.accom-chip.여{background:#FFF0F6;color:#BE185D;border-color:#FBCFE8;}
+.accom-chip.여{background:#FFF0F6;color:#000000;border-color:#FBCFE8;}
 .accom-chip.남{background:#DBEAFE;color:#1E3A8A;border-color:#BFDBFE;}
 .accom-chip.아이{background:#FEF9C3;color:#854D0E;border-color:#FDE68A;}
 .accom-chip.─{color:#94A3B8;font-style:italic;border:none;cursor:default;}
@@ -549,6 +549,16 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   box-shadow:0 0 0 3px rgba(59,130,246,.4);
   transition:transform .1s,box-shadow .1s;
 }
+/* 미배치 이동 팝업 */
+.accom-remove-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:flex-end;justify-content:center;}
+.accom-remove-sheet{background:#fff;width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:20px 20px 36px;text-align:center;}
+.accom-remove-handle{width:36px;height:4px;background:#E2E8F0;border-radius:4px;margin:0 auto 16px;}
+.accom-remove-name{font-size:16px;font-weight:800;color:#1E3A8A;margin-bottom:4px;}
+.accom-remove-room{font-size:12px;color:#64748B;margin-bottom:20px;}
+.accom-remove-desc{font-size:13px;color:#334155;margin-bottom:20px;line-height:1.6;}
+.accom-remove-btns{display:flex;gap:10px;}
+.accom-remove-ok{flex:2;padding:13px;background:#DC2626;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+.accom-remove-cancel{flex:1;padding:13px;background:#F1F5F9;border:none;border-radius:10px;color:#64748B;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
 .accom-members-cell.drag-over{background:#EFF6FF;border-radius:7px;outline:2px dashed #3B82F6;outline-offset:2px;}
 .accom-divider td{background:#EFF6FF;font-size:10px;font-weight:700;color:#1E3A8A;padding:5px 10px;text-align:left;border-top:2px solid #3B82F6;}
 #accomGhost{position:fixed;pointer-events:none;z-index:9999;padding:4px 11px;border-radius:13px;font-size:11px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.25);transform:translate(-50%,-50%);display:none;}
@@ -4733,50 +4743,66 @@ function accomMouseUp(e){accomEndDrag(e.clientX,e.clientY);document.removeEventL
 
 // 터치: 롱프레스(500ms) 후 드래그 시작, 그 전에 손가락 움직이면 스크롤로 처리
 var accomLongPressTimer=null;
+var accomLongPressTimer2=null;  // 800ms → 미배치 이동
 var accomTouchStartX=0, accomTouchStartY=0;
 var accomLongPressChip=null;
-var ACCOM_LONG_PRESS_MS=500; // 롱프레스 시간
-var ACCOM_MOVE_THRESHOLD=8;  // 이 픽셀 이상 움직이면 스크롤로 판단
+var ACCOM_LONG_PRESS_MS=500;   // 500ms: 드래그 시작
+var ACCOM_REMOVE_MS=900;       // 900ms: 미배치 이동 팝업
+var ACCOM_MOVE_THRESHOLD=8;
 
 function accomTouchStart(e){
   var t=e.touches[0];
   accomTouchStartX=t.clientX;
   accomTouchStartY=t.clientY;
   accomLongPressChip=e.currentTarget;
-  accomLongPressChip.classList.add('pressing'); // 시각 피드백 시작
-  // 500ms 후 드래그 시작
+  accomLongPressChip.classList.add('pressing');
+
+  // 500ms → 드래그 시작
   accomLongPressTimer=setTimeout(function(){
     accomLongPressTimer=null;
     accomLongPressChip.classList.remove('pressing');
-    // 진동 피드백 (지원 기기)
     if(navigator.vibrate) navigator.vibrate(40);
     accomStartDrag(accomLongPressChip, accomTouchStartX, accomTouchStartY);
-    // 이제부터 touchmove/touchend 를 드래그로 처리
     document.addEventListener('touchmove', accomTouchMove, {passive:false});
     document.addEventListener('touchend', accomTouchEnd);
   }, ACCOM_LONG_PRESS_MS);
-  // 손가락 움직임 감지 (스크롤 판단)
+
+  // 900ms → 미배치 이동 선택 팝업 (드래그 없이 꾹 누른 경우)
+  accomLongPressTimer2=setTimeout(function(){
+    accomLongPressTimer2=null;
+    // 드래그가 시작됐으면 무시
+    if(accomDragging) return;
+    var chip=accomLongPressChip;
+    if(!chip) return;
+    chip.classList.remove('pressing');
+    // 드래그 취소
+    clearTimeout(accomLongPressTimer);
+    accomLongPressTimer=null;
+    document.removeEventListener('touchmove',accomTouchStartMove);
+    if(navigator.vibrate) navigator.vibrate([40,30,40]);
+    // 미배치 이동 확인 팝업
+    showAccomRemovePopup(chip.dataset.name, chip.dataset.roomid);
+  }, ACCOM_REMOVE_MS);
+
   document.addEventListener('touchmove', accomTouchStartMove, {passive:true});
   document.addEventListener('touchend', accomTouchStartEnd, {once:true});
 }
 function accomTouchStartMove(e){
-  if(!accomLongPressTimer) return;
+  if(!accomLongPressTimer && !accomLongPressTimer2) return;
   var t=e.touches[0];
   var dx=Math.abs(t.clientX-accomTouchStartX);
   var dy=Math.abs(t.clientY-accomTouchStartY);
   if(dx>ACCOM_MOVE_THRESHOLD||dy>ACCOM_MOVE_THRESHOLD){
-    clearTimeout(accomLongPressTimer);
-    accomLongPressTimer=null;
+    clearTimeout(accomLongPressTimer); accomLongPressTimer=null;
+    clearTimeout(accomLongPressTimer2); accomLongPressTimer2=null;
     if(accomLongPressChip) accomLongPressChip.classList.remove('pressing');
     document.removeEventListener('touchmove',accomTouchStartMove);
   }
 }
 function accomTouchStartEnd(){
-  if(accomLongPressTimer){
-    clearTimeout(accomLongPressTimer);
-    accomLongPressTimer=null;
-    if(accomLongPressChip) accomLongPressChip.classList.remove('pressing');
-  }
+  clearTimeout(accomLongPressTimer); accomLongPressTimer=null;
+  clearTimeout(accomLongPressTimer2); accomLongPressTimer2=null;
+  if(accomLongPressChip) accomLongPressChip.classList.remove('pressing');
   document.removeEventListener('touchmove',accomTouchStartMove);
 }
 function accomTouchMove(e){
@@ -5014,6 +5040,45 @@ function accomDebug(){
 }
 
 var accomToastTimer;
+
+function showAccomRemovePopup(name, roomId){
+  var old=document.getElementById('accomRemoveModal');
+  if(old) old.remove();
+
+  var room=ACCOM_ROOMS.find(function(r){return r.id===roomId;});
+  if(!room) return;
+
+  var modal=document.createElement('div');
+  modal.id='accomRemoveModal';
+  modal.className='accom-remove-modal';
+  modal.onclick=function(e){if(e.target===modal) modal.remove();};
+
+  modal.innerHTML=
+    '<div class="accom-remove-sheet">'+
+      '<div class="accom-remove-handle"></div>'+
+      '<div class="accom-remove-name">'+name+'</div>'+
+      '<div class="accom-remove-room">현재 배치: '+roomId+' ('+room.typeName+')</div>'+
+      '<div class="accom-remove-desc">이 인원을 숙소 배치에서 해제하고<br><b>미배치 인원 목록</b>으로 이동합니다.</div>'+
+      '<div class="accom-remove-btns">'+
+        '<button class="accom-remove-cancel" onclick="document.getElementById(\'accomRemoveModal\').remove()">취소</button>'+
+        '<button class="accom-remove-ok" data-name="'+name+'" data-room="'+roomId+'" onclick="moveToUnassigned(this.dataset.name,this.dataset.room)">미배치로 이동</button>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(modal);
+}
+
+function moveToUnassigned(name, roomId){
+  var room=ACCOM_ROOMS.find(function(r){return r.id===roomId;});
+  if(!room) return;
+  room.members=room.members.filter(function(m){return m!==name;});
+  accomHistory.push({name:name, fromId:roomId, toId:'(미배치)'});
+  accomChangedRows.add(roomId);
+  var modal=document.getElementById('accomRemoveModal');
+  if(modal) modal.remove();
+  renderAccomTable();
+  accomUpdateChangeBar();
+  accomShowToast('📋 '+name+' → 미배치 목록으로 이동');
+}
 function accomShowToast(msg){
   var el=document.getElementById('accomToast');
   if(!el)return;
