@@ -437,10 +437,34 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .accom-btn-reset{background:#FEE2E2;color:#DC2626;}
 .accom-notices{display:none;}
 .accom-notice{display:none;}
-.accom-tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-.accom-table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border-radius:10px;overflow:hidden;box-shadow:var(--shadow);min-width:360px;}
+.accom-tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:0;}
+.accom-table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border-radius:10px;box-shadow:var(--shadow);min-width:360px;}
+/* fixed 헤더 */
+.accom-thead-fixed{
+  position:fixed;
+  left:0;right:0;
+  z-index:85;
+  display:none;
+  overflow-x:hidden;
+  background:var(--primary);
+}
+.accom-thead-fixed table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  min-width:360px;
+  table-layout:fixed;
+}
+.accom-thead-fixed th{
+  color:#fff;font-size:11px;font-weight:700;padding:8px 5px;
+  text-align:center;white-space:nowrap;
+  border-right:1px solid rgba(255,255,255,.15);
+  background:var(--primary);
+  overflow:hidden;
+}
+.accom-thead-fixed th:last-child{border-right:none;}
 .accom-table thead tr{background:var(--primary);}
-.accom-table thead th{color:#fff;font-size:11px;font-weight:700;padding:8px 5px;text-align:center;white-space:nowrap;border-right:1px solid rgba(255,255,255,.15);position:sticky;top:0;z-index:5;background:var(--primary);}
+.accom-table thead th{color:#fff;font-size:11px;font-weight:700;padding:8px 5px;text-align:center;white-space:nowrap;border-right:1px solid rgba(255,255,255,.15);background:var(--primary);}
 .accom-table thead th:last-child{border-right:none;}
 .accom-table tbody tr{border-bottom:1px solid var(--border);}
 .accom-table tbody tr:last-child{border-bottom:none;}
@@ -2013,7 +2037,14 @@ function switchTab(tab) {
   if(tab==='acct')    renderAcct();
   if(tab==='family')  renderFamily();
   if(tab==='editlog') loadEditLog();
-  if(tab==='accom')   renderAccom();
+  if(tab==='accom'){
+    renderAccom();
+  } else {
+    // 숙소탭 벗어나면 fixed 헤더 숨김
+    var fh=document.getElementById('accomFixedHeader');
+    if(fh) fh.style.display='none';
+    if(window._accomScrollHandler) window.removeEventListener('scroll',window._accomScrollHandler);
+  }
   if(tab!=='miss'&&tab!=='acct'&&tab!=='family'&&tab!=='editlog'&&tab!=='accom') buildFilters();
 }
 
@@ -4212,15 +4243,79 @@ function renderAccomTable(){
     html+='</tr>';
   });
   tb.innerHTML=html;
-  // 헤더(hd) + 탭바(tab-bar) 실제 높이 측정 → thead th sticky top 동적 적용
+  // ── fixed 헤더 생성 및 스크롤 동기화 ──
   requestAnimationFrame(function(){
     var hd  = document.querySelector('.hd');
     var tab = document.querySelector('.tab-bar');
-    var stickyTop = (hd ? hd.offsetHeight : 50) +
-                    (tab ? tab.offsetHeight : 54);
-    document.querySelectorAll('.accom-table thead th').forEach(function(th){
-      th.style.top = stickyTop + 'px';
-    });
+    var stickyTop = (hd ? hd.offsetHeight : 50) + (tab ? tab.offsetHeight : 54);
+
+    // fixed 헤더 컨테이너 생성 (기존 것 재사용)
+    var fixedHdr = document.getElementById('accomFixedHeader');
+    if(!fixedHdr){
+      fixedHdr = document.createElement('div');
+      fixedHdr.id = 'accomFixedHeader';
+      fixedHdr.className = 'accom-thead-fixed';
+      document.body.appendChild(fixedHdr);
+    }
+    fixedHdr.style.top = stickyTop + 'px';
+
+    // 원본 테이블의 thead 복제 → fixed 헤더에 삽입
+    var origTable = document.querySelector('.accom-table');
+    if(origTable){
+      var cloneTable = document.createElement('table');
+      cloneTable.style.cssText = 'width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;min-width:360px;';
+      var cloneThead = origTable.querySelector('thead').cloneNode(true);
+      cloneTable.appendChild(cloneThead);
+      fixedHdr.innerHTML = '';
+      fixedHdr.appendChild(cloneTable);
+
+      // 열 너비 동기화 함수
+      function syncColWidths(){
+        var origCols = origTable.querySelectorAll('colgroup col');
+        var cloneTbl = fixedHdr.querySelector('table');
+        // colgroup 복제
+        var cg = cloneTbl.querySelector('colgroup');
+        if(cg) cg.remove();
+        var origCg = origTable.querySelector('colgroup');
+        if(origCg) cloneTbl.insertBefore(origCg.cloneNode(true), cloneTbl.firstChild);
+        // 테이블 너비 = tbl-wrap 너비
+        var wrap = document.querySelector('.accom-tbl-wrap');
+        if(wrap){
+          cloneTbl.style.width = origTable.offsetWidth + 'px';
+          fixedHdr.style.width = wrap.offsetWidth + 'px';
+          fixedHdr.style.left  = wrap.getBoundingClientRect().left + 'px';
+        }
+      }
+      syncColWidths();
+
+      // 가로 스크롤 동기화
+      var wrap2 = document.querySelector('.accom-tbl-wrap');
+      if(wrap2){
+        wrap2.addEventListener('scroll', function(){
+          fixedHdr.scrollLeft = wrap2.scrollLeft;
+        });
+      }
+
+      // 세로 스크롤 → fixed 헤더 표시/숨김
+      var theadEl = origTable.querySelector('thead');
+      function onPageScroll(){
+        if(!theadEl || !origTable) return;
+        var rect = theadEl.getBoundingClientRect();
+        if(rect.top < stickyTop){
+          fixedHdr.style.display = 'block';
+        } else {
+          fixedHdr.style.display = 'none';
+        }
+        // 가로 스크롤 위치 맞추기
+        var wrap3 = document.querySelector('.accom-tbl-wrap');
+        if(wrap3) fixedHdr.scrollLeft = wrap3.scrollLeft;
+      }
+      // 기존 스크롤 리스너 제거 후 재등록
+      if(window._accomScrollHandler) window.removeEventListener('scroll', window._accomScrollHandler);
+      window._accomScrollHandler = onPageScroll;
+      window.addEventListener('scroll', onPageScroll, {passive:true});
+      onPageScroll(); // 초기 실행
+    }
   });
   bindAccomDrag();
   applyAccomFilter();
