@@ -455,9 +455,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   -webkit-overflow-scrolling:touch;
   padding:0 12px 20px;
 }
-.accom-table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:var(--shadow);min-width:560px;}
+.accom-table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border-radius:10px;overflow:hidden;box-shadow:var(--shadow);min-width:360px;}
 .accom-table thead tr{background:var(--primary);}
-.accom-table thead th{color:#fff;font-size:11px;font-weight:700;padding:8px 6px;text-align:center;white-space:nowrap;border-right:1px solid rgba(255,255,255,.15);position:sticky;top:0;z-index:5;background:var(--primary);}
+.accom-table thead th{color:#fff;font-size:11px;font-weight:700;padding:8px 5px;text-align:center;white-space:nowrap;border-right:1px solid rgba(255,255,255,.15);position:sticky;top:0;z-index:5;background:var(--primary);}
 .accom-table thead th:last-child{border-right:none;}
 .accom-table tbody tr{border-bottom:1px solid var(--border);}
 .accom-table tbody tr:last-child{border-bottom:none;}
@@ -478,10 +478,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .accom-g-badge.여{background:#FFF0F6;color:#BE185D;}.accom-g-badge.남{background:#DBEAFE;color:#1E3A8A;}
 .accom-g-badge.혼합{background:#ECFDF5;color:#065F46;}.accom-g-badge.가족{background:#FEF9C3;color:#854D0E;}
 .accom-g-badge.─{background:#F1F5F9;color:#94A3B8;}
-.accom-cap{font-size:12px;font-weight:700;}
+.accom-cap{font-size:11px;font-weight:700;}
 .accom-cap.full{color:#1E3A8A;}.accom-cap.part{color:#F59E0B;}.accom-cap.empty{color:#94A3B8;}.accom-cap.over{color:#DC2626;}
-.accom-team-cell{font-size:11px;color:#64748B;font-weight:600;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;}
-.accom-members-cell{display:flex;flex-wrap:wrap;gap:4px;min-width:160px;padding:2px 0;}
+.accom-team-cell{font-size:10px;color:#64748B;font-weight:600;white-space:normal;word-break:keep-all;line-height:1.4;width:76px;}
+.accom-members-cell{display:flex;flex-direction:column;gap:3px;padding:2px 0;}
+.accom-members-row{display:flex;flex-wrap:nowrap;gap:4px;}
 .accom-chip{padding:4px 9px;border-radius:13px;font-size:11px;font-weight:700;cursor:grab;border:1.5px solid transparent;transition:transform .1s,box-shadow .1s,opacity .15s;user-select:none;-webkit-user-select:none;touch-action:none;}
 .accom-chip:active{cursor:grabbing;}
 .accom-chip.dragging{opacity:.35;transform:scale(.92);}
@@ -986,6 +987,11 @@ function processData(res, returnTab) {
   renderStats();
   // 저장 후 원래 탭으로 복귀 (miss/family 등)
   if(returnTab && canTab(returnTab)) switchTab(returnTab);
+  // 숙소배치 탭이 열려 있으면 allData 로드 완료 후 테이블 재렌더링
+  if(document.getElementById('accomPanel') &&
+     document.getElementById('accomPanel').classList.contains('show')){
+    renderAccomTable();
+  }
 }
 
 function showListError(msg) {
@@ -4144,14 +4150,23 @@ function renderAccom(){
   h+='<button class="accom-btn accom-btn-reset" onclick="accomReset()">✕ 초기화</button>';
   h+='</div>';
   h+='<div class="accom-tbl-wrap"><table class="accom-table">';
-  h+='<colgroup><col style="width:46px"><col style="width:54px"><col style="width:38px"><col style="width:44px"><col style="width:110px"><col></colgroup>';
+  h+='<colgroup><col style="width:42px"><col style="width:50px"><col style="width:34px"><col style="width:30px"><col style="width:76px"><col></colgroup>';
   h+='<thead><tr>';
   h+='<th>방번호</th><th>숙소타입</th><th>성별</th><th>인원</th><th>팀명</th>';
-  h+='<th style="text-align:left;min-width:200px">숙소자 <span style="font-weight:400;opacity:.7">(드래그 이동)</span></th>';
+  h+='<th style="text-align:left;min-width:200px">숙소자 <span style="font-weight:400;opacity:.7">(길게 눌러 이동)</span></th>';
   h+='</tr></thead><tbody id="accomTbody"></tbody></table></div>';
   h+='<div id="accomToast"></div>';
   panel.innerHTML=h;
   if(!document.getElementById('accomGhost')) createAccomGhost();
+  // allData가 아직 없으면 로딩 표시 후 loadData 완료 시 자동 렌더링
+  if(!allData||allData.length===0){
+    document.getElementById('accomTbody').innerHTML=
+      '<tr><td colspan="6" style="text-align:center;padding:24px;color:#64748B;font-size:12px;">'+
+      '⏳ 명단 데이터 로딩 중... 잠시 후 자동으로 표시됩니다.</td></tr>';
+    // loadData가 완료되면 processData → renderAccomTable 자동 호출됨
+    if(typeof loadData==='function') loadData();
+    return;
+  }
   renderAccomTable();
 }
 
@@ -4183,17 +4198,25 @@ function renderAccomTable(){
     var isEmpty=cnt===0;
     var isChanged=accomChangedRows.has(r.id);
     var teamStr=isEmpty?'(여유)':accomGetTeam(r.members);
+    // 팀명: '/' 기준으로 <br> 줄바꿈
+    var teamHtml=teamStr.replace(/ \/ /g,'<br>').replace(/\//g,'<br>');
     var chips='';
     if(isEmpty){
       chips='<span class="accom-chip ─">여유 '+r.cap+'자리</span>';
     } else {
-      r.members.forEach(function(m){
-        var cc=accomChipClass(m,r.gender);
-        var kid=ACCOM_KIDS.indexOf(m)>=0?'👦':'';
-        var unreg=!accomIsRegistered(m);
-        var title=unreg?'사역팀 미등록':'';
-        chips+='<span class="accom-chip '+cc+(isChanged?' moved':'')+(unreg?' unreg':'')+'" data-name="'+m+'" data-roomid="'+r.id+'" title="'+title+'">'+m+kid+'</span>';
-      });
+      // 4인 단위 행 분리
+      for(var ri2=0;ri2<r.members.length;ri2+=4){
+        var rowSlice=r.members.slice(ri2,ri2+4);
+        chips+='<div class="accom-members-row">';
+        rowSlice.forEach(function(m){
+          var cc=accomChipClass(m,r.gender);
+          var kid=ACCOM_KIDS.indexOf(m)>=0?'👦':'';
+          var unreg=!accomIsRegistered(m);
+          var title=unreg?'사역팀 미등록':'';
+          chips+='<span class="accom-chip '+cc+(isChanged?' moved':'')+(unreg?' unreg':'')+'" data-name="'+m+'" data-roomid="'+r.id+'" title="'+title+'">'+m+kid+'</span>';
+        });
+        chips+='</div>';
+      }
     }
     html+='<tr class="accom-type-'+r.type+(isEmpty?' empty-row':'')+(isChanged?' accom-changed':'')+'"';
     html+=' data-id="'+r.id+'" data-gender="'+r.gender+'" data-team="'+teamStr+'" data-members="'+r.members.join(',')+'">'; 
@@ -4201,7 +4224,7 @@ function renderAccomTable(){
     html+='<td><span class="accom-type-badge">'+r.typeName+'</span></td>';
     html+='<td><span class="accom-g-badge '+r.gender+'">'+r.gender+'</span></td>';
     html+='<td><span class="accom-cap '+capCls+'">'+cnt+'/'+r.cap+'</span></td>';
-    html+='<td class="accom-team-cell left">'+teamStr+'</td>';
+    html+='<td class="accom-team-cell left">'+teamHtml+'</td>';
     html+='<td class="left"><div class="accom-members-cell" data-roomid="'+r.id+'">'+chips+'</div></td>';
     html+='</tr>';
   });
