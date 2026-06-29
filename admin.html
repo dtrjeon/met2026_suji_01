@@ -2165,7 +2165,7 @@ function switchTab(tab) {
   var editlogPanel = document.getElementById('editlogPanel');
   if(editlogPanel) editlogPanel.className = 'editlog-panel'+(tab==='editlog'?' show':'');
   document.getElementById('filterWrap').style.display  = tab==='list'?'flex':'none';
-  document.querySelector('.search-wrap').style.display = tab==='list'?'block':'none';
+  document.querySelector('.search-wrap').style.display = tab==='list'?'flex':'none';
   document.getElementById('resultBar').style.display   = tab==='list'?'block':'none';
   document.getElementById('refreshBtn').style.display  = tab==='list'?'flex':'none';
   var tabAccom = document.getElementById('tabAccom');
