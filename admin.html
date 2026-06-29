@@ -4276,8 +4276,8 @@ function renderAccom(){
   h+='<button class="accom-tab" style="border-color:#16A34A;color:#16A34A" data-f="잔여" onclick="setAccomFilter(this.dataset.f,this)">🟩 잔여실</button>';
   h+='</div>';
   h+='<input class="accom-search" type="text" placeholder="🔍 이름·팀 검색" oninput="setAccomSearch(this.value)">';
-  h+='<button class="accom-btn" style="background:#0891B2;color:#fff;flex-shrink:0" onclick="loadAccomFromSheet()">🔄 불러오기</button>';
-  h+='<button class="accom-btn accom-btn-excel" style="flex-shrink:0" onclick="accomExportExcel()">📊 엑셀저장</button>';
+  h+='<button class="accom-btn" style="background:#0891B2;color:#fff;flex-shrink:0" onclick="loadAccomFromSheet()" title="불러오기">🔄</button>';
+  h+='<button class="accom-btn accom-btn-excel" style="flex-shrink:0" onclick="accomExportExcel()" title="엑셀저장">📊</button>';
   h+='</div>';
   h+='<div class="accom-change-bar" id="accomChangeBar">';
   h+='<span class="accom-change-msg" id="accomChangeMsg"></span>';
