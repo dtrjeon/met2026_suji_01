@@ -4380,14 +4380,20 @@ function accomUpdateSummary(){
 }
 
 function getAccomUnassigned(){
-  // 단체(교회준비) 명단 중 ACCOM_ROOMS에 없는 사람
+  // 단체(교회준비) + 7/21~22 일정 인원 중 ACCOM_ROOMS에 없는 사람
   if(!allData||!allData.length) return [];
   var placedNames={};
   ACCOM_ROOMS.forEach(function(r){
     r.members.forEach(function(m){ placedNames[m.trim()]=true; });
   });
   return allData.filter(function(d){
-    return d.accom&&d.accom.indexOf('단체')>=0&&!placedNames[d.name&&d.name.trim()];
+    if(!d.accom||d.accom.indexOf('단체')<0) return false;
+    // 7/21~22 일정 포함 여부 (표기 방식 다양: "7/21~22", "7/21~7/22", "7/21~22(화~수)" 등)
+    var sched=(d.sched||'').replace(/\s/g,'');
+    var is2day=sched.indexOf('7/21')>=0&&(sched.indexOf('22')>=0||sched.indexOf('7/22')>=0);
+    if(!is2day) return false;
+    if(d.name&&d.name.trim()==='고영수') return false;
+    return !placedNames[d.name&&d.name.trim()];
   });
 }
 
