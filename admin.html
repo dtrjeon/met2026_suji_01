@@ -458,10 +458,24 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .accom-unassigned-table td.td-team{font-size:10px;color:#64748B;font-weight:600;white-space:nowrap;}
 .accom-unassigned-table td.td-cnt{font-size:11px;font-weight:700;color:#1E3A8A;text-align:center;white-space:nowrap;}
 .accom-unassigned-chips{display:flex;flex-wrap:wrap;gap:4px;}
-.accom-pool-chip{padding:3px 8px;border-radius:11px;font-size:11px;font-weight:700;cursor:grab;border:1.5px solid #CBD5E1;background:#F8FAFC;color:#334155;touch-action:none;user-select:none;-webkit-user-select:none;white-space:nowrap;}
-.accom-pool-chip.dragging{opacity:.35;transform:scale(.92);}
+.accom-pool-chip{padding:3px 8px;border-radius:11px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid #CBD5E1;background:#F8FAFC;color:#334155;touch-action:manipulation;user-select:none;-webkit-user-select:none;white-space:nowrap;transition:transform .1s,box-shadow .1s;}
+.accom-pool-chip:active{transform:scale(.95);}
 .accom-pool-chip.여{background:#FFF0F6;color:#BE185D;border-color:#FBCFE8;}
 .accom-pool-chip.남{background:#DBEAFE;color:#1E3A8A;border-color:#BFDBFE;}
+/* 방 선택 모달 */
+.accom-assign-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;}
+.accom-assign-sheet{background:#fff;width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:16px 16px 30px;max-height:75vh;overflow-y:auto;}
+.accom-assign-handle{width:36px;height:4px;background:#E2E8F0;border-radius:4px;margin:0 auto 14px;}
+.accom-assign-title{font-size:14px;font-weight:800;color:#1E3A8A;margin-bottom:12px;}
+.accom-assign-subtitle{font-size:11px;color:#64748B;margin-bottom:10px;}
+.accom-assign-rooms{display:flex;flex-direction:column;gap:6px;}
+.accom-assign-room-btn{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid #E2E8F0;border-radius:10px;background:#F8FAFC;cursor:pointer;text-align:left;font-family:inherit;transition:background .1s;}
+.accom-assign-room-btn:active{background:#EFF6FF;}
+.accom-assign-room-id{font-size:13px;font-weight:800;min-width:36px;}
+.accom-assign-room-info{flex:1;font-size:11px;color:#64748B;}
+.accom-assign-room-cap{font-size:12px;font-weight:700;}
+.accom-assign-room-cap.ok{color:#16A34A;}.accom-assign-room-cap.warn{color:#F59E0B;}
+.accom-assign-cancel{width:100%;margin-top:10px;padding:11px;background:#F1F5F9;color:#64748B;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;}
 .accom-chip-wrap{display:inline-flex;align-items:center;gap:2px;position:relative;}
 .accom-chip-del{display:none;position:absolute;top:-5px;right:-5px;width:14px;height:14px;border-radius:50%;background:#DC2626;color:#fff;font-size:9px;font-weight:900;line-height:14px;text-align:center;cursor:pointer;z-index:2;}
 .accom-del-mode .accom-chip-del{display:block;}
@@ -4436,7 +4450,7 @@ function renderAccomUnassigned(){
       h+='<td><div class="accom-unassigned-chips">';
       rowMembers.forEach(function(d){
         var g=d.gender==='여'?'여':d.gender==='남'?'남':'';
-        h+='<span class="accom-pool-chip '+g+'" data-name="'+d.name+'" data-gender="'+d.gender+'" data-mteam="'+(d.mteam||'')+'">'
+        h+='<span class="accom-pool-chip '+g+'" data-name="'+d.name+'" data-gender="'+d.gender+'" data-mteam="'+(d.mteam||'')+'" onclick="openAssignModal(this.dataset.name,this.dataset.gender,this.dataset.mteam)">'
           +d.name+'</span>';
       });
       h+='</div></td></tr>';
@@ -4458,85 +4472,91 @@ function toggleUnassignedBox(){
 
 // 미배치 칩 드래그 → 숙소로 이동
 function bindPoolDrag(){
-  document.querySelectorAll('.accom-pool-chip').forEach(function(chip){
-    chip.addEventListener('mousedown', poolMouseDown);
-    chip.addEventListener('touchstart', poolTouchStart, {passive:true});
-  });
-}
-function poolMouseDown(e){
-  if(e.button!==0) return;
-  poolStartDrag(e.currentTarget,e.clientX,e.clientY);
-  document.addEventListener('mousemove',poolMouseMove);
-  document.addEventListener('mouseup',poolMouseUp);
-  e.preventDefault();
-}
-function poolMouseMove(e){accomMoveDrag(e.clientX,e.clientY);}
-function poolMouseUp(e){
-  poolEndDrag(e.clientX,e.clientY);
-  document.removeEventListener('mousemove',poolMouseMove);
-  document.removeEventListener('mouseup',poolMouseUp);
-}
-function poolTouchStart(e){
-  var t=e.touches[0];
-  accomLongPressChip=e.currentTarget;
-  accomTouchStartX=t.clientX; accomTouchStartY=t.clientY;
-  accomLongPressChip.classList.add('pressing');
-  accomLongPressTimer=setTimeout(function(){
-    accomLongPressTimer=null;
-    accomLongPressChip.classList.remove('pressing');
-    if(navigator.vibrate) navigator.vibrate(40);
-    poolStartDrag(accomLongPressChip,accomTouchStartX,accomTouchStartY);
-    document.addEventListener('touchmove',poolTouchMove,{passive:false});
-    document.addEventListener('touchend',poolTouchEnd);
-  },500);
-  document.addEventListener('touchmove',accomTouchStartMove,{passive:true});
-  document.addEventListener('touchend',accomTouchStartEnd,{once:true});
-}
-function poolTouchMove(e){accomMoveDrag(e.touches[0].clientX,e.touches[0].clientY);e.preventDefault();}
-function poolTouchEnd(e){
-  var t=e.changedTouches[0];
-  poolEndDrag(t.clientX,t.clientY);
-  document.removeEventListener('touchmove',poolTouchMove);
-  document.removeEventListener('touchend',poolTouchEnd);
+  // onclick으로 처리하므로 별도 드래그 바인딩 불필요
 }
 
-function poolStartDrag(chip,x,y){
-  // accomDragging 구조 재사용 (fromId=null 로 pool 구분)
-  accomDragging={name:chip.dataset.name,fromId:null,el:chip,isPool:true};
-  chip.classList.add('dragging');
-  var g=document.getElementById('accomGhost')||createAccomGhost();
-  g.textContent=chip.dataset.name;
-  g.style.background=getComputedStyle(chip).backgroundColor;
-  g.style.color=getComputedStyle(chip).color;
-  g.style.display='block';
-  g.style.left=x+'px'; g.style.top=y+'px';
+// 방 선택 모달
+function openAssignModal(name, gender, mteam){
+  // 기존 모달 제거
+  var old=document.getElementById('accomAssignModal');
+  if(old) old.remove();
+
+  // 타입별 색상
+  var TYPE_COLOR={A:'#1E3A8A',B:'#166534',C:'#854D0E',D:'#9A3412',E:'#5B21B6',F:'#9F1239'};
+  var TYPE_BG={A:'#DBEAFE',B:'#DCFCE7',C:'#FEF08A',D:'#FFEDD5',E:'#EDE9FE',F:'#FFE4E6'};
+
+  var modal=document.createElement('div');
+  modal.id='accomAssignModal';
+  modal.className='accom-assign-modal';
+  modal.onclick=function(e){if(e.target===modal) closeAssignModal();};
+
+  var g=gender==='여'?'🔴':gender==='남'?'🔵':'';
+  var h='<div class="accom-assign-sheet">';
+  h+='<div class="accom-assign-handle"></div>';
+  h+='<div class="accom-assign-title">'+g+' '+name+' 배치</div>';
+  h+='<div class="accom-assign-subtitle">사역팀: '+(mteam||'─')+'&nbsp;&nbsp;성별: '+(gender||'─')+'</div>';
+
+  // 여유있는 방 목록 (성별 우선, 여유 있는 방)
+  var roomsToShow=[];
+  ACCOM_ROOMS.forEach(function(r){
+    if(r.members.indexOf(name)>=0) return; // 이미 배치됨
+    var remain=r.cap-r.members.length;
+    roomsToShow.push({r:r,remain:remain});
+  });
+  // 같은 성별 방 우선, 그 다음 여유 많은 순
+  roomsToShow.sort(function(a,b){
+    var ag=(a.r.gender===gender||a.r.gender==='혼합')?0:1;
+    var bg=(b.r.gender===gender||b.r.gender==='혼합')?0:1;
+    if(ag!==bg) return ag-bg;
+    return b.remain-a.remain;
+  });
+
+  h+='<div class="accom-assign-rooms">';
+  roomsToShow.forEach(function(item){
+    var r=item.r, remain=item.remain;
+    var bg=TYPE_BG[r.type]||'#F8FAFC';
+    var fg=TYPE_COLOR[r.type]||'#1E293B';
+    var capCls=remain===0?'warn':remain<=1?'warn':'ok';
+    var capTxt=remain===0?'만실':'잔여 '+remain+'자리';
+    var team=r.members.length>0?accomGetTeam(r.members):'(비어있음)';
+    h+='<button class="accom-assign-room-btn" data-name="'+name+'" data-rid="'+r.id+'" onclick="doAssign(this.dataset.name,this.dataset.rid)" style="border-left:4px solid '+fg+';background:'+bg+'20">';
+    h+='<span class="accom-assign-room-id" style="color:'+fg+'">'+r.id+'</span>';
+    h+='<span class="accom-assign-room-info">'+r.typeName+' · '+r.gender+' · '+team+'</span>';
+    h+='<span class="accom-assign-room-cap '+capCls+'">'+capTxt+'</span>';
+    h+='</button>';
+  });
+  h+='</div>';
+  h+='<button class="accom-assign-cancel" onclick="closeAssignModal()">취소</button>';
+  h+='</div>';
+  modal.innerHTML=h;
+  document.body.appendChild(modal);
 }
-function poolEndDrag(x,y){
-  if(!accomDragging){var g=document.getElementById('accomGhost');if(g)g.style.display='none';return;}
-  var g=document.getElementById('accomGhost');if(g)g.style.display='none';
-  if(accomOverCell) accomOverCell.classList.remove('drag-over');
-  var el=document.elementFromPoint(x,y);
-  var targetCell=el?el.closest('.accom-members-cell'):null;
-  var toId=targetCell?targetCell.dataset.roomid:null;
-  accomDragging.el.classList.remove('dragging');
-  if(toId){
-    // pool → 숙소로 추가
-    var toRoom=ACCOM_ROOMS.find(function(r){return r.id===toId;});
-    var name=accomDragging.name;
-    if(toRoom&&toRoom.members.indexOf(name)<0){
-      if(toRoom.members.length>=toRoom.cap){
-        if(!confirm(toId+' 방이 정원('+toRoom.cap+'명)을 초과합니다. 추가하시겠습니까?'))
-          {accomDragging=null;accomOverCell=null;return;}
-      }
-      toRoom.members.push(name);
-      accomHistory.push({name:name,fromId:'(미배치)',toId:toId});
-      accomChangedRows.add(toId);
-      renderAccomTable();
-      accomUpdateChangeBar();
-      accomShowToast('✅ '+name+' → '+toId+' 배치');
+
+function closeAssignModal(){
+  var m=document.getElementById('accomAssignModal');
+  if(m) m.remove();
+}
+
+function doAssign(name, toId){
+  var toRoom=ACCOM_ROOMS.find(function(r){return r.id===toId;});
+  if(!toRoom) return;
+  if(toRoom.members.indexOf(name)>=0){
+    accomShowToast('이미 배치된 인원입니다');
+    closeAssignModal();
+    return;
+  }
+  if(toRoom.members.length>=toRoom.cap){
+    if(!confirm(toId+' 방이 정원('+toRoom.cap+'명)을 초과합니다. 추가하시겠습니까?')){
+      return;
     }
   }
-  accomDragging=null; accomOverCell=null;
+  toRoom.members.push(name);
+  accomHistory.push({name:name,fromId:'(미배치)',toId:toId});
+  accomChangedRows.add(toId);
+  closeAssignModal();
+  renderAccomTable();
+  accomUpdateChangeBar();
+  accomShowToast('✅ '+name+' → '+toId+' 배치 완료');
 }
 
 function toggleAccomDelMode(){
