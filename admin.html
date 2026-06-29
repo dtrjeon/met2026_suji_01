@@ -537,9 +537,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .accom-chip{padding:3px 7px;border-radius:11px;font-size:11px;font-weight:700;cursor:grab;border:0.5px solid transparent;transition:transform .1s,box-shadow .1s,opacity .15s;user-select:none;-webkit-user-select:none;touch-action:none;white-space:nowrap;}
 .accom-chip:active{cursor:grabbing;}
 .accom-chip.dragging{opacity:.35;transform:scale(.92);}
-.accom-chip.여{background:#FFF0F6;color:#000000;border-color:#FBCFE8;}
-.accom-chip.남{background:#DBEAFE;color:#1E3A8A;border-color:#BFDBFE;}
-.accom-chip.아이{background:#FEF9C3;color:#854D0E;border-color:#FDE68A;}
+.accom-chip.여{background:#FFF0F6;color:#000000;border-color:#F472B6;}
+.accom-chip.남{background:#DBEAFE;color:#1E3A8A;border-color:#60A5FA;}
+.accom-chip.아이{background:#FEF9C3;color:#854D0E;border-color:#FACC15;}
 .accom-chip.─{color:#94A3B8;font-style:italic;border:none;cursor:default;}
 .accom-chip.moved{outline:2px solid #F59E0B;outline-offset:1px;}
 .accom-chip.unreg{background:#E2E8F0 !important;color:#64748B !important;border-color:#CBD5E1 !important;opacity:.8;}
@@ -4272,8 +4272,6 @@ function renderAccom(){
   var h='';
   h+='<div class="accom-toolbar"><div class="accom-tabs">';
   h+='<button class="accom-tab active" data-f="전체" onclick="setAccomFilter(this.dataset.f,this)">전체</button>';
-  h+='<button class="accom-tab f여" data-f="여" onclick="setAccomFilter(this.dataset.f,this)">🔴 여성</button>';
-  h+='<button class="accom-tab f남" data-f="남" onclick="setAccomFilter(this.dataset.f,this)">🔵 남성</button>';
   h+='<button class="accom-tab" style="border-color:#16A34A;color:#16A34A" data-f="잔여" onclick="setAccomFilter(this.dataset.f,this)">🟩 잔여실</button>';
   h+='</div>';
   h+='<input class="accom-search" type="text" placeholder="🔍 이름·팀 검색" oninput="setAccomSearch(this.value)">';
@@ -4379,7 +4377,7 @@ function renderAccomTable(){
           var teamColor=accomTeamColor(m);
           var dInfo=allData.find(function(x){return x.name&&x.name.trim()===m.trim();});
           var title=unreg?'사역팀 미등록':(dInfo?(dInfo.mteam||'')+(dInfo.note?' ('+dInfo.note+')':''):'');
-          var style=unreg?'':'border-color:'+teamColor+';border-width:2px;';
+          var style=unreg?'':'border-color:'+teamColor+';border-width:1px;';
           chips+='<span class="accom-chip '+cc+(isChanged?' moved':'')+(unreg?' unreg':'')+'" data-name="'+m+'" data-roomid="'+r.id+'" title="'+title+'" style="'+style+'">'+m+kid+'</span>';
         });
         chips+='</div>';
