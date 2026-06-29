@@ -476,12 +476,12 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .accom-assign-room-cap{font-size:12px;font-weight:700;}
 .accom-assign-room-cap.ok{color:#16A34A;}.accom-assign-room-cap.warn{color:#F59E0B;}
 .accom-assign-cancel{width:100%;margin-top:10px;padding:11px;background:#F1F5F9;color:#64748B;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;}
-.accom-chip-wrap{display:inline-flex;align-items:center;gap:2px;position:relative;}
-.accom-chip-del{display:none;position:absolute;top:-5px;right:-5px;width:14px;height:14px;border-radius:50%;background:#DC2626;color:#fff;font-size:9px;font-weight:900;line-height:14px;text-align:center;cursor:pointer;z-index:2;}
-.accom-del-mode .accom-chip-del{display:block;}
-.accom-del-mode .accom-chip{padding-right:14px;}
-.accom-del-btn{padding:5px 10px;border-radius:7px;border:1.5px solid #DC2626;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;background:#fff;color:#DC2626;}
-.accom-del-btn.on{background:#DC2626;color:#fff;}
+
+
+.accom-del-mode 
+
+
+
 .accom-table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border-radius:10px;box-shadow:var(--shadow);min-width:360px;}
 /* fixed 헤더 */
 .accom-thead-fixed{
@@ -4201,14 +4201,13 @@ function renderAccom(){
   h+='<button class="accom-tab" data-f="여유" onclick="setAccomFilter(this.dataset.f,this)">⬜ 여유</button>';
   h+='</div>';
   h+='<input class="accom-search" type="text" placeholder="🔍 이름·팀 검색" oninput="setAccomSearch(this.value)">';
-  h+='<button class="accom-del-btn" id="accomDelBtn" onclick="toggleAccomDelMode()">🗑 삭제모드</button>';
   h+='</div>';
   h+='<div class="accom-change-bar" id="accomChangeBar">';
   h+='<span class="accom-change-msg" id="accomChangeMsg"></span>';
   h+='<button class="accom-btn accom-btn-undo" onclick="accomUndo()">↩ 되돌리기</button>';
   h+='<button class="accom-btn accom-btn-save" onclick="accomSave()">💾 저장</button>';
   h+='<button class="accom-btn" style="background:#7C3AED;color:#fff" onclick="accomDebug()">🔍 진단</button>';
-  h+='<button class="accom-btn accom-btn-excel" onclick="accomExportExcel()">📥 엑셀 출력</button>';
+  h+='<button class="accom-btn accom-btn-excel" onclick="accomExportExcel()">📊 엑셀저장</button>';
   h+='<button class="accom-btn accom-btn-reset" onclick="accomReset()">✕ 초기화</button>';
   h+='</div>';
   h+='<div class="accom-summary" id="accomSummary"></div>';
@@ -4297,7 +4296,7 @@ function renderAccomTable(){
           var kid=ACCOM_KIDS.indexOf(m)>=0?'👦':'';
           var unreg=!accomIsRegistered(m);
           var title=unreg?'사역팀 미등록':'';
-          chips+='<span class="accom-chip-wrap"><span class="accom-chip '+cc+(isChanged?' moved':'')+(unreg?' unreg':'')+'" data-name="'+m+'" data-roomid="'+r.id+'" title="'+title+'">'+m+kid+'</span><span class="accom-chip-del" data-room="'+r.id+'" data-member="'+m+'" onclick="accomDeleteMember(this.dataset.room,this.dataset.member)">✕</span></span>';
+          chips+='<span class="accom-chip '+cc+(isChanged?' moved':'')+(unreg?' unreg':'')+'" data-name="'+m+'" data-roomid="'+r.id+'" title="'+title+'">'+m+kid+'</span>';
         });
         chips+='</div>';
       }
@@ -4394,14 +4393,8 @@ function renderAccomTable(){
   bindAccomDrag();
   applyAccomFilter();
   accomUpdateSummary();
-  // 삭제모드 상태 유지
-  if(accomDelMode){
-    var wrap=document.querySelector('.accom-tbl-wrap');
-    if(wrap) wrap.classList.add('accom-del-mode');
-  }
 }
 
-var accomDelMode=false;
 
 function accomUpdateSummary(){
   var el=document.getElementById('accomSummary');
@@ -4579,27 +4572,7 @@ function doAssign(name, toId){
   accomShowToast('✅ '+name+' → '+toId+' 배치 완료');
 }
 
-function toggleAccomDelMode(){
-  accomDelMode=!accomDelMode;
-  var btn=document.getElementById('accomDelBtn');
-  var wrap=document.querySelector('.accom-tbl-wrap');
-  if(btn) btn.classList.toggle('on', accomDelMode);
-  if(wrap) wrap.classList.toggle('accom-del-mode', accomDelMode);
-  if(btn) btn.textContent = accomDelMode ? '🗑 삭제모드 ON' : '🗑 삭제모드';
-}
 
-function accomDeleteMember(roomId, name){
-  if(!accomDelMode) return;
-  if(!confirm(name+' 을(를) '+roomId+'에서 삭제하시겠습니까?')) return;
-  var room=ACCOM_ROOMS.find(function(r){return r.id===roomId;});
-  if(!room) return;
-  room.members=room.members.filter(function(m){return m!==name;});
-  accomHistory.push({name:name, fromId:roomId, toId:'(삭제)'});
-  accomChangedRows.add(roomId);
-  renderAccomTable();
-  accomUpdateChangeBar();
-  accomShowToast('🗑 '+name+' 삭제됨');
-}
 
 function setAccomFilter(f,el){
   accomFilter=f;
@@ -4782,21 +4755,62 @@ function accomUpdateChangeBar(){
   else{bar.classList.add('show');msg.textContent='변경 '+accomHistory.length+'건 (미저장)';}
 }
 function accomSave(){
-  if(!accomHistory.length){accomShowToast('변경사항 없음');return;}
   var btn=document.querySelector('.accom-btn-save');
-  btn.textContent='저장 중...';btn.disabled=true;
-  var roomData=ACCOM_ROOMS.map(function(r){return {id:r.id,members:r.members.join(',')};});
+  if(!btn) return;
+  btn.textContent='저장 중...'; btn.disabled=true;
+
+  // 엑셀 양식과 동일한 컬럼으로 전체 데이터 전송
+  // A:방번호 B:숙소타입 C:성별 D:인원 E:총인원 F:잔여 G:팀명 H:숙소자 I:수정
+  var META={A01:'2인 침대/침구',A02:'2인 침대/침구',A03:'2인 침대/침구',
+    A04:'2인 침대/침구',A05:'2인 침대/침구',A06:'2인 침대/침구',
+    A07:'2인 침대/침구',A08:'2인 침대/침구',A09:'2인 침대/침구',
+    A10:'2인 침대/침구',A11:'2인 침대/침구',
+    B01:'트윈2',B02:'트윈2',B03:'트윈2',B04:'트윈2',B05:'트윈2',
+    C01:'트윈1, 침구 2',C02:'트윈1, 침구 2',
+    D01:'침구3',D02:'침구3',D03:'침구3',D04:'침구3',D05:'침구3',
+    F01:'트윈1, 싱글1, 침구3',F02:'트윈1, 싱글1, 침구3',E01:'침구5'};
+
+  var roomData=ACCOM_ROOMS.map(function(r){
+    var cnt=r.members.length;
+    var teamStr=cnt===0?'(여유)':accomGetTeam(r.members);
+    return {
+      id:       r.id,
+      typeName: r.typeName,
+      gender:   r.gender,
+      cnt:      cnt,
+      cap:      r.cap,
+      remain:   r.cap-cnt,
+      team:     teamStr,
+      members:  r.members.join(', '),
+      note:     META[r.id]||''
+    };
+  });
+
   var pw=currentUser.name+':'+currentUser.phone;
   fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
-    body:'data='+encodeURIComponent(JSON.stringify({action:'saveRoomAssign',pw:pw,rooms:roomData,log:accomHistory}))
+    body:'data='+encodeURIComponent(JSON.stringify({
+      action:'saveRoomAssign',
+      pw:pw,
+      rooms:roomData,
+      log:accomHistory
+    }))
   }).then(function(r){return r.json();})
   .then(function(j){
-    if(j.result==='ok'){accomHistory=[];accomChangedRows=new Set();renderAccomTable();accomUpdateChangeBar();accomShowToast('💾 저장 완료!');}
-    else{var txt=ACCOM_ROOMS.map(function(r){return r.id+'\t'+r.members.join(', ');}).join('\n');prompt('GAS 저장 실패. 복사하세요:',txt);}
-  }).catch(function(){
-    var txt=ACCOM_ROOMS.map(function(r){return r.id+'\t'+r.members.join(', ');}).join('\n');
-    prompt('저장 오류. 복사하세요:',txt);
-  }).finally(function(){btn.textContent='💾 저장';btn.disabled=false;});
+    if(j.result==='ok'){
+      accomHistory=[];
+      accomChangedRows=new Set();
+      renderAccomTable();
+      accomUpdateChangeBar();
+      accomShowToast('💾 구글시트 저장 완료!');
+    } else {
+      accomShowToast('❌ 저장 실패: '+(j.message||'오류'));
+    }
+  }).catch(function(e){
+    accomShowToast('❌ 네트워크 오류');
+  }).finally(function(){
+    btn.textContent='💾 저장';
+    btn.disabled=false;
+  });
 }
 function accomExportExcel(){
   accomShowToast('📥 엑셀 생성 중...');
@@ -4809,29 +4823,48 @@ function accomExportExcel(){
   } else {_doExportExcel();}
 }
 function _doExportExcel(){
-  var META={A01:'2인 침대/침구',A02:'2인 침대/침구',A03:'2인 침대/침구',A04:'2인 침대/침구',A05:'2인 침대/침구',A06:'2인 침대/침구',A07:'2인 침대/침구',A08:'2인 침대/침구',A09:'2인 침대/침구',A10:'2인 침대/침구',A11:'2인 침대/침구',B01:'트윈2',B02:'트윈2',B03:'트윈2',B04:'트윈2',B05:'트윈2',C01:'트윈1, 침구 2',C02:'트윈1, 침구 2',D01:'침구3',D02:'침구3',D03:'침구3',D04:'침구3',D05:'침구3',F01:'트윈1, 싱글1, 침구3',F02:'트윈1, 싱글1, 침구3',E01:'침구5'};
+  var META={
+    A01:'2인 침대/침구',A02:'2인 침대/침구',A03:'2인 침대/침구',
+    A04:'2인 침대/침구',A05:'2인 침대/침구',A06:'2인 침대/침구',
+    A07:'2인 침대/침구',A08:'2인 침대/침구',A09:'2인 침대/침구',
+    A10:'2인 침대/침구',A11:'2인 침대/침구',
+    B01:'트윈2',B02:'트윈2',B03:'트윈2',B04:'트윈2',B05:'트윈2',
+    C01:'트윈1, 침구 2',C02:'트윈1, 침구 2',
+    D01:'침구3',D02:'침구3',D03:'침구3',D04:'침구3',D05:'침구3',
+    F01:'트윈1, 싱글1, 침구3',F02:'트윈1, 싱글1, 침구3',E01:'침구5'
+  };
   var TYPE_BG={A:'FFDBEAFE',B:'FFDCFCE7',C:'FFD6E3BC',D:'FFFFEDD5',E:'FFEDE9FE',F:'FFFFE4E6'};
   var GENDER_BG={'여':'FFFFF0F6','남':'FFEFF6FF','가족':'FFFFF0F6','─':'FFF8FAFC','혼합':'FFECFDF5'};
   var HDR='FF1E3A8A',CAP='FFFFF0F6',REM='FFDBEAFE';
-  function cs(bg,bold,ha){return {fill:{patternType:'solid',fgColor:{argb:bg||'FFFFFFFF'}},font:{bold:!!bold,name:'맑은 고딕',sz:10,color:{argb:bg===HDR?'FFFFFFFF':'FF000000'}},alignment:{horizontal:ha||'left',vertical:'center'},border:{top:{style:'thin',color:{argb:'FFCBD5E1'}},bottom:{style:'thin',color:{argb:'FFCBD5E1'}},left:{style:'thin',color:{argb:'FFCBD5E1'}},right:{style:'thin',color:{argb:'FFCBD5E1'}}}};}
+  function cs(bg,bold,ha,wrap){
+    return {
+      fill:{patternType:'solid',fgColor:{argb:bg||'FFFFFFFF'}},
+      font:{bold:!!bold,name:'맑은 고딕',sz:10,color:{argb:bg===HDR?'FFFFFFFF':'FF000000'}},
+      alignment:{horizontal:ha||'left',vertical:'center',wrapText:!!wrap},
+      border:{top:{style:'thin',color:{argb:'FFCBD5E1'}},bottom:{style:'thin',color:{argb:'FFCBD5E1'}},
+              left:{style:'thin',color:{argb:'FFCBD5E1'}},right:{style:'thin',color:{argb:'FFCBD5E1'}}}
+    };
+  }
   var wb=XLSX.utils.book_new(),ws={};
-  ws['!cols']=[{wch:8},{wch:10},{wch:7},{wch:7},{wch:7},{wch:6},{wch:24},{wch:42},{wch:16}];
+  ws['!cols']=[{wch:8},{wch:10},{wch:7},{wch:7},{wch:7},{wch:6},{wch:24},{wch:44},{wch:16}];
   var hdrs=['방번호','숙소타입','성별','인원','총인원','잔여','팀명','숙소자','수정'];
   hdrs.forEach(function(h,ci){ws[XLSX.utils.encode_cell({r:0,c:ci})]={v:h,t:'s',s:cs(HDR,true,'center')};});
-  var order=['A01','A02','A03','A04','A05','A06','A07','A08','A09','A10','A11','B01','B02','B03','B04','B05','C01','C02','D01','D02','D03','D04','D05','F01','F02','E01'];
+  var order=['A01','A02','A03','A04','A05','A06','A07','A08','A09','A10','A11',
+    'B01','B02','B03','B04','B05','C01','C02',
+    'D01','D02','D03','D04','D05','F01','F02','E01'];
   order.forEach(function(rid,ri){
     var r=ACCOM_ROOMS.find(function(x){return x.id===rid;});
-    if(!r)return;
+    if(!r) return;
     var er=ri+1,tbg=TYPE_BG[r.type]||'FFFFFFFF',gbg=GENDER_BG[r.gender]||CAP,cnt=r.members.length;
     var team=cnt===0?'(여유)':accomGetTeam(r.members);
-    ws[XLSX.utils.encode_cell({r:er,c:0})]={v:r.id,t:'s',s:cs(tbg,true,'center')};
-    ws[XLSX.utils.encode_cell({r:er,c:1})]={v:r.typeName,t:'s',s:cs(tbg,false,'center')};
-    ws[XLSX.utils.encode_cell({r:er,c:2})]={v:r.gender,t:'s',s:cs(gbg,true,'center')};
-    ws[XLSX.utils.encode_cell({r:er,c:3})]={v:cnt||'',t:cnt?'n':'s',s:cs(CAP,true,'center')};
-    ws[XLSX.utils.encode_cell({r:er,c:4})]={v:r.cap,t:'n',s:cs(CAP,true,'center')};
+    ws[XLSX.utils.encode_cell({r:er,c:0})]={v:r.id,       t:'s',s:cs(tbg,true,'center')};
+    ws[XLSX.utils.encode_cell({r:er,c:1})]={v:r.typeName, t:'s',s:cs(tbg,false,'center')};
+    ws[XLSX.utils.encode_cell({r:er,c:2})]={v:r.gender,   t:'s',s:cs(gbg,true,'center')};
+    ws[XLSX.utils.encode_cell({r:er,c:3})]={v:cnt||'',    t:cnt?'n':'s',s:cs(CAP,true,'center')};
+    ws[XLSX.utils.encode_cell({r:er,c:4})]={v:r.cap,      t:'n',s:cs(CAP,true,'center')};
     ws[XLSX.utils.encode_cell({r:er,c:5})]={f:'E'+(er+1)+'-D'+(er+1),t:'n',s:cs(REM,true,'center')};
-    ws[XLSX.utils.encode_cell({r:er,c:6})]={v:team,t:'s',s:cs(tbg,false,'left')};
-    ws[XLSX.utils.encode_cell({r:er,c:7})]={v:r.members.join(', '),t:'s',s:cs(tbg,false,'left')};
+    ws[XLSX.utils.encode_cell({r:er,c:6})]={v:team,       t:'s',s:cs(tbg,false,'left')};
+    ws[XLSX.utils.encode_cell({r:er,c:7})]={v:r.members.join(', '),t:'s',s:cs(tbg,false,'left',true)};
     ws[XLSX.utils.encode_cell({r:er,c:8})]={v:META[r.id]||'',t:'s',s:cs(tbg,false,'center')};
   });
   var sr=order.length+1;
@@ -4839,13 +4872,15 @@ function _doExportExcel(){
   ws[XLSX.utils.encode_cell({r:sr,c:4})]={f:'SUM(E2:E'+sr+')',t:'n',s:cs(CAP,true,'center')};
   ws[XLSX.utils.encode_cell({r:sr,c:5})]={f:'E'+(sr+1)+'-D'+(sr+1),t:'n',s:cs(REM,true,'center')};
   ws['!rows']=[{hpt:21.75}];
-  for(var i=0;i<order.length;i++)ws['!rows'].push({hpt:19.5});
+  for(var i=0;i<order.length+1;i++) ws['!rows'].push({hpt:19.5});
   ws['!ref']=XLSX.utils.encode_range({r:0,c:0},{r:sr,c:8});
   var now=new Date();
-  var stamp=now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'_'+String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
+  var stamp=now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')
+    +'_'+String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
+  var fname='MET2026_삼척숙소배치표_'+stamp+'.xlsx';
   XLSX.utils.book_append_sheet(wb,ws,'숙소배치표(남녀분리)');
-  XLSX.writeFile(wb,'MET2026_삼척숙소배치표_'+stamp+'.xlsx',{bookType:'xlsx',type:'binary',cellStyles:true});
-  accomShowToast('📥 다운로드 완료');
+  XLSX.writeFile(wb,fname,{bookType:'xlsx',type:'binary',cellStyles:true});
+  accomShowToast('📊 '+fname+' 저장 완료');
 }
 function accomDebug(){
   // 회색칩(미등록) 이름 수집
