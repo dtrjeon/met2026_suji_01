@@ -4430,12 +4430,21 @@ function renderAccomUnassigned(){
   var list=getAccomUnassigned();
   if(!list.length){ box.innerHTML=''; return; }
 
-  // 팀별 그룹핑
-  var teams={};
+  // 팀명 + 목장명 복합 그룹핑
+  var groups={};
   list.forEach(function(d){
-    var t=d.mteam||'(미지정)';
-    if(!teams[t]) teams[t]=[];
-    teams[t].push(d);
+    var team=(d.mteam||'(미지정)').trim();
+    var moksang=(d.moksang||'').trim()||'-';
+    var key=team+'__'+moksang;
+    if(!groups[key]) groups[key]={team:team,moksang:moksang,members:[]};
+    groups[key].members.push(d);
+  });
+
+  // 팀명 → 목장명 순 정렬
+  var sortedKeys=Object.keys(groups).sort(function(a,b){
+    var ta=groups[a].team, tb=groups[b].team;
+    if(ta!==tb) return ta.localeCompare(tb,'ko');
+    return groups[a].moksang.localeCompare(groups[b].moksang,'ko');
   });
 
   var isOpen=box.dataset.open==='1';
@@ -4445,25 +4454,53 @@ function renderAccomUnassigned(){
   h+='<span class="accom-unassigned-hd-arrow'+(isOpen?' open':'')+'">▼</span>';
   h+='</div>';
   h+='<div class="accom-unassigned-body'+(isOpen?' show':'')+'">';
-  h+='<table class="accom-unassigned-table"><thead><tr><th>팀명</th><th>인원</th><th>명단 (5명씩)</th></tr></thead><tbody>';
+  h+='<table class="accom-unassigned-table"><thead><tr>';
+  h+='<th>팀명</th><th>목장</th><th>인원</th><th>명단 (5명씩)</th>';
+  h+='</tr></thead><tbody>';
 
-  Object.keys(teams).sort().forEach(function(team){
-    var members=teams[team];
-    // 5명씩 행 분리
+  // 팀명이 같은 연속 행은 rowspan으로 병합
+  // 먼저 팀별 행 수 계산
+  var teamRowCount={};
+  sortedKeys.forEach(function(key){
+    var g=groups[key];
+    var rowCount=Math.ceil(g.members.length/5)||1;
+    teamRowCount[key]=rowCount;
+  });
+  var teamSpanDone={};
+
+  sortedKeys.forEach(function(key){
+    var g=groups[key];
+    var members=g.members;
     var rows=[];
     for(var i=0;i<members.length;i+=5) rows.push(members.slice(i,i+5));
+    if(!rows.length) rows=[[]];
+
+    // 같은 팀의 총 행 수 (rowspan용)
+    var sameTeamKeys=sortedKeys.filter(function(k){return groups[k].team===g.team;});
+    var totalTeamRows=sameTeamKeys.reduce(function(acc,k){
+      return acc+Math.ceil(groups[k].members.length/5||1);
+    },0);
+
     var isFirst=true;
     rows.forEach(function(rowMembers){
       h+='<tr>';
+      // 팀명 셀: 팀 첫 행에만 rowspan
+      if(!teamSpanDone[g.team]){
+        teamSpanDone[g.team]=true;
+        h+='<td class="td-team" rowspan="'+totalTeamRows+'">'+g.team+'</td>';
+      }
+      // 목장명 셀: 목장 첫 행에만 rowspan
       if(isFirst){
-        h+='<td class="td-team" rowspan="'+rows.length+'">'+team+'</td>';
+        h+='<td class="td-team" rowspan="'+rows.length+'">'+g.moksang+'</td>';
         h+='<td class="td-cnt" rowspan="'+rows.length+'">'+members.length+'명</td>';
         isFirst=false;
       }
       h+='<td><div class="accom-unassigned-chips">';
       rowMembers.forEach(function(d){
-        var g=d.gender==='여'?'여':d.gender==='남'?'남':'';
-        h+='<span class="accom-pool-chip '+g+'" data-name="'+d.name+'" data-gender="'+d.gender+'" data-mteam="'+(d.mteam||'')+'" onclick="openAssignModal(this.dataset.name,this.dataset.gender,this.dataset.mteam)">'
+        var gc=d.gender==='여'?'여':d.gender==='남'?'남':'';
+        var tip=(d.mteam||'')+' / '+(d.moksang||'');
+        h+='<span class="accom-pool-chip '+gc+'" data-name="'+d.name+'" data-gender="'+d.gender
+          +'" data-mteam="'+(d.mteam||'')+'" title="'+tip+'" onclick="openAssignModal(this.dataset.name,this.dataset.gender,this.dataset.mteam)">'
           +d.name+'</span>';
       });
       h+='</div></td></tr>';
@@ -4474,6 +4511,7 @@ function renderAccomUnassigned(){
   box.innerHTML=h;
   bindPoolDrag();
 }
+
 
 function toggleUnassignedBox(){
   var box=document.getElementById('accomUnassignedBox');
