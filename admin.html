@@ -440,7 +440,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .accom-tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .accom-table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border-radius:10px;overflow:hidden;box-shadow:var(--shadow);min-width:360px;}
 .accom-table thead tr{background:var(--primary);}
-.accom-table thead th{color:#fff;font-size:11px;font-weight:700;padding:8px 5px;text-align:center;white-space:nowrap;border-right:1px solid rgba(255,255,255,.15);position:sticky;top:calc(50px + env(safe-area-inset-top) + 54px);z-index:5;background:var(--primary);}
+.accom-table thead th{color:#fff;font-size:11px;font-weight:700;padding:8px 5px;text-align:center;white-space:nowrap;border-right:1px solid rgba(255,255,255,.15);position:sticky;top:0;z-index:5;background:var(--primary);}
 .accom-table thead th:last-child{border-right:none;}
 .accom-table tbody tr{border-bottom:1px solid var(--border);}
 .accom-table tbody tr:last-child{border-bottom:none;}
@@ -4212,6 +4212,16 @@ function renderAccomTable(){
     html+='</tr>';
   });
   tb.innerHTML=html;
+  // 헤더(hd) + 탭바(tab-bar) 실제 높이 측정 → thead th sticky top 동적 적용
+  requestAnimationFrame(function(){
+    var hd  = document.querySelector('.hd');
+    var tab = document.querySelector('.tab-bar');
+    var stickyTop = (hd?hd.getBoundingClientRect().height:50) +
+                    (tab?tab.getBoundingClientRect().height:54);
+    document.querySelectorAll('.accom-table thead th').forEach(function(th){
+      th.style.top = stickyTop + 'px';
+    });
+  });
   bindAccomDrag();
   applyAccomFilter();
 }
