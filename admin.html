@@ -3345,12 +3345,7 @@ function setPaySt(rno,st){
   var prev = payData[rno] ? Object.assign({}, payData[rno]) : null;
   if(!payData[rno]) payData[rno]={};
   payData[rno].status=st;
-  if(st==='paid'){
-    if(!payData[rno].date){
-      var t=new Date();
-      payData[rno].date=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
-    }
-  } else {
+  if(st!=='paid'){
     payData[rno].date='';
   }
   savePayData(rno, prev);
