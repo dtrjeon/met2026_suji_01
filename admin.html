@@ -2824,6 +2824,7 @@ var payData = {};  // { rno: { status, amount, date, memo } }
 
 var acctFilter = { status: 'all', search: '' };
 var acctSort = 'current'; // 'current'=현재기준(미납우선), 'paydate'=납입일기준
+var acctSortDir = 'asc';  // 납입일기준 클릭 시 토글: asc(오름차순) ↔ desc(내림차순)
 
 // GAS에서 payData 로드 (processData 호출 시 병합)
 function loadPayDataFromServer(serverPayData) {
@@ -3105,7 +3106,8 @@ function renderAcct(){
   // ── 정렬 버튼 ──
   html+='<div class="acct-filter" style="margin-top:6px;">'
     +'<button class="acct-fbtn'+(acctSort==='current'?' active':'')+'" onclick="setAcctSort(&apos;current&apos;)">📌 현재 기준</button>'
-    +'<button class="acct-fbtn'+(acctSort==='paydate'?' active':'')+'" onclick="setAcctSort(&apos;paydate&apos;)">📅 납입일 기준</button>'
+    +'<button class="acct-fbtn'+(acctSort==='paydate'?' active':'')+'" onclick="setAcctSort(&apos;paydate&apos;)">📅 납입일 기준'
+      +(acctSort==='paydate'?(acctSortDir==='asc'?' ▲':' ▼'):'')+'</button>'
     +'</div>';
 
   // ── 검색 ──
@@ -3169,7 +3171,10 @@ function renderAcct(){
     return dates[dates.length-1]; // 최신 납입일 대표값
   }
   if(acctSort==='paydate'){
-    filteredFids.sort(function(a,b){ return fidPayDate(a).localeCompare(fidPayDate(b)); });
+    filteredFids.sort(function(a,b){
+      var cmp=fidPayDate(a).localeCompare(fidPayDate(b));
+      return acctSortDir==='desc'?-cmp:cmp;
+    });
   } else {
     filteredFids.sort(function(a,b){ return fidPriority(a)-fidPriority(b); });
   }
@@ -3189,7 +3194,10 @@ function renderAcct(){
     return dates[dates.length-1];
   }
   if(acctSort==='paydate'){
-    indivGroups.sort(function(a,b){ return groupPayDate(a).localeCompare(groupPayDate(b)); });
+    indivGroups.sort(function(a,b){
+      var cmp=groupPayDate(a).localeCompare(groupPayDate(b));
+      return acctSortDir==='desc'?-cmp:cmp;
+    });
   } else {
     indivGroups.sort(function(a,b){ return groupPriority(a)-groupPriority(b); });
   }
@@ -3394,7 +3402,16 @@ function setPayDate(rno, dateVal){
   renderAcct();
 }
 function setAcctFilter(st){ acctFilter.status=st; renderAcct(); }
-function setAcctSort(s){ acctSort=s; renderAcct(); }
+function setAcctSort(s){
+  if(s==='paydate'&&acctSort==='paydate'){
+    // 이미 납입일기준이면 → 방향만 토글
+    acctSortDir = acctSortDir==='asc' ? 'desc' : 'asc';
+  } else if(s==='paydate'){
+    acctSortDir='asc'; // 새로 진입 시 오름차순부터
+  }
+  acctSort=s;
+  renderAcct();
+}
 function setAcctSearch(v){  acctFilter.search=v;  renderAcct(); }
 
 // ══════════════════════════════════════════
