@@ -2823,6 +2823,7 @@ loadLoginInfo();
 var payData = {};  // { rno: { status, amount, date, memo } }
 
 var acctFilter = { status: 'all', search: '' };
+var acctSort = 'current'; // 'current'=현재기준(미납우선), 'paydate'=납입일기준
 
 // GAS에서 payData 로드 (processData 호출 시 병합)
 function loadPayDataFromServer(serverPayData) {
@@ -3101,6 +3102,12 @@ function renderAcct(){
     +'<button class="acct-fbtn exempt-f'+(acctFilter.status==='exempt'?' active':'')+'" onclick="setAcctFilter(&apos;exempt&apos;)">&#x1f516; 면제 ('+exemptCnt+')</button>'
     +'</div>';
 
+  // ── 정렬 버튼 ──
+  html+='<div class="acct-filter" style="margin-top:6px;">'
+    +'<button class="acct-fbtn'+(acctSort==='current'?' active':'')+'" onclick="setAcctSort(&apos;current&apos;)">📌 현재 기준</button>'
+    +'<button class="acct-fbtn'+(acctSort==='paydate'?' active':'')+'" onclick="setAcctSort(&apos;paydate&apos;)">📅 납입일 기준</button>'
+    +'</div>';
+
   // ── 검색 ──
   // 검색창은 고정 DOM(acctSearchInput) 사용 — 여기서 생성 안 함
 
@@ -3147,14 +3154,25 @@ function renderAcct(){
       return ((a.gender||'').indexOf('남')>=0?0:1)-((b.gender||'').indexOf('남')>=0?0:1);
     });
   });
-  // 미납 우선 정렬
+  // 미납 우선 정렬 (현재기준)
   function fidPriority(fid){
     var sts=famByFid[fid].map(function(m){return (payData[m.rno]||{}).status||'unpaid';});
     if(sts.indexOf('unpaid')>-1) return 0;
     if(sts.indexOf('paid')>-1)   return 1;
     return 2;
   }
-  filteredFids.sort(function(a,b){ return fidPriority(a)-fidPriority(b); });
+  // 가족 그룹의 대표 납입일 (그룹 내 가장 최근 납입일, 없으면 맨 뒤로)
+  function fidPayDate(fid){
+    var dates=famByFid[fid].map(function(m){return (payData[m.rno]||{}).date||'';}).filter(Boolean);
+    if(!dates.length) return '9999-99-99'; // 미납입은 맨 뒤
+    dates.sort();
+    return dates[dates.length-1]; // 최신 납입일 대표값
+  }
+  if(acctSort==='paydate'){
+    filteredFids.sort(function(a,b){ return fidPayDate(a).localeCompare(fidPayDate(b)); });
+  } else {
+    filteredFids.sort(function(a,b){ return fidPriority(a)-fidPriority(b); });
+  }
 
   // 개인 섹션: buildGroups 사용
   var indivGroups = buildGroups(indivData);
@@ -3164,7 +3182,17 @@ function renderAcct(){
     if(sts.indexOf('paid')>-1)   return 1;
     return 2;
   }
-  indivGroups.sort(function(a,b){ return groupPriority(a)-groupPriority(b); });
+  function groupPayDate(g){
+    var dates=g.members.map(function(m){return (payData[m.rno]||{}).date||'';}).filter(Boolean);
+    if(!dates.length) return '9999-99-99';
+    dates.sort();
+    return dates[dates.length-1];
+  }
+  if(acctSort==='paydate'){
+    indivGroups.sort(function(a,b){ return groupPayDate(a).localeCompare(groupPayDate(b)); });
+  } else {
+    indivGroups.sort(function(a,b){ return groupPriority(a)-groupPriority(b); });
+  }
 
   var famMemberTotal = filteredFids.reduce(function(s,fid){ return s+famByFid[fid].length; },0);
   var filteredTotal  = famMemberTotal + indivData.length;
@@ -3366,6 +3394,7 @@ function setPayDate(rno, dateVal){
   renderAcct();
 }
 function setAcctFilter(st){ acctFilter.status=st; renderAcct(); }
+function setAcctSort(s){ acctSort=s; renderAcct(); }
 function setAcctSearch(v){  acctFilter.search=v;  renderAcct(); }
 
 // ══════════════════════════════════════════
