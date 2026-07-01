@@ -415,7 +415,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .spouse-section-hd{padding:5px 12px 3px;font-size:9px;font-weight:700;letter-spacing:1px;color:var(--primary);background:#f0f4ff;border-bottom:1px solid var(--border);}
 
 /* ── 숙소배치 패널 ── */
-/* ── 숙소배치 패널 ── */
 .accom-panel{display:none;padding:10px 12px 80px;}
 .accom-panel.show{display:block;}
 .accom-toolbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;}
@@ -969,46 +968,17 @@ function getDeviceInfo() {
 }
 
 // ── 접속현황 로깅 (구글시트 '접속현황' 탭에 기록) ──
-function getIpLocation() {
-  var fetchWithTimeout = function(url, ms){
-    return Promise.race([
-      fetch(url, { cache: 'no-store' }),
-      new Promise(function(_, reject){ setTimeout(function(){ reject(new Error('timeout')); }, ms); })
-    ]);
-  };
-  return fetchWithTimeout('https://ipwho.is/', 4000)
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if (!d || d.success === false) throw new Error('lookup failed');
-      var parts = [d.city, d.region, d.country].filter(Boolean);
-      return parts.join(' ');
-    })
-    .catch(function(){
-      // 1차 실패 시 대체 서비스로 재시도
-      return fetchWithTimeout('https://ipapi.co/json/', 4000)
-        .then(function(r){ return r.json(); })
-        .then(function(d){
-          if (!d || d.error) return '';
-          return [d.city, d.region, d.country_name].filter(Boolean).join(' ');
-        })
-        .catch(function(){ return ''; });
-    });
-}
-
 function logAccess(name) {
   try {
-    getIpLocation().then(function(location){
-      fetch(GAS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'data=' + encodeURIComponent(JSON.stringify({
-          action   : 'logAccess',
-          name     : name,
-          device   : getDeviceInfo(),
-          location : location
-        }))
-      }).catch(function(){});
-    });
+    fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'data=' + encodeURIComponent(JSON.stringify({
+        action : 'logAccess',
+        name   : name,
+        device : getDeviceInfo()
+      }))
+    }).catch(function(){});
   } catch(e) {}
 }
 
