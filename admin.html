@@ -970,14 +970,29 @@ function getDeviceInfo() {
 
 // ── 접속현황 로깅 (구글시트 '접속현황' 탭에 기록) ──
 function getIpLocation() {
-  return fetch('https://ipapi.co/json/', { cache: 'no-store' })
+  var fetchWithTimeout = function(url, ms){
+    return Promise.race([
+      fetch(url, { cache: 'no-store' }),
+      new Promise(function(_, reject){ setTimeout(function(){ reject(new Error('timeout')); }, ms); })
+    ]);
+  };
+  return fetchWithTimeout('https://ipwho.is/', 4000)
     .then(function(r){ return r.json(); })
     .then(function(d){
-      if (!d || d.error) return '';
-      var parts = [d.city, d.region, d.country_name].filter(Boolean);
+      if (!d || d.success === false) throw new Error('lookup failed');
+      var parts = [d.city, d.region, d.country].filter(Boolean);
       return parts.join(' ');
     })
-    .catch(function(){ return ''; });
+    .catch(function(){
+      // 1차 실패 시 대체 서비스로 재시도
+      return fetchWithTimeout('https://ipapi.co/json/', 4000)
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if (!d || d.error) return '';
+          return [d.city, d.region, d.country_name].filter(Boolean).join(' ');
+        })
+        .catch(function(){ return ''; });
+    });
 }
 
 function logAccess(name) {
