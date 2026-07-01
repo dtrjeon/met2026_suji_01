@@ -564,6 +564,47 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 #accomToast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1E293B;color:#fff;padding:9px 18px;border-radius:18px;font-size:12px;font-weight:600;z-index:200;display:none;white-space:nowrap;}
 #accomToast.show{display:block;}
 
+/* ── 차량배치 패널 ── */
+.veh-panel{display:none;padding:10px 12px 90px;}
+.veh-panel.show{display:block;}
+.veh-toolbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.veh-btn{padding:8px 12px;border:none;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:#fff;}
+.veh-btn-auto{background:#1E3A8A;}
+.veh-btn-undo{background:#64748B;}
+.veh-btn-reset{background:#DC2626;}
+.veh-btn-save{background:#166534;}
+.veh-btn-excel{background:#0F766E;}
+.veh-btn:disabled{opacity:.5;cursor:default;}
+.veh-summary{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.veh-sum-chip{padding:6px 12px;border-radius:14px;font-size:11px;font-weight:700;background:#EFF6FF;color:#1E3A8A;border:1px solid #DBEAFE;}
+.veh-sum-chip.warn{background:#FEF2F2;color:#B91C1C;border-color:#FECACA;}
+.bus-block{background:#fff;border-radius:12px;box-shadow:var(--shadow);padding:12px;margin-bottom:14px;}
+.bus-title{font-size:13px;font-weight:800;color:#1E3A8A;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+.bus-title-cnt{font-size:11px;font-weight:700;color:#64748B;}
+.bus-front{display:flex;justify-content:flex-end;padding:0 4px 6px;font-size:9px;color:#94A3B8;font-weight:700;}
+.bus-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px 8px;}
+.bus-grid .veh-seat:nth-child(4n+2){margin-right:8px;} /* 통로 여백(왼쪽 2열 뒤) */
+.bus-back-row{display:flex;gap:5px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);}
+.bus-back-row .veh-seat{flex:1;}
+.veh-seat{aspect-ratio:1/0.85;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;text-align:center;padding:2px;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:pan-y;border:1px solid transparent;line-height:1.15;overflow:hidden;transition:transform .1s,box-shadow .1s,opacity .15s;}
+.veh-seat.empty{background:#F1F5F9;color:#CBD5E1;cursor:default;border:1px dashed #E2E8F0;}
+.veh-seat.family{background:#DBEAFE;color:#1E3A8A;border-color:#93C5FD;}
+.veh-seat.team{background:#DCFCE7;color:#166534;border-color:#86EFAC;}
+.veh-seat.individual{background:#FEF3C7;color:#92400E;border-color:#FDE68A;}
+.veh-seat.dragging{opacity:.35;transform:scale(.9);}
+.veh-seat.drag-over{outline:2px dashed #3B82F6;outline-offset:1px;}
+.veh-seat:active{cursor:grabbing;}
+.veh-unassigned{background:#fff;border-radius:12px;box-shadow:var(--shadow);padding:12px;margin-bottom:14px;}
+.veh-unassigned-title{font-size:12px;font-weight:800;color:#B91C1C;margin-bottom:6px;}
+.veh-unassigned-chips{display:flex;flex-wrap:wrap;gap:5px;}
+.veh-unassigned-chip{padding:4px 9px;border-radius:11px;font-size:11px;font-weight:700;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;}
+#vehGhost{position:fixed;pointer-events:none;z-index:9999;padding:4px 9px;border-radius:8px;font-size:10px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.25);transform:translate(-50%,-50%);display:none;background:#1E3A8A;color:#fff;}
+#vehToast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1E293B;color:#fff;padding:9px 18px;border-radius:18px;font-size:12px;font-weight:600;z-index:200;display:none;white-space:nowrap;}
+#vehToast.show{display:block;}
+.veh-legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;font-size:10px;color:#64748B;}
+.veh-legend span{display:flex;align-items:center;gap:4px;}
+.veh-legend i{width:10px;height:10px;border-radius:3px;display:inline-block;}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -642,6 +683,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     <div class="tab" id="tabAccom" onclick="switchTab('accom')" style="display:none">
       <span class="tab-ico">🏕️</span><span class="tab-lbl">숙소배치</span>
     </div>
+    <div class="tab" id="tabVeh" onclick="switchTab('veh')" style="display:none">
+      <span class="tab-ico">🚌</span><span class="tab-lbl">차량배치</span>
+    </div>
   </div>
 
   <!-- 필터 -->
@@ -718,6 +762,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
   <!-- 숙소배치 패널 (전태룡 전용) -->
   <div class="accom-panel" id="accomPanel" style="display:none"></div>
+
+  <!-- 차량배치 패널 (전태룡·유원종 전용) -->
+  <div class="veh-panel" id="vehPanel" style="display:none"></div>
 
 
   <!-- 새로고침 -->
@@ -839,10 +886,10 @@ var currentUser = null;
 // acct:  명단 O(팝업X), 회계 O  — 통계X, 확인필요X
 // admin: 명단 O(팝업O), 통계 O  — 회계X, 확인필요X
 var ROLE_TABS = {
-  super: ['list','stat','miss','acct','family','editlog','accom'],
+  super: ['list','stat','miss','acct','family','editlog','accom','veh'],
   full:  ['list','stat','miss','acct','family'],
   acct:  ['list','acct'],
-  admin: ['list','stat','family','accom'],
+  admin: ['list','stat','family','accom','veh'],
 };
 
 function getUserRole(){ return currentUser ? currentUser.role : 'full'; }
@@ -871,7 +918,26 @@ var TEST_DATA = [
 
   // ── 가족 그룹 3: 김성민 + 이수진 (부부만) ──
   {submitAt:'2026-05-03 15:20',rno:'2026-F003-1',gno:'2026-F003',type:'가족',couple:'부부목장',rel:'본인',name:'김성민',ids:'E',gender:'남',phone:'010-5555-6666',pastor:'정옥희',village:'신정4',moksang:'S샘물1',mteam:'전도팀',sched:'7/21~22(화~수)',trans:'버스',ride:'',accom:'단체(교회준비)',spouse:'이수진',note:'',device:'Android'},
-  {submitAt:'2026-05-03 15:20',rno:'2026-F003-2',gno:'2026-F003',type:'가족',couple:'부부목장',rel:'배우자',name:'이수진',ids:'',gender:'여',phone:'010-7777-8888',pastor:'정옥희',village:'신정4',moksang:'S샘물1',mteam:'이미용팀',sched:'7/21~22(화~수)',trans:'버스',ride:'',accom:'단체(교회준비)',spouse:'김성민',note:'',device:'Android'}
+  {submitAt:'2026-05-03 15:20',rno:'2026-F003-2',gno:'2026-F003',type:'가족',couple:'부부목장',rel:'배우자',name:'이수진',ids:'',gender:'여',phone:'010-7777-8888',pastor:'정옥희',village:'신정4',moksang:'S샘물1',mteam:'이미용팀',sched:'7/21~22(화~수)',trans:'버스',ride:'',accom:'단체(교회준비)',spouse:'김성민',note:'',device:'Android'},
+
+  // ── 가족 그룹 4: 최민수 + 조은정 + 자녀1 (버스, 3명) ──
+  {submitAt:'2026-05-04 09:40',rno:'2026-F004-1',gno:'2026-F004',type:'가족',couple:'부부목장',rel:'본인',name:'최민수',ids:'G',gender:'남',phone:'010-2222-3333',pastor:'김하연',village:'신정1',moksang:'S사랑하는2',mteam:'전도팀',sched:'7/21~22(화~수)',trans:'버스',ride:'',accom:'단체(교회준비)',spouse:'조은정',note:'',device:'Android'},
+  {submitAt:'2026-05-04 09:40',rno:'2026-F004-2',gno:'2026-F004',type:'가족',couple:'부부목장',rel:'배우자',name:'조은정',ids:'',gender:'여',phone:'010-4444-5555',pastor:'김하연',village:'신정1',moksang:'S사랑하는2',mteam:'간식팀',sched:'7/21~22(화~수)',trans:'버스',ride:'',accom:'단체(교회준비)',spouse:'최민수',note:'',device:'iOS'},
+  {submitAt:'2026-05-04 09:40',rno:'2026-F004-3',gno:'2026-F004',type:'가족',couple:'부부목장',rel:'자녀',name:'최하늘',ids:'',gender:'여',phone:'',pastor:'',village:'신정1',moksang:'S사랑하는2',mteam:'',sched:'7/21~22(화~수)',trans:'버스',ride:'',accom:'단체(교회준비)',spouse:'',note:'초2',device:'iOS'},
+
+  // ── 가족 그룹 5: 박성진 + 김다혜 (부부, 버스) ──
+  {submitAt:'2026-05-04 10:15',rno:'2026-F005-1',gno:'2026-F005',type:'가족',couple:'부부목장',rel:'본인',name:'박성진',ids:'H',gender:'남',phone:'010-6666-7777',pastor:'유수영',village:'신정4',moksang:'S샘물2',mteam:'시설지원팀',sched:'7/21~22(화~수)',trans:'버스',ride:'',accom:'단체(교회준비)',spouse:'김다혜',note:'',device:'Android'},
+  {submitAt:'2026-05-04 10:15',rno:'2026-F005-2',gno:'2026-F005',type:'가족',couple:'부부목장',rel:'배우자',name:'김다혜',ids:'',gender:'여',phone:'010-8888-9999',pastor:'유수영',village:'신정4',moksang:'S샘물2',mteam:'이미용팀',sched:'7/21~22(화~수)',trans:'버스',ride:'',accom:'단체(교회준비)',spouse:'박성진',note:'',device:'Android'},
+
+  // ── 개인(버스) 추가 ──
+  {submitAt:'2026-05-05 08:20',rno:'2026-A006',gno:'2026-A006',type:'개인',couple:'-',rel:'본인',name:'정수아',ids:'',gender:'여',phone:'010-1010-2020',pastor:'정지원',village:'신정3',moksang:'S양떼2',mteam:'어린이(청소년)팀',sched:'7/21~22(화~수)',trans:'버스',ride:'',accom:'단체(교회준비)',spouse:'',note:'',device:'iOS'},
+  {submitAt:'2026-05-05 08:45',rno:'2026-A007',gno:'2026-A007',type:'개인',couple:'-',rel:'본인',name:'장현우',ids:'',gender:'남',phone:'010-3030-4040',pastor:'김의겸',village:'신정2',moksang:'S하늘정원3',mteam:'바자회팀',sched:'7/21~22(화~수)',trans:'버스',ride:'',accom:'단체(교회준비)',spouse:'',note:'',device:'Android'},
+  {submitAt:'2026-05-05 09:05',rno:'2026-A008',gno:'2026-A008',type:'개인',couple:'-',rel:'본인',name:'윤소희',ids:'',gender:'여',phone:'010-5050-6060',pastor:'황은성',village:'신정5',moksang:'S참포도나무3',mteam:'',sched:'7/22(수)',trans:'버스',ride:'',accom:'단체(교회준비)',spouse:'',note:'',device:'iOS'},
+  {submitAt:'2026-05-05 09:30',rno:'2026-A009',gno:'2026-A009',type:'개인',couple:'-',rel:'본인',name:'임재현',ids:'',gender:'남',phone:'010-7070-8080',pastor:'이은영',village:'신정1',moksang:'S사랑하는3',mteam:'전도팀',sched:'7/21~22(화~수)',trans:'버스',ride:'',accom:'단체(교회준비)',spouse:'',note:'',device:'Android'},
+  {submitAt:'2026-05-05 09:50',rno:'2026-A010',gno:'2026-A010',type:'개인',couple:'-',rel:'본인',name:'한가은',ids:'',gender:'여',phone:'010-9090-1111',pastor:'정현주',village:'신정4',moksang:'S샘물3',mteam:'장금이팀',sched:'7/21~22(화~수)',trans:'버스',ride:'',accom:'단체(교회준비)',spouse:'',note:'',device:'iOS'},
+  {submitAt:'2026-05-05 10:10',rno:'2026-A011',gno:'2026-A011',type:'개인',couple:'-',rel:'본인',name:'서동현',ids:'',gender:'남',phone:'010-1212-3434',pastor:'오은영',village:'신정2',moksang:'S하늘정원4',mteam:'',sched:'7/21(화)',trans:'버스',ride:'',accom:'개인(개별준비)',spouse:'',note:'',device:'Android'},
+  {submitAt:'2026-05-05 10:35',rno:'2026-A012',gno:'2026-A012',type:'개인',couple:'-',rel:'본인',name:'백지원',ids:'',gender:'여',phone:'010-5656-7878',pastor:'김미라',village:'신정3',moksang:'S양떼3',mteam:'의료팀',sched:'7/21~22(화~수)',trans:'버스',ride:'',accom:'단체(교회준비)',spouse:'',note:'',device:'iOS'},
+  {submitAt:'2026-05-05 11:00',rno:'2026-A013',gno:'2026-A013',type:'개인',couple:'-',rel:'본인',name:'문성호',ids:'',gender:'남',phone:'010-9898-2323',pastor:'안선영',village:'신정5',moksang:'S참포도나무4',mteam:'중보기도팀',sched:'7/21~22(화~수)',trans:'버스',ride:'',accom:'단체(교회준비)',spouse:'',note:'',device:'Android'}
 ];
 
 var allData  = [];
@@ -1030,7 +1096,7 @@ function showApp(res) {
 }
 
 function applyTabPermissions() {
-  var tabs = ['list','stat','miss','acct','family','editlog','accom'];
+  var tabs = ['list','stat','miss','acct','family','editlog','accom','veh'];
   tabs.forEach(function(t){
     var el = document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1));
     if (el) el.style.display = canTab(t) ? '' : 'none';
@@ -1046,6 +1112,7 @@ function logout() {
   currentUser = null;
   _pw = '';
   allData = []; filtered = [];
+  vehLoaded = false; vehData = {1:{}, 2:{}}; vehMeta = {}; vehHistory = [];
   document.getElementById('pwScreen').className = 'pw-screen';
   document.getElementById('app').className = 'app';
   // 저장 체크 OFF 상태면 입력창 비우기
@@ -2216,10 +2283,15 @@ function switchTab(tab) {
   if(tabAccom) tabAccom.className = 'tab'+(tab==='accom'?' active':'');
   var accomPanel = document.getElementById('accomPanel');
   if(accomPanel) accomPanel.style.display = tab==='accom'?'block':'none';
+  var tabVeh = document.getElementById('tabVeh');
+  if(tabVeh) tabVeh.className = 'tab'+(tab==='veh'?' active':'');
+  var vehPanel = document.getElementById('vehPanel');
+  if(vehPanel) vehPanel.style.display = tab==='veh'?'block':'none';
   if(tab==='miss')    renderMissing();
   if(tab==='acct')    renderAcct();
   if(tab==='family')  renderFamily();
   if(tab==='editlog') loadEditLog();
+  if(tab==='veh')      renderVeh();
   if(tab==='accom'){
     renderAccom();
   } else {
@@ -5313,6 +5385,450 @@ function accomShowToast(msg){
   el.textContent=msg;el.classList.add('show');
   clearTimeout(accomToastTimer);
   accomToastTimer=setTimeout(function(){el.classList.remove('show');},2200);
+}
+
+// ============================================================
+// ★ 차량배치 탭 (전태룡·유원종 전용)
+// 버스 2대(1호차/2호차), 각 45인승, 자동 균등배분 + 드래그 수동조정
+// 우선순위: 1.가족 2.사역팀 3.개인 — LPT(균등분배) 알고리즘
+// ============================================================
+var VEH_BUS_CAP = 45;
+function vehGenSeatLayout(){
+  var seats=[];
+  for(var r=1;r<=10;r++){
+    seats.push('R'+r+'L1'); seats.push('R'+r+'L2');
+    seats.push('R'+r+'R1'); seats.push('R'+r+'R2');
+  }
+  for(var b=1;b<=5;b++) seats.push('B'+b);
+  return seats; // 총 45석 (앞 10줄×4 + 뒷줄 5)
+}
+var vehSeatLayout = vehGenSeatLayout();
+var vehData = {1:{}, 2:{}};   // {busNum:{seatId:name}}
+var vehMeta = {};             // name -> {type, team, family_id}
+var vehHistory = [];
+var vehDragging = null, vehOverSeat = null;
+var vehLoaded = false;
+var vehToastTimer;
+
+function vehGetBusRiders(){
+  var seen={};
+  return allData.filter(function(d){
+    if(!d.name) return false;
+    var n=d.name.trim();
+    if(!n||seen[n]) return false;
+    if(!d.trans || d.trans.trim()!=='버스') return false;
+    seen[n]=true;
+    return true;
+  });
+}
+function vehFamKey(d){
+  var fid=(d.family_id||'').trim();
+  if(fid) return fid;
+  if(d.type==='가족' && d.gno) return d.gno.trim();
+  return '';
+}
+function vehGetAssignedNames(){
+  var s={};
+  [1,2].forEach(function(b){
+    Object.keys(vehData[b]).forEach(function(seat){
+      var n=vehData[b][seat]; if(n) s[n]=true;
+    });
+  });
+  return s;
+}
+
+function vehAutoAssign(){
+  var riders = vehGetBusRiders();
+  if(!riders.length){ vehShowToast('⚠️ 버스 탑승자가 없습니다.'); return; }
+
+  try{
+  vehData={1:{},2:{}}; vehMeta={}; vehHistory=[];
+  var consumed={};
+  var units=[];
+
+  // 1순위: 가족 그룹 (family_id 또는 가족형 gno 기준으로 묶음)
+  var famMap={};
+  riders.forEach(function(d){
+    var fk=vehFamKey(d);
+    if(fk){ (famMap[fk]=famMap[fk]||[]).push(d); }
+  });
+  Object.keys(famMap).forEach(function(fk){
+    var members=famMap[fk];
+    members.forEach(function(d){ consumed[d.name.trim()]=true; });
+    units.push({type:'family', members:members});
+  });
+
+  // 2순위: 사역팀 그룹 (가족으로 묶이지 않은 나머지)
+  var teamMap={};
+  riders.forEach(function(d){
+    var n=d.name.trim();
+    if(consumed[n]) return;
+    var team=(d.mteam||'').trim();
+    if(team && team!=='-'){ (teamMap[team]=teamMap[team]||[]).push(d); }
+  });
+  Object.keys(teamMap).forEach(function(team){
+    var members=teamMap[team];
+    members.forEach(function(d){ consumed[d.name.trim()]=true; });
+    units.push({type:'team', members:members});
+  });
+
+  // 3순위: 개인 (가족·사역팀 어디에도 속하지 않은 나머지)
+  riders.forEach(function(d){
+    var n=d.name.trim();
+    if(consumed[n]) return;
+    consumed[n]=true;
+    units.push({type:'individual', members:[d]});
+  });
+
+  // 메타 기록 (좌석 색상 표시용)
+  units.forEach(function(u){
+    u.members.forEach(function(d){
+      vehMeta[d.name.trim()] = {type:u.type, team:(d.mteam||'').trim(), family_id:vehFamKey(d)};
+    });
+  });
+
+  // LPT(Longest Processing Time) 균등배분: 큰 단위부터 더 적은 쪽 버스에 배정
+  units.sort(function(a,b){ return b.members.length - a.members.length; });
+  var queue={1:[], 2:[]}, used={1:0, 2:0};
+  units.forEach(function(u){
+    var size=u.members.length;
+    var pref = used[1]<=used[2] ? 1 : 2;
+    var other = pref===1 ? 2 : 1;
+    if(VEH_BUS_CAP-used[pref] >= size){
+      queue[pref]=queue[pref].concat(u.members); used[pref]+=size;
+    } else if(VEH_BUS_CAP-used[other] >= size){
+      queue[other]=queue[other].concat(u.members); used[other]+=size;
+    } else {
+      // 두 버스 모두 통째로 못 들어가면 부득이하게 분할 배치
+      var remainPref=VEH_BUS_CAP-used[pref];
+      var part1=u.members.slice(0,remainPref), part2=u.members.slice(remainPref);
+      queue[pref]=queue[pref].concat(part1); used[pref]+=part1.length;
+      var remainOther=VEH_BUS_CAP-used[other];
+      var part2a=part2.slice(0,remainOther);
+      queue[other]=queue[other].concat(part2a); used[other]+=part2a.length;
+      // 그래도 남는 인원(총 90명 초과)은 미배정으로 남음
+    }
+  });
+
+  [1,2].forEach(function(busNum){
+    var list=queue[busNum];
+    vehSeatLayout.forEach(function(seatId,i){
+      vehData[busNum][seatId] = list[i] ? list[i].name.trim() : '';
+    });
+  });
+
+  renderVeh();
+  vehShowToast('🔀 자동배분 완료 ('+riders.length+'명)');
+  }catch(err){
+    console.error('[차량배치] 자동배분 오류:', err);
+    vehShowToast('❌ 자동배분 실패: '+err.message);
+  }
+}
+
+function vehSeatHtml(busNum, seatId){
+  var name=vehData[busNum][seatId]||'';
+  if(!name) return '<div class="veh-seat empty" data-bus="'+busNum+'" data-seat="'+seatId+'">·</div>';
+  var meta=vehMeta[name]||{type:'individual'};
+  return '<div class="veh-seat '+meta.type+'" data-bus="'+busNum+'" data-seat="'+seatId+'" data-name="'+name+'" title="'+name+(meta.team?' · '+meta.team:'')+'">'+name+'</div>';
+}
+
+function renderVeh(){
+  var panel=document.getElementById('vehPanel');
+  if(!panel) return;
+  if(!currentUser||(currentUser.name!=='전태룡'&&currentUser.name!=='유원종')){
+    panel.innerHTML='<div style="padding:40px;text-align:center;color:#DC2626;font-weight:700;font-size:14px;">⛔ 차량배치 탭은 전태룡·유원종만 접근 가능합니다.</div>';
+    return;
+  }
+  if(!vehLoaded){
+    vehLoaded=true;
+    panel.innerHTML='<div style="padding:40px;text-align:center;color:#64748B;font-size:13px;">⏳ 차량배치 데이터를 불러오는 중…</div>';
+    loadVehFromSheet();
+    return;
+  }
+
+  var riders=vehGetBusRiders();
+  var assigned=vehGetAssignedNames();
+  var unassigned=riders.filter(function(d){ return !assigned[d.name.trim()]; });
+  var cnt1=Object.keys(vehData[1]).filter(function(s){return vehData[1][s];}).length;
+  var cnt2=Object.keys(vehData[2]).filter(function(s){return vehData[2][s];}).length;
+
+  var h='';
+  h+='<div class="veh-toolbar">';
+  h+='<button class="veh-btn veh-btn-auto" onclick="vehAutoAssign()">🔀 자동배분</button>';
+  h+='<button class="veh-btn veh-btn-undo" onclick="vehUndo()"'+(vehHistory.length?'':' disabled')+'>↩ 되돌리기</button>';
+  h+='<button class="veh-btn veh-btn-reset" onclick="vehReset()">🔄 초기화</button>';
+  h+='<button class="veh-btn veh-btn-save" onclick="vehSave()">💾 저장</button>';
+  h+='<button class="veh-btn veh-btn-excel" onclick="vehExportExcel()">📥 엑셀</button>';
+  h+='</div>';
+
+  h+='<div class="veh-summary">';
+  h+='<div class="veh-sum-chip">🚌 총 버스탑승 '+riders.length+'명</div>';
+  h+='<div class="veh-sum-chip">1호차 '+cnt1+'/'+VEH_BUS_CAP+'</div>';
+  h+='<div class="veh-sum-chip">2호차 '+cnt2+'/'+VEH_BUS_CAP+'</div>';
+  if(unassigned.length) h+='<div class="veh-sum-chip warn">⚠ 미배정 '+unassigned.length+'명</div>';
+  h+='</div>';
+
+  h+='<div class="veh-legend">'
+   +'<span><i style="background:#DBEAFE"></i>가족</span>'
+   +'<span><i style="background:#DCFCE7"></i>사역팀</span>'
+   +'<span><i style="background:#FEF3C7"></i>개인</span>'
+   +'</div>';
+  h+='<div style="font-size:10px;color:#94A3B8;margin-bottom:10px;">💡 좌석을 <b>길게 눌러서</b> 다른 좌석으로 끌어놓으면 자리가 바뀝니다. (짧게 탭하면 반응 없음)</div>';
+
+  [1,2].forEach(function(busNum){
+    var cnt=busNum===1?cnt1:cnt2;
+    h+='<div class="bus-block">';
+    h+='<div class="bus-title"><span>🚌 '+busNum+'호차</span><span class="bus-title-cnt">'+cnt+' / '+VEH_BUS_CAP+'명</span></div>';
+    h+='<div class="bus-front">🚪 출입구 · 🧑\u200d✈️ 기사석</div>';
+    h+='<div class="bus-grid">';
+    vehSeatLayout.slice(0,40).forEach(function(seatId){ h+=vehSeatHtml(busNum, seatId); });
+    h+='</div>';
+    h+='<div class="bus-back-row">';
+    vehSeatLayout.slice(40).forEach(function(seatId){ h+=vehSeatHtml(busNum, seatId); });
+    h+='</div>';
+    h+='</div>';
+  });
+
+  if(unassigned.length){
+    h+='<div class="veh-unassigned"><div class="veh-unassigned-title">⚠ 미배정 인원 ('+unassigned.length+'명)</div><div class="veh-unassigned-chips">';
+    unassigned.forEach(function(d){
+      h+='<span class="veh-unassigned-chip">'+d.name+(d.mteam&&d.mteam!=='-'?' · '+d.mteam:'')+'</span>';
+    });
+    h+='</div></div>';
+  }
+
+  h+='<div id="vehToast"></div>';
+  panel.innerHTML=h;
+  bindVehDrag();
+}
+
+// ── 서버(구글시트 '차량배치') 불러오기/저장 ──
+function loadVehFromSheet(){
+  if(!currentUser){ renderVeh(); return; }
+  var pw=currentUser.name+':'+currentUser.phone;
+  fetch(GAS_URL+'?action=getVehicleData&pw='+encodeURIComponent(pw))
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if(j.result==='ok' && j.seats && j.seats.length){
+        vehData={1:{},2:{}};
+        j.seats.forEach(function(s){
+          if((s.bus===1||s.bus===2) && s.seat) vehData[s.bus][s.seat]=s.name||'';
+        });
+        vehRebuildMeta();
+      }
+      renderVeh();
+    })
+    .catch(function(){ renderVeh(); }); // 저장된 데이터 없음/오류 → 빈 상태로 표시, 자동배분 유도
+}
+function vehRebuildMeta(){
+  vehMeta={};
+  [1,2].forEach(function(b){
+    Object.keys(vehData[b]).forEach(function(seat){
+      var name=vehData[b][seat];
+      if(!name) return;
+      var d=allData.find(function(x){ return x.name && x.name.trim()===name; });
+      if(d){
+        var fk=vehFamKey(d), team=(d.mteam||'').trim();
+        vehMeta[name]={type: fk?'family':(team&&team!=='-'?'team':'individual'), team:team, family_id:fk};
+      } else {
+        vehMeta[name]={type:'individual', team:'', family_id:''};
+      }
+    });
+  });
+}
+function vehSave(){
+  var btn=document.querySelector('.veh-btn-save');
+  if(!btn) return;
+  btn.textContent='저장 중...'; btn.disabled=true;
+  var seats=[];
+  [1,2].forEach(function(b){
+    vehSeatLayout.forEach(function(seatId){
+      var name=vehData[b][seatId]||'';
+      if(name){
+        var meta=vehMeta[name]||{};
+        seats.push({bus:b, seat:seatId, name:name, type:meta.type||'', team:meta.team||'', family_id:meta.family_id||''});
+      }
+    });
+  });
+  var pw=currentUser.name+':'+currentUser.phone;
+  fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:'data='+encodeURIComponent(JSON.stringify({action:'saveVehicleAssign', pw:pw, seats:seats}))
+  }).then(function(r){ return r.json(); })
+  .then(function(j){
+    if(j.result==='ok'){ vehHistory=[]; renderVeh(); vehShowToast('💾 구글시트 저장 완료!'); }
+    else vehShowToast('❌ 저장 실패: '+(j.message||'오류'));
+  }).catch(function(){ vehShowToast('❌ 네트워크 오류'); })
+  .finally(function(){ btn.textContent='💾 저장'; btn.disabled=false; });
+}
+
+// ── 드래그&드롭 좌석 교체 (마우스+터치, 숙소배치와 동일한 방식) ──
+function createVehGhost(){
+  var g=document.getElementById('vehGhost');
+  if(g) return g;
+  g=document.createElement('div'); g.id='vehGhost';
+  document.body.appendChild(g);
+  return g;
+}
+function bindVehDrag(){
+  if(!document.getElementById('vehGhost')) createVehGhost();
+  document.querySelectorAll('.veh-seat[data-name]').forEach(function(seat){
+    seat.addEventListener('mousedown', vehMouseDown);
+    seat.addEventListener('touchstart', vehTouchStart, {passive:true});
+  });
+}
+function vehMouseDown(e){
+  if(e.button!==0) return;
+  vehStartDrag(e.currentTarget, e.clientX, e.clientY);
+  document.addEventListener('mousemove', vehMouseMove);
+  document.addEventListener('mouseup', vehMouseUp);
+  e.preventDefault();
+}
+function vehMouseMove(e){ vehMoveDrag(e.clientX, e.clientY); }
+function vehMouseUp(e){
+  vehEndDrag(e.clientX, e.clientY);
+  document.removeEventListener('mousemove', vehMouseMove);
+  document.removeEventListener('mouseup', vehMouseUp);
+}
+var vehLongPressTimer=null, vehTouchStartX=0, vehTouchStartY=0, vehLongPressSeat=null;
+var VEH_LONG_PRESS_MS=350, VEH_MOVE_THRESHOLD=8;
+function vehTouchStart(e){
+  var t=e.touches[0];
+  vehTouchStartX=t.clientX; vehTouchStartY=t.clientY;
+  vehLongPressSeat=e.currentTarget;
+  vehLongPressSeat.classList.add('pressing');
+  vehLongPressTimer=setTimeout(function(){
+    vehLongPressTimer=null;
+    vehLongPressSeat.classList.remove('pressing');
+    if(navigator.vibrate) navigator.vibrate(30);
+    vehStartDrag(vehLongPressSeat, vehTouchStartX, vehTouchStartY);
+    document.addEventListener('touchmove', vehTouchMove, {passive:false});
+    document.addEventListener('touchend', vehTouchEnd);
+  }, VEH_LONG_PRESS_MS);
+  document.addEventListener('touchmove', vehTouchStartMove, {passive:true});
+  document.addEventListener('touchend', vehTouchStartEnd, {once:true});
+}
+function vehTouchStartMove(e){
+  if(!vehLongPressTimer) return;
+  var t=e.touches[0];
+  if(Math.abs(t.clientX-vehTouchStartX)>VEH_MOVE_THRESHOLD || Math.abs(t.clientY-vehTouchStartY)>VEH_MOVE_THRESHOLD){
+    clearTimeout(vehLongPressTimer); vehLongPressTimer=null;
+    if(vehLongPressSeat) vehLongPressSeat.classList.remove('pressing');
+    document.removeEventListener('touchmove', vehTouchStartMove);
+  }
+}
+function vehTouchStartEnd(){
+  clearTimeout(vehLongPressTimer); vehLongPressTimer=null;
+  if(vehLongPressSeat) vehLongPressSeat.classList.remove('pressing');
+  document.removeEventListener('touchmove', vehTouchStartMove);
+}
+function vehTouchMove(e){
+  if(!vehDragging) return;
+  vehMoveDrag(e.touches[0].clientX, e.touches[0].clientY);
+  e.preventDefault();
+}
+function vehTouchEnd(e){
+  var t=e.changedTouches[0];
+  vehEndDrag(t.clientX, t.clientY);
+  document.removeEventListener('touchmove', vehTouchMove);
+  document.removeEventListener('touchend', vehTouchEnd);
+  document.removeEventListener('touchmove', vehTouchStartMove);
+}
+function vehStartDrag(seatEl, x, y){
+  vehDragging={name:seatEl.dataset.name, fromBus:Number(seatEl.dataset.bus), fromSeat:seatEl.dataset.seat, el:seatEl};
+  seatEl.classList.add('dragging');
+  var g=createVehGhost();
+  g.textContent=seatEl.dataset.name;
+  g.style.display='block';
+  g.style.left=x+'px'; g.style.top=y+'px';
+}
+function vehMoveDrag(x,y){
+  if(!vehDragging) return;
+  var g=document.getElementById('vehGhost');
+  if(g){ g.style.left=x+'px'; g.style.top=y+'px'; g.style.display='none'; }
+  var el=document.elementFromPoint(x,y);
+  if(g) g.style.display='block';
+  var seat=el?el.closest('.veh-seat'):null;
+  if(vehOverSeat && vehOverSeat!==seat) vehOverSeat.classList.remove('drag-over');
+  if(seat && seat!==vehDragging.el){ seat.classList.add('drag-over'); vehOverSeat=seat; }
+  else vehOverSeat=null;
+}
+function vehEndDrag(x,y){
+  if(!vehDragging){ var g=document.getElementById('vehGhost'); if(g) g.style.display='none'; return; }
+  var g=document.getElementById('vehGhost'); if(g) g.style.display='none';
+  if(vehOverSeat) vehOverSeat.classList.remove('drag-over');
+  var el=document.elementFromPoint(x,y);
+  var targetSeat=el?el.closest('.veh-seat'):null;
+  vehDragging.el.classList.remove('dragging');
+  if(targetSeat && targetSeat!==vehDragging.el){
+    var toBus=Number(targetSeat.dataset.bus), toSeat=targetSeat.dataset.seat;
+    vehDoSwap(vehDragging.name, vehDragging.fromBus, vehDragging.fromSeat, toBus, toSeat);
+  }
+  vehDragging=null; vehOverSeat=null;
+}
+function vehDoSwap(name, fromBus, fromSeat, toBus, toSeat){
+  var targetName = vehData[toBus][toSeat] || '';
+  vehData[toBus][toSeat] = name;
+  vehData[fromBus][fromSeat] = targetName;
+  vehHistory.push({name:name, fromBus:fromBus, fromSeat:fromSeat, toBus:toBus, toSeat:toSeat, swappedName:targetName});
+  renderVeh();
+  vehShowToast(targetName ? ('🔀 '+name+' ↔ '+targetName+' 자리 교체') : ('✅ '+name+' → '+toBus+'호차 '+toSeat));
+}
+function vehUndo(){
+  if(!vehHistory.length) return;
+  var last=vehHistory.pop();
+  vehData[last.fromBus][last.fromSeat]=last.name;
+  vehData[last.toBus][last.toSeat]=last.swappedName||'';
+  renderVeh();
+  vehShowToast('↩ 되돌리기');
+}
+function vehReset(){
+  var ok=true;
+  try{ ok=confirm('모든 차량배치를 초기화하시겠습니까?'); }catch(e){ ok=true; }
+  if(!ok) return;
+  vehData={1:{},2:{}}; vehHistory=[]; vehMeta={};
+  renderVeh();
+  vehShowToast('🔄 초기화 완료');
+}
+
+// ── 엑셀 저장 ──
+function vehExportExcel(){
+  if(typeof XLSX==='undefined'){
+    var s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload=function(){ _doVehExcel(); };
+    s.onerror=function(){ alert('엑셀 라이브러리 로드 실패'); };
+    document.head.appendChild(s);
+  } else { _doVehExcel(); }
+}
+function _doVehExcel(){
+  var rows=[];
+  [1,2].forEach(function(b){
+    vehSeatLayout.forEach(function(seatId){
+      var name=vehData[b][seatId]||'';
+      var meta=vehMeta[name]||{};
+      rows.push({
+        '호차': b+'호차',
+        '좌석': seatId,
+        '이름': name,
+        '구분': meta.type==='family'?'가족':meta.type==='team'?'사역팀':(name?'개인':''),
+        '사역팀': meta.team||''
+      });
+    });
+  });
+  var ws=XLSX.utils.json_to_sheet(rows);
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '차량배치');
+  var now=new Date();
+  var stamp=now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'_'+String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
+  XLSX.writeFile(wb, 'MET2026_삼척차량배치_'+stamp+'.xlsx');
+  vehShowToast('📊 엑셀 저장 완료');
+}
+function vehShowToast(msg){
+  var el=document.getElementById('vehToast');
+  if(!el) return;
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(vehToastTimer);
+  vehToastTimer=setTimeout(function(){ el.classList.remove('show'); },2200);
 }
 
 </script>
