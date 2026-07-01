@@ -905,6 +905,7 @@ function tryLogin() {
     sessionStorage.setItem('admin_user', JSON.stringify({name:user.name, phone:user.phone}));
     if (user.role === 'super') sessionStorage.setItem('super_user', JSON.stringify({name:user.name, phone:user.phone}));
     saveLoginInfo(name, phone);
+    logAccess(user.name);
     showApp({ result:'ok', data: TEST_DATA, updated: '테스트 데이터' });
     return;
   }
@@ -924,6 +925,7 @@ function tryLogin() {
         sessionStorage.setItem('admin_user', JSON.stringify({name:user.name, phone:user.phone}));
         if (user.role === 'super') sessionStorage.setItem('super_user', JSON.stringify({name:user.name, phone:user.phone}));
         saveLoginInfo(name, phone);
+        logAccess(user.name);
         showApp(res);
       } else {
         setErr('오류: ' + (res.message || '알 수 없는 오류'));
@@ -937,6 +939,49 @@ function tryLogin() {
 }
 
 function setErr(msg){ document.getElementById('pwErr').textContent = msg; }
+
+// ── 디바이스 정보 추출 ──
+function getDeviceInfo() {
+  var ua = navigator.userAgent || '';
+  var os = 'Unknown';
+  if (/Windows/i.test(ua)) os = 'Windows';
+  else if (/Android/i.test(ua)) os = 'Android';
+  else if (/iPhone|iPad|iPod/i.test(ua)) os = 'iOS';
+  else if (/Macintosh|Mac OS/i.test(ua)) os = 'Mac';
+  else if (/Linux/i.test(ua)) os = 'Linux';
+
+  var type = 'PC';
+  if (/iPad|Tablet/i.test(ua)) type = '태블릿';
+  else if (/Mobi|Android.*Mobile|iPhone/i.test(ua)) type = '모바일';
+
+  var browser = 'Unknown';
+  if (/SamsungBrowser/i.test(ua)) browser = '삼성인터넷';
+  else if (/KAKAOTALK/i.test(ua)) browser = '카카오톡';
+  else if (/Instagram/i.test(ua)) browser = '인스타그램';
+  else if (/NAVER/i.test(ua)) browser = '네이버앱';
+  else if (/Edg\//i.test(ua)) browser = 'Edge';
+  else if (/Chrome/i.test(ua) && !/Chromium/i.test(ua)) browser = 'Chrome';
+  else if (/CriOS/i.test(ua)) browser = 'Chrome(iOS)';
+  else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari';
+  else if (/Firefox/i.test(ua)) browser = 'Firefox';
+
+  return type + '/' + os + '/' + browser;
+}
+
+// ── 접속현황 로깅 (구글시트 '접속현황' 탭에 기록) ──
+function logAccess(name) {
+  try {
+    fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'data=' + encodeURIComponent(JSON.stringify({
+        action : 'logAccess',
+        name   : name,
+        device : getDeviceInfo()
+      }))
+    }).catch(function(){});
+  } catch(e) {}
+}
 
 // ── 로그인 정보 저장/복원 (localStorage) ──
 function saveLoginInfo(name, phone) {
@@ -2789,6 +2834,7 @@ loadLoginInfo();
     // 테스트 모드: 전태룡으로 자동 로그인
     currentUser = USERS[1]; // 전태룡
     _pw = 'test';
+    logAccess(currentUser.name);
     showApp({ result:'ok', data: TEST_DATA, updated: '테스트 데이터' });
     return;
   }
@@ -2808,7 +2854,7 @@ loadLoginInfo();
         .then(function(r){ return r.json(); })
         .then(function(res){
           document.getElementById('pwSpinner').className = 'pw-spinner';
-          if (res.result === 'ok') { showApp(res); }
+          if (res.result === 'ok') { logAccess(user.name); showApp(res); }
           else { sessionStorage.removeItem('admin_user'); currentUser=null; _pw=''; }
         })
         .catch(function(){ document.getElementById('pwSpinner').className='pw-spinner'; });
