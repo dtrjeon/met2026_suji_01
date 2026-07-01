@@ -969,17 +969,31 @@ function getDeviceInfo() {
 }
 
 // ── 접속현황 로깅 (구글시트 '접속현황' 탭에 기록) ──
+function getIpLocation() {
+  return fetch('https://ipapi.co/json/', { cache: 'no-store' })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d || d.error) return '';
+      var parts = [d.city, d.region, d.country_name].filter(Boolean);
+      return parts.join(' ');
+    })
+    .catch(function(){ return ''; });
+}
+
 function logAccess(name) {
   try {
-    fetch(GAS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: 'data=' + encodeURIComponent(JSON.stringify({
-        action : 'logAccess',
-        name   : name,
-        device : getDeviceInfo()
-      }))
-    }).catch(function(){});
+    getIpLocation().then(function(location){
+      fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'data=' + encodeURIComponent(JSON.stringify({
+          action   : 'logAccess',
+          name     : name,
+          device   : getDeviceInfo(),
+          location : location
+        }))
+      }).catch(function(){});
+    });
   } catch(e) {}
 }
 
