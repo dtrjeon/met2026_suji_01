@@ -5437,11 +5437,32 @@ function vehGetBusRiders(){
     return true;
   });
 }
-function vehFamKey(d){
-  var fid=(d.family_id||'').trim();
-  if(fid) return fid;
-  if(d.type==='가족' && d.gno) return d.gno.trim();
-  return '';
+// 가족현황 탭과 동일한 기준으로 가족그룹을 판정 (family_id 우선, 없으면 배우자성명 상호매칭)
+function vehBuildFamilyMap(){
+  var map={}; // rno -> 가족키
+  allData.forEach(function(d){
+    var fid=(d.family_id||'').trim();
+    if(fid) map[d.rno]=fid;
+  });
+  var spouseGrouped={};
+  allData.forEach(function(d){
+    if((d.family_id||'').trim()) return; // family_id 있는 사람은 이미 처리됨
+    if(spouseGrouped[d.rno]) return;
+    var sp=(d.spouse||'').trim();
+    if(!sp) return;
+    var partner=allData.find(function(x){
+      return x.rno!==d.rno && (x.name||'')===sp && !(x.family_id||'').trim();
+    });
+    if(!partner) return;
+    if(spouseGrouped[partner.rno]) return;
+    var ids=[d.rno, partner.rno].sort();
+    var synFid='spouse-'+ids[0]+'_'+ids[1];
+    spouseGrouped[d.rno]=synFid;
+    spouseGrouped[partner.rno]=synFid;
+    map[d.rno]=synFid;
+    map[partner.rno]=synFid;
+  });
+  return map;
 }
 function vehGetAssignedNames(){
   var s={};
@@ -5461,11 +5482,12 @@ function vehAutoAssign(){
   vehData={1:{},2:{}}; vehMeta={}; vehHistory=[];
   var consumed={};
   var units=[];
+  var famKeyMap = vehBuildFamilyMap(); // rno -> 가족키 (가족현황 탭과 동일 기준)
 
-  // 1순위: 가족 그룹 (family_id 또는 가족형 gno 기준으로 묶음)
+  // 1순위: 가족 그룹 (가족현황 탭과 동일 기준: family_id 또는 배우자성명 상호매칭)
   var famMap={};
   riders.forEach(function(d){
-    var fk=vehFamKey(d);
+    var fk=famKeyMap[d.rno]||'';
     if(fk){ (famMap[fk]=famMap[fk]||[]).push(d); }
   });
   Object.keys(famMap).forEach(function(fk){
@@ -5499,7 +5521,7 @@ function vehAutoAssign(){
   // 메타 기록 (좌석 색상 표시용)
   units.forEach(function(u){
     u.members.forEach(function(d){
-      vehMeta[d.name.trim()] = {type:u.type, team:(d.mteam||'').trim(), family_id:vehFamKey(d)};
+      vehMeta[d.name.trim()] = {type:u.type, team:(d.mteam||'').trim(), family_id:famKeyMap[d.rno]||''};
     });
   });
 
