@@ -2628,7 +2628,7 @@ function confirmDeleteDup() {
   // ── 납입 정보 복사 먼저 실행 (있을 경우) ──
   function doDelete() {
     var ps = 'data='+encodeURIComponent(JSON.stringify({
-      action: 'deleteRows', rnos: rnos, pw: _pw
+      action: 'deleteRows', rnos: rnos, pw: _pw, editor: (currentUser&&currentUser.name)||''
     }));
     fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:ps})
       .then(function(r){ return r.json(); })
@@ -2805,7 +2805,7 @@ function confirmDeleteMissSearch() {
   var btn = document.getElementById('missSearchDelBtn');
   if(btn){ btn.disabled=true; btn.textContent='삭제 중...'; }
   var ps = 'data='+encodeURIComponent(JSON.stringify({
-    action: 'deleteRows', rnos: rnos, pw: _pw
+    action: 'deleteRows', rnos: rnos, pw: _pw, editor: (currentUser&&currentUser.name)||''
   }));
   fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:ps})
     .then(function(r){ return r.json(); })

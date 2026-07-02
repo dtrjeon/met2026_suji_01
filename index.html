@@ -1941,7 +1941,11 @@ function buildCard(m,i){
       return '<div class="rb"><input type="radio" id="t'+m.uid+'_'+t+'" name="t'+m.uid+'" value="'+t+'"'+(m.trans===t?' checked':'')+' onchange="onTransChange('+m.uid+',\''+t+'\')">'
         +'<label for="t'+m.uid+'_'+t+'">'+t+'</label></div>';
     }).join('')+'</div>'
-    +(m.trans==='동승'?'<div style="margin-top:8px;"><div class="lbl" style="font-size:11px;margin-bottom:4px;">운전자 이름 <span class="req">*</span></div><input type="text" id="m'+m.uid+'_ride" placeholder="운전자 이름" value="'+(m.ride||'')+'"/></div>':'');
+    +(m.trans==='동승'
+       ? '<div style="margin-top:8px;"><div class="lbl" style="font-size:11px;margin-bottom:4px;">운전자 이름 <span class="req">*</span></div><input type="text" id="m'+m.uid+'_ride" placeholder="운전자 이름" value="'+(m.ride||'')+'"/></div>'
+       : m.trans==='자차'
+       ? '<div style="margin-top:8px;"><div class="lbl" style="font-size:11px;margin-bottom:4px;">동승자 이름 <span class="req">*</span></div><input type="text" id="m'+m.uid+'_ride" placeholder="* 동승자 등록해주세요" value="'+(m.ride||'')+'"/></div>'
+       : '');
 
   return '<div class="card" id="card'+m.uid+'">'
     +'<button type="button" class="chd" onclick="onToggleCard('+m.uid+')">'
@@ -2098,7 +2102,7 @@ mdata.forEach(function(m,i){
     +cfmRow('참여일정',m.sched)
     +cfmRow('차량',m.trans)
     +cfmRow('숙소',m.accom)
-    +(m.ride?cfmRow('동승운전자',m.ride):'')
+    +(m.ride?cfmRow(m.trans==='자차'?'동승자':'동승운전자',m.ride):'')
     +(m.spouse?cfmRow('배우자성명',m.spouse):'')
     +(m.note?'<div class="cfm-row full"><div class="cfm-key">비고</div><div class="cfm-val">'+m.note+'</div></div>':'')
     +'</div></div></div>';
