@@ -1644,6 +1644,16 @@ function renderCard(d, i, total) {
 function openDetail(idx) {
   if (!canPopup()) return; // 팝업 권한 없으면 차단
   var d = filtered[idx]; if(!d) return;
+  renderDetailFor(d);
+}
+// 확인필요 탭 등에서 rno로 직접 상세보기를 열 때 사용 (슈퍼바이저 전용)
+function openDetailByRno(rno){
+  if(getUserRole()!=='super'){ return; } // 슈퍼바이저만 허용
+  var d = allData.find(function(x){ return x.rno===rno; });
+  if(!d){ alert('해당 관리번호를 찾을 수 없습니다: '+rno); return; }
+  renderDetailFor(d);
+}
+function renderDetailFor(d) {
   _currentDetailRno = d.rno;
   document.getElementById('detailName').textContent = d.name + (d.gender?' ('+d.gender+')':'') + (d.ids?' · '+d.ids:'');
   document.getElementById('detailRno').textContent  = d.rno + (d.gno&&d.gno!==d.rno?'  /  그룹: '+d.gno:'');
@@ -2336,6 +2346,14 @@ function renderMissing() {
       +'background:rgba(32,80,200,0.08);border:1px solid rgba(32,80,200,0.25);border-radius:6px;cursor:pointer;">✏️ 수정</button>';
   }
 
+  // 확인필요 탭 전용 상세보기 버튼 — 슈퍼바이저만 노출
+  function detailBtn(rno){
+    if(getUserRole()!=='super') return '';
+    return '<button onclick="event.stopPropagation();openDetailByRno(\''+esc(rno)+'\');" '
+      +'style="padding:4px 10px;font-size:11px;font-weight:700;color:#166534;'
+      +'background:rgba(22,101,52,0.08);border:1px solid rgba(22,101,52,0.25);border-radius:6px;cursor:pointer;">👁 상세</button>';
+  }
+
   function makeCards(list) {
     if(!list.length) return '<div class="miss-empty">✅ 누락 없음</div>';
     return list.map(function(d, i){
@@ -2455,6 +2473,7 @@ function renderMissing() {
           +'</div>'
           +'<div style="font-size:10px;color:rgba(100,110,150,0.6);margin-top:3px;">'+esc(d.rno)+'</div>'
           +'</div>'
+          +detailBtn(d.rno)
           +'</div>';
       });
       dupHtml += '</div>';
@@ -2522,7 +2541,7 @@ function renderMissing() {
           +'<span style="font-weight:700;color:'+stColor(st)+';">'+stLabel(st)+(payDate?' ('+payDate+')':'')+'</span>'
           +(d.phone?'<span style="font-size:10px;color:rgba(80,90,130,0.7);">📞 '+esc(d.phone)+'</span>':'')
           +'</div><div style="font-size:10px;color:rgba(100,110,150,0.6);margin-top:3px;">'+esc(d.rno)+'</div>'
-          +'</div>'+editBtn(d.rno)+'</div>';
+          +'</div>'+detailBtn(d.rno)+editBtn(d.rno)+'</div>';
       });
       payDupHtml += '</div>';
     });
@@ -4523,7 +4542,7 @@ function accomIsRegistered(name){
 function renderAccom(){
   var panel=document.getElementById('accomPanel');
   if(!panel) return;
-  if(!currentUser||(currentUser.name!=='전태룡'&&currentUser.name!=='유원종')){
+  if(!currentUser||(currentUser.name!=='전태룡'&&currentUser.name!=='유원종'&&currentUser.name!=='고영수')){
     panel.innerHTML='<div style="padding:40px;text-align:center;color:#DC2626;font-weight:700;font-size:14px;">7월23일에 최종본 공유하도록 하겠습니다.</div>';
     return;
   }
@@ -5408,7 +5427,7 @@ function accomShowToast(msg){
 // 좌석열: A/B열(왼쪽 2인), 통로, C/D열(오른쪽 2인) — 가족은 A·B 또는 C·D로 묶어서 배치
 // ============================================================
 var VEH_BUS_CAP = 45;
-var VEH_VERSION = 'v1.9 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
+var VEH_VERSION = 'v2.0 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
 function vehGenSeatLayout(){
   var seats=[];
   for(var r=1;r<=10;r++){
@@ -5670,8 +5689,8 @@ function vehRowHtml(busNum, r, borders){
 function renderVeh(){
   var panel=document.getElementById('vehPanel');
   if(!panel) return;
-  if(!currentUser||(currentUser.name!=='전태룡'&&currentUser.name!=='유원종')){
-    panel.innerHTML='<div style="padding:40px;text-align:center;color:#DC2626;font-weight:700;font-size:14px;">⛔ 차량배치 탭은 전태룡·유원종만 접근 가능합니다.</div>';
+  if(!currentUser||(currentUser.name!=='전태룡'&&currentUser.name!=='유원종'&&currentUser.name!=='고영수')){
+    panel.innerHTML='<div style="padding:40px;text-align:center;color:#DC2626;font-weight:700;font-size:14px;">⛔ 차량배치 탭은 전태룡·유원종·고영수만 접근 가능합니다.</div>';
     return;
   }
   if(!vehLoaded){
