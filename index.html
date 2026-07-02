@@ -1363,6 +1363,21 @@ function doLookup(){
 
 function esc2(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+// ── 접속로그 기록: '이전 신청 내용 불러오기/수정' 시점에만 호출 ──
+function logIndexAccess(name, mteam){
+  try{
+    fetch(GSURL,{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:'data='+encodeURIComponent(JSON.stringify({
+        action:'logIndexAccess',
+        name:name||'',
+        mteam:mteam||''
+      }))
+    }).catch(function(){});
+  }catch(e){}
+}
+
 function selfDelete(i, e) {
   e.stopPropagation();
   var res = document.getElementById('lkupResult');
@@ -1451,6 +1466,9 @@ function applyLookup(i){
   m.accom  = d.accom  || '단체(교회준비)';
   m.pastor = pastor;
   m._loadedRno = d.rno;
+
+  // 접속로그 기록 (이전신청 불러오기/수정 시점) — 실패해도 화면엔 영향 없음
+  try{ logIndexAccess(d.name, d.mteam); }catch(e){}
 
   // ④ 팝업 먼저 닫기 후 렌더링
   closeLookup();
