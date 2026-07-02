@@ -577,6 +577,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .veh-btn-group{background:#7C3AED;}
 .veh-btn-group.active{background:#B91C1C;}
 .veh-btn:disabled{opacity:.5;cursor:default;}
+.veh-version{align-self:center;font-size:9px;color:#94A3B8;font-weight:700;margin-left:2px;}
 .veh-summary{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
 .veh-sum-chip{padding:6px 12px;border-radius:14px;font-size:11px;font-weight:700;background:#EFF6FF;color:#1E3A8A;border:1px solid #DBEAFE;}
 .veh-sum-chip.warn{background:#FEF2F2;color:#B91C1C;border-color:#FECACA;}
@@ -585,9 +586,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .bus-title-cnt{font-size:11px;font-weight:700;color:#64748B;}
 .bus-front{display:flex;justify-content:flex-end;padding:0 4px 6px;font-size:9px;color:#94A3B8;font-weight:700;}
 .bus-grid{display:flex;flex-direction:column;gap:6px;}
-.bus-row{display:flex;align-items:stretch;gap:8px;}
-.veh-pair{flex:1;min-width:0;display:flex;gap:4px;border-radius:8px;padding:2px;border:2px solid transparent;}
-.veh-pair.fam-grouped{border:2px dashed #1E3A8A;background:rgba(30,58,138,0.04);}
+.bus-row{display:flex;align-items:stretch;gap:4px;}
 .bus-back-row{display:flex;gap:5px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);}
 .bus-back-row .veh-seat{flex:1;min-width:auto;}
 .veh-seat{aspect-ratio:1/0.95;flex:1;min-width:0;border-radius:7px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;text-align:left;padding:3px 4px;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:pan-y;border:1px solid transparent;overflow:hidden;transition:transform .1s,box-shadow .1s,opacity .15s;}
@@ -5407,6 +5406,7 @@ function accomShowToast(msg){
 // 좌석열: A/B열(왼쪽 2인), 통로, C/D열(오른쪽 2인) — 가족은 A·B 또는 C·D로 묶어서 배치
 // ============================================================
 var VEH_BUS_CAP = 45;
+var VEH_VERSION = 'v1.8 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
 function vehGenSeatLayout(){
   var seats=[];
   for(var r=1;r<=10;r++){
@@ -5527,31 +5527,42 @@ function vehAutoAssign(){
 
   // LPT(Longest Processing Time) 균등배분: 큰 단위부터 더 적은 쪽 버스에 배정
   units.sort(function(a,b){ return b.members.length - a.members.length; });
-  var queue={1:[], 2:[]}, used={1:0, 2:0};
+  var queue={1:[], 2:[]}, used={1:0, 2:0}; // queue: [{type, members:[...]}] 청크 배열 (좌석채움 단계의 가족 정렬 보정용)
   units.forEach(function(u){
     var size=u.members.length;
     var pref = used[1]<=used[2] ? 1 : 2;
     var other = pref===1 ? 2 : 1;
     if(VEH_BUS_CAP-used[pref] >= size){
-      queue[pref]=queue[pref].concat(u.members); used[pref]+=size;
+      queue[pref].push({type:u.type, members:u.members}); used[pref]+=size;
     } else if(VEH_BUS_CAP-used[other] >= size){
-      queue[other]=queue[other].concat(u.members); used[other]+=size;
+      queue[other].push({type:u.type, members:u.members}); used[other]+=size;
     } else {
       // 두 버스 모두 통째로 못 들어가면 부득이하게 분할 배치
       var remainPref=VEH_BUS_CAP-used[pref];
       var part1=u.members.slice(0,remainPref), part2=u.members.slice(remainPref);
-      queue[pref]=queue[pref].concat(part1); used[pref]+=part1.length;
+      if(part1.length){ queue[pref].push({type:u.type, members:part1}); used[pref]+=part1.length; }
       var remainOther=VEH_BUS_CAP-used[other];
       var part2a=part2.slice(0,remainOther);
-      queue[other]=queue[other].concat(part2a); used[other]+=part2a.length;
+      if(part2a.length){ queue[other].push({type:u.type, members:part2a}); used[other]+=part2a.length; }
       // 그래도 남는 인원(총 90명 초과)은 미배정으로 남음
     }
   });
 
+  // 좌석 채우기: 가족 청크는 항상 좌석쌍(A/C) 경계에서 시작하도록 보정 → 홀수 인원 가족도 같은 줄에 모여 앉음
   [1,2].forEach(function(busNum){
-    var list=queue[busNum];
-    vehSeatLayout.forEach(function(seatId,i){
-      vehData[busNum][seatId] = list[i] ? list[i].name.trim() : '';
+    var cursor=0, backCursor=40; // 0~39: 앞좌석(A/B/C/D×10줄), 40~44: 뒷좌석
+    queue[busNum].forEach(function(chunk){
+      var members=chunk.members.slice();
+      if(chunk.type==='family' && cursor<40 && (cursor%4===1 || cursor%4===3)){
+        cursor++; // B·D 위치(짝 중간)면 한 칸 건너뛰어 A·C 경계로 정렬
+      }
+      while(members.length>0){
+        var seatId;
+        if(cursor<40){ seatId=vehSeatLayout[cursor]; cursor++; }
+        else if(backCursor<45){ seatId=vehSeatLayout[backCursor]; backCursor++; }
+        else break; // 좌석 부족 → 남은 인원은 미배정으로 남음
+        vehData[busNum][seatId]=members.shift().name.trim();
+      }
     });
   });
 
@@ -5563,14 +5574,28 @@ function vehAutoAssign(){
   }
 }
 
-function vehSeatHtml(busNum, seatId){
+function vehSeatHtml(busNum, seatId, borderSpec, extraStyle){
   var name=vehData[busNum][seatId]||'';
-  if(!name) return '<div class="veh-seat empty" data-bus="'+busNum+'" data-seat="'+seatId+'">·</div>';
+  extraStyle = extraStyle || '';
+  if(!name) return '<div class="veh-seat empty" style="'+extraStyle+'" data-bus="'+busNum+'" data-seat="'+seatId+'">·</div>';
   var meta=vehMeta[name]||{type:'individual'};
   var teamAbbr = vehTeamAbbrev(meta.team);
   var teamHtml = teamAbbr ? '<span class="veh-seat-team">'+teamAbbr+'</span>' : '';
   var isSel = vehSelectedSeats.some(function(s){ return s.bus===busNum && s.seat===seatId; });
-  return '<div class="veh-seat '+meta.type+(isSel?' selected':'')+'" data-bus="'+busNum+'" data-seat="'+seatId+'" data-name="'+name+'" title="'+name+(meta.team?' · '+meta.team:'')+'">'+teamHtml+'<span class="veh-seat-name">'+name+'</span></div>';
+  var borderCss='';
+  if(borderSpec){
+    borderCss = 'border-top:'   +(borderSpec.top   ?'2px dashed #1E3A8A':'2px solid transparent')+';'
+              + 'border-right:' +(borderSpec.right ?'2px dashed #1E3A8A':'2px solid transparent')+';'
+              + 'border-bottom:'+(borderSpec.bottom?'2px dashed #1E3A8A':'2px solid transparent')+';'
+              + 'border-left:'  +(borderSpec.left  ?'2px dashed #1E3A8A':'2px solid transparent')+';';
+  }
+  var childTag = vehIsChild(name) ? ' (자)' : '';
+  return '<div class="veh-seat '+meta.type+(isSel?' selected':'')+'" style="'+extraStyle+borderCss+'" data-bus="'+busNum+'" data-seat="'+seatId+'" data-name="'+name+'" title="'+name+childTag+(meta.team?' · '+meta.team:'')+'">'+teamHtml+'<span class="veh-seat-name">'+name+childTag+'</span></div>';
+}
+// 가족관계가 '자녀'인지 확인 (명단 데이터의 가족관계 필드 기준)
+function vehIsChild(name){
+  var d=allData.find(function(x){ return x.name && x.name.trim()===name; });
+  return !!(d && (d.rel||'').trim()==='자녀');
 }
 // 좌석 박스가 작아서 사역팀명을 줄여서 표시 (전체 이름은 title 툴팁으로 확인)
 function vehTeamAbbrev(team){
@@ -5578,18 +5603,44 @@ function vehTeamAbbrev(team){
   var t=team.replace(/팀$/,'');
   return t.length>4 ? t.slice(0,4) : t;
 }
-// A·B열 한 쌍 / C·D열 한 쌍을 렌더링. 같은 family_id를 가진 둘이 함께 앉아 있으면 파선 외곽선으로 묶어 표시
-function vehPairHtml(busNum, seatId1, seatId2){
-  var n1=vehData[busNum][seatId1]||'', n2=vehData[busNum][seatId2]||'';
-  var m1=n1?vehMeta[n1]:null, m2=n2?vehMeta[n2]:null;
-  var grouped = !!(m1 && m2 && m1.family_id && m2.family_id && m1.family_id===m2.family_id);
-  return '<div class="veh-pair'+(grouped?' fam-grouped':'')+'">'+vehSeatHtml(busNum,seatId1)+vehSeatHtml(busNum,seatId2)+'</div>';
+// 버스 한 대의 앞좌석(10줄×A/B/C/D)에서 같은 family_id를 가진 좌석끼리 상하좌우로 연결된 부분의
+// 테두리를 계산. 맞닿은 변(이웃도 같은 가족)은 테두리 없음, 그 외 바깥쪽 변만 파선으로 표시 →
+// 가로(A·B, C·D)뿐 아니라 세로(윗줄·아랫줄)로도 자연스럽게 하나의 파선 박스처럼 이어져 보임.
+function vehComputeBorders(busNum){
+  var famOf=function(sid){
+    var n=vehData[busNum][sid]||'';
+    if(!n) return null;
+    var m=vehMeta[n];
+    return (m&&m.family_id) ? m.family_id : null;
+  };
+  var borders={};
+  for(var r=1;r<=10;r++){
+    ['A','B','C','D'].forEach(function(col){
+      var sid='R'+r+col;
+      var fam=famOf(sid);
+      if(!fam) return; // 가족 아님 → 테두리 없음
+      var leftCol  = (col==='B')?'A':(col==='D')?'C':null;   // 통로(B-C)는 좌우 연결 대상에서 제외
+      var rightCol = (col==='A')?'B':(col==='C')?'D':null;
+      var leftMatch  = leftCol  && famOf('R'+r+leftCol)===fam;
+      var rightMatch = rightCol && famOf('R'+r+rightCol)===fam;
+      var upMatch    = r>1  && famOf('R'+(r-1)+col)===fam;
+      var downMatch  = r<10 && famOf('R'+(r+1)+col)===fam;
+      if(!leftMatch && !rightMatch && !upMatch && !downMatch) return; // 연결된 이웃 없음 → 테두리 없음
+      borders[sid] = { top:!upMatch, right:!rightMatch, bottom:!downMatch, left:!leftMatch };
+    });
+  }
+  return borders;
 }
-function vehRowHtml(busNum, r){
-  return '<div class="bus-row">'
-    + vehPairHtml(busNum, 'R'+r+'A', 'R'+r+'B')
-    + vehPairHtml(busNum, 'R'+r+'C', 'R'+r+'D')
-    + '</div>';
+function vehRowHtml(busNum, r, borders){
+  var cols=['A','B','C','D'];
+  var h='<div class="bus-row">';
+  cols.forEach(function(col){
+    var sid='R'+r+col;
+    var extraStyle=(col==='B')?'margin-right:8px;':'';
+    h += vehSeatHtml(busNum, sid, borders[sid], extraStyle);
+  });
+  h+='</div>';
+  return h;
 }
 
 function renderVeh(){
@@ -5620,6 +5671,7 @@ function renderVeh(){
   h+='<button class="veh-btn veh-btn-group'+(vehGroupMode?' active':'')+'" onclick="vehToggleGroupMode()">'+(vehGroupMode?'✖ 선택모드 종료':'👨\u200d👩\u200d👧 가족묶기')+'</button>';
   h+='<button class="veh-btn veh-btn-save" onclick="vehSave()">💾 저장</button>';
   h+='<button class="veh-btn veh-btn-excel" onclick="vehExportExcel()">📥 엑셀</button>';
+  h+='<span class="veh-version">'+VEH_VERSION+'</span>';
   h+='</div>';
 
   h+='<div class="veh-summary">';
@@ -5641,11 +5693,12 @@ function renderVeh(){
 
   [1,2].forEach(function(busNum){
     var cnt=busNum===1?cnt1:cnt2;
+    var borders=vehComputeBorders(busNum);
     h+='<div class="bus-block">';
     h+='<div class="bus-title"><span>🚌 '+busNum+'호차</span><span class="bus-title-cnt">'+cnt+' / '+VEH_BUS_CAP+'명</span></div>';
     h+='<div class="bus-front">🚪 출입구 · 🧑\u200d✈️ 기사석</div>';
     h+='<div class="bus-grid">';
-    for(var r=1;r<=10;r++){ h+=vehRowHtml(busNum, r); }
+    for(var r=1;r<=10;r++){ h+=vehRowHtml(busNum, r, borders); }
     h+='</div>';
     h+='<div class="bus-back-row">';
     vehSeatLayout.slice(40).forEach(function(seatId){ h+=vehSeatHtml(busNum, seatId); });
@@ -5766,6 +5819,7 @@ function vehClearSelection(){
 }
 function vehConfirmGroup(){
   if(vehSelectedSeats.length<2){ vehShowToast('⚠️ 2명 이상 선택해주세요.'); return; }
+  if(vehSelectedSeats.length>4){ vehShowToast('⚠️ 한 번에 최대 4명까지 묶을 수 있습니다.'); return; }
   var gid='MG-'+Date.now();
   var names=[];
   vehSelectedSeats.forEach(function(s){
@@ -5774,9 +5828,22 @@ function vehConfirmGroup(){
     vehMeta[s.name].type='family';
     names.push(s.name);
   });
+  var connected = vehIsGroupConnected(vehSelectedSeats.slice());
   vehSelectedSeats=[];
   renderVeh();
-  vehShowToast('👨\u200d👩\u200d👧 '+names.join(', ')+' 가족으로 묶었습니다.');
+  if(connected){
+    vehShowToast('👨\u200d👩\u200d👧 '+names.join(', ')+' 가족으로 묶었습니다.');
+  } else {
+    vehShowToast('👨\u200d👩\u200d👧 '+names.join(', ')+' 가족으로 묶었습니다. (자리가 떨어져 있어 파선은 표시되지 않아요 — 드래그로 붙여 앉히면 파선이 나타납니다)');
+  }
+}
+// 선택된 인원이 상하좌우로 실제 서로 연결되어 있는지(파선이 보일지) 확인
+function vehIsGroupConnected(selected){
+  if(selected.length<2) return false;
+  var bus=selected[0].bus;
+  if(!selected.every(function(s){ return s.bus===bus; })) return false; // 서로 다른 버스면 연결 불가
+  var borders=vehComputeBorders(bus);
+  return selected.every(function(s){ return !!borders[s.seat]; });
 }
 function vehDissolveGroup(){
   if(!vehSelectedSeats.length){ vehShowToast('⚠️ 해체할 좌석을 선택해주세요.'); return; }
