@@ -2387,17 +2387,18 @@ function renderMissing() {
     .sort();
 
   // 두 항목 간 다른 필드 찾기
+  var DUP_CHECK_KEYS = ['moksang','mteam','sched','trans','accom','village','pastor'];
+  var DUP_CHECK_LABELS = {'moksang':'목장','mteam':'사역팀','sched':'일정','trans':'차량','accom':'숙소','village':'마을','pastor':'목자'};
   function diffFields(members) {
-    var keys = ['moksang','mteam','sched','trans','accom','village','pastor'];
-    var labels = {'moksang':'목장','mteam':'사역팀','sched':'일정','trans':'차량','accom':'숙소','village':'마을','pastor':'목자'};
     var diffs = [];
-    keys.forEach(function(k){
+    DUP_CHECK_KEYS.forEach(function(k){
       var vals = members.map(function(m){ return m[k]||'-'; });
       var unique = vals.filter(function(v,i,a){ return a.indexOf(v)===i; });
-      if(unique.length > 1) diffs.push(labels[k]);
+      if(unique.length > 1) diffs.push(DUP_CHECK_LABELS[k]);
     });
     return diffs;
   }
+  var DUP_CHECK_ALL_LABEL = DUP_CHECK_KEYS.map(function(k){ return DUP_CHECK_LABELS[k]; }).join('·');
 
   var dupHtml = '';
   if(dupGroups.length === 0){
@@ -2414,7 +2415,7 @@ function renderMissing() {
         +' <span style="font-size:10px;background:rgba(180,80,20,0.12);color:#8a3800;border:1px solid rgba(180,80,20,0.2);border-radius:8px;padding:1px 7px;">'+members.length+'건</span>'
         +(diffs.length
           ? ' <span style="font-size:10px;color:rgba(80,90,130,0.6);font-weight:400;">차이: '+diffs.join(' · ')+'</span>'
-          : ' <span style="font-size:10px;color:rgba(150,50,50,0.7);font-weight:400;">⚠️ 완전 중복</span>')
+          : ' <span style="font-size:10px;color:rgba(150,50,50,0.7);font-weight:400;">⚠️ 완전 중복 ('+DUP_CHECK_ALL_LABEL+' 모두 동일)</span>')
         +'</div>';
 
       members.forEach(function(d){
@@ -2440,7 +2441,7 @@ function renderMissing() {
         diffVals.forEach(function(df){
           summaryParts.push(
             '<span style="background:rgba(180,80,20,0.1);color:#8a3800;border:1px solid rgba(180,80,20,0.2);'
-            +'border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;">'+esc(df.val)+'</span>'
+            +'border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;">'+esc(df.label)+': '+esc(df.val)+'</span>'
           );
         });
 
