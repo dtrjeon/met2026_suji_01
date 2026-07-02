@@ -5408,7 +5408,7 @@ function accomShowToast(msg){
 // 좌석열: A/B열(왼쪽 2인), 통로, C/D열(오른쪽 2인) — 가족은 A·B 또는 C·D로 묶어서 배치
 // ============================================================
 var VEH_BUS_CAP = 45;
-var VEH_VERSION = 'v1.5 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
+var VEH_VERSION = 'v1.6 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
 function vehGenSeatLayout(){
   var seats=[];
   for(var r=1;r<=10;r++){
@@ -5816,6 +5816,8 @@ function vehConfirmGroup(){
 function vehTryRelocateGroup(selected){
   var n=selected.length;
   var starts = (n===2) ? [0,2] : [0]; // 2명: A·B 또는 C·D / 3~4명: A열부터
+
+  // 1순위: 완전히 빈 자리(또는 본인들이 이미 앉은 자리)를 찾아 이동
   for(var bus=1; bus<=2; bus++){
     for(var r=1; r<=10; r++){
       for(var si=0; si<starts.length; si++){
@@ -5833,6 +5835,37 @@ function vehTryRelocateGroup(selected){
           selected.forEach(function(s,idx){ vehData[bus][ids[idx]] = s.name; });
           return true;
         }
+      }
+    }
+  }
+
+  // 2순위: 빈 자리가 없으면 — 다른 사람이 앉아있는 자리라도 서로 자리를 맞바꿔서 붙여 앉힘
+  for(var bus2=1; bus2<=2; bus2++){
+    for(var r2=1; r2<=10; r2++){
+      for(var si2=0; si2<starts.length; si2++){
+        var start2=starts[si2];
+        if(start2+n>4) continue;
+        var ids2=[];
+        for(var k2=0;k2<n;k2++) ids2.push('R'+r2+String.fromCharCode(65+start2+k2));
+        // 선택된 인원 본인의 현재 자리와 겹치지 않는 후보만 사용(단순하고 안전한 스왑을 위해)
+        var overlapsSelf = ids2.some(function(sid){
+          return selected.some(function(s){ return s.bus===bus2 && s.seat===sid; });
+        });
+        if(overlapsSelf) continue;
+
+        var displaced = ids2.map(function(sid){ return {seat:sid, name:vehData[bus2][sid]||''}; })
+                             .filter(function(d){ return d.name; });
+        // 원래 자리들(selected가 비우게 될 자리) 확보
+        var originals = selected.map(function(s){ return {bus:s.bus, seat:s.seat}; });
+
+        // 선택 인원을 원래 자리에서 비우고, target 자리도 비운 뒤 재배치
+        selected.forEach(function(s){ vehData[s.bus][s.seat]=''; });
+        ids2.forEach(function(sid){ vehData[bus2][sid]=''; });
+        selected.forEach(function(s,idx){ vehData[bus2][ids2[idx]] = s.name; });
+        displaced.forEach(function(d, idx){
+          if(originals[idx]) vehData[originals[idx].bus][originals[idx].seat] = d.name;
+        });
+        return true;
       }
     }
   }
