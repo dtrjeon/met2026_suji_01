@@ -1336,6 +1336,9 @@ function doLookup(){
       res.innerHTML='<div class="lkup-msg">등록된 신청서가 없습니다.<br><small style="color:rgba(120,130,160,0.5);">이름·식별번호를 다시 확인해주세요</small></div>';
       return;
     }
+    // 접속로그 기록: 조회 성공 시 결과 건마다 이름/사역팀 기록
+    data.data.forEach(function(d){ try{ logIndexAccess(d.name, d.mteam); }catch(e){} });
+
     var html='';
     data.data.forEach(function(d,i){
       html+='<div class="lkup-card" id="lkupc'+i+'">'
@@ -1466,9 +1469,6 @@ function applyLookup(i){
   m.accom  = d.accom  || '단체(교회준비)';
   m.pastor = pastor;
   m._loadedRno = d.rno;
-
-  // 접속로그 기록 (이전신청 불러오기/수정 시점) — 실패해도 화면엔 영향 없음
-  try{ logIndexAccess(d.name, d.mteam); }catch(e){}
 
   // ④ 팝업 먼저 닫기 후 렌더링
   closeLookup();
