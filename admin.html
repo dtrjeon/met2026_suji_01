@@ -584,6 +584,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .bus-block{background:#fff;border-radius:12px;box-shadow:var(--shadow);padding:12px;margin-bottom:14px;}
 .bus-title{font-size:13px;font-weight:800;color:#1E3A8A;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
 .bus-title-cnt{font-size:11px;font-weight:700;color:#64748B;}
+.bus-gender-stats{font-size:10px;color:#64748B;font-weight:600;margin-bottom:6px;padding:4px 8px;background:#F8FAFC;border-radius:6px;}
 .bus-front{display:flex;justify-content:flex-end;padding:0 4px 6px;font-size:9px;color:#94A3B8;font-weight:700;}
 .bus-grid{display:flex;flex-direction:column;gap:6px;}
 .bus-row{display:flex;align-items:stretch;gap:4px;}
@@ -2638,7 +2639,7 @@ function confirmDeleteDup() {
           rnos.forEach(function(rno){ delete payData[rno]; });
           alert('✅ '+data.deleted+'건이 삭제되었습니다.'+(payMigrations.length?' (납입 정보 복사 완료)':''));
           dupSelected={};
-          loadData();
+          loadData('miss');
         } else {
           alert('❌ 삭제 실패: '+(data.message||''));
           if(btn){ btn.disabled=false; btn.textContent='선택 항목 삭제'; }
@@ -2817,7 +2818,7 @@ function confirmDeleteMissSearch() {
         document.getElementById('missSearchResults').innerHTML = '';
         document.getElementById('missSearchClr').style.display = 'none';
         document.getElementById('missPanel').style.display = '';
-        loadData();
+        loadData('miss');
       } else {
         alert('❌ 삭제 실패: '+(data.message||''));
         if(btn){ btn.disabled=false; btn.textContent='선택 항목 삭제'; }
@@ -5407,7 +5408,7 @@ function accomShowToast(msg){
 // 좌석열: A/B열(왼쪽 2인), 통로, C/D열(오른쪽 2인) — 가족은 A·B 또는 C·D로 묶어서 배치
 // ============================================================
 var VEH_BUS_CAP = 45;
-var VEH_VERSION = 'v1.8 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
+var VEH_VERSION = 'v1.9 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
 function vehGenSeatLayout(){
   var seats=[];
   for(var r=1;r<=10;r++){
@@ -5473,6 +5474,20 @@ function vehGetAssignedNames(){
     });
   });
   return s;
+}
+// 특정 버스에 탑승한 인원의 성별/자녀 수 집계
+function vehBusGenderStats(busNum){
+  var male=0, female=0, child=0, total=0;
+  Object.keys(vehData[busNum]).forEach(function(seat){
+    var name=vehData[busNum][seat];
+    if(!name) return;
+    total++;
+    var tags=vehPersonTags(name);
+    if(tags.gender==='남') male++;
+    else if(tags.gender==='여') female++;
+    if(tags.isChild) child++;
+  });
+  return {total:total, male:male, female:female, child:child};
 }
 
 function vehAutoAssign(){
@@ -5590,14 +5605,22 @@ function vehSeatHtml(busNum, seatId, borderSpec, extraStyle){
               + 'border-bottom:'+(borderSpec.bottom?'2px dashed #1E3A8A':'2px solid transparent')+';'
               + 'border-left:'  +(borderSpec.left  ?'2px dashed #1E3A8A':'2px solid transparent')+';';
   }
-  var childTag = vehIsChild(name) ? ' (자)' : '';
-  return '<div class="veh-seat '+meta.type+(isSel?' selected':'')+'" style="'+extraStyle+borderCss+'" data-bus="'+busNum+'" data-seat="'+seatId+'" data-name="'+name+'" title="'+name+childTag+(meta.team?' · '+meta.team:'')+'">'+teamHtml+'<span class="veh-seat-name">'+name+childTag+'</span></div>';
+  var tags = vehPersonTags(name); // {gender:'남'|'여'|'', isChild:bool}
+  var tagParts = [];
+  if(tags.gender) tagParts.push(tags.gender);
+  if(tags.isChild) tagParts.push('자');
+  var tagStr = tagParts.length ? ' ('+tagParts.join(',')+')' : '';
+  return '<div class="veh-seat '+meta.type+(isSel?' selected':'')+'" style="'+extraStyle+borderCss+'" data-bus="'+busNum+'" data-seat="'+seatId+'" data-name="'+name+'" title="'+name+tagStr+(meta.team?' · '+meta.team:'')+'">'+teamHtml+'<span class="veh-seat-name">'+name+tagStr+'</span></div>';
 }
-// 가족관계가 '자녀'인지 확인 (명단 데이터의 가족관계 필드 기준)
-function vehIsChild(name){
+// 명단 데이터에서 성별/자녀여부 조회
+function vehPersonTags(name){
   var d=allData.find(function(x){ return x.name && x.name.trim()===name; });
-  return !!(d && (d.rel||'').trim()==='자녀');
+  return {
+    gender: d ? (d.gender||'').trim() : '',
+    isChild: !!(d && (d.rel||'').trim()==='자녀')
+  };
 }
+function vehIsChild(name){ return vehPersonTags(name).isChild; }
 // 좌석 박스가 작아서 사역팀명을 줄여서 표시 (전체 이름은 title 툴팁으로 확인)
 function vehTeamAbbrev(team){
   if(!team) return '';
@@ -5695,8 +5718,10 @@ function renderVeh(){
   [1,2].forEach(function(busNum){
     var cnt=busNum===1?cnt1:cnt2;
     var borders=vehComputeBorders(busNum);
+    var gs=vehBusGenderStats(busNum);
     h+='<div class="bus-block">';
     h+='<div class="bus-title"><span>🚌 '+busNum+'호차</span><span class="bus-title-cnt">'+cnt+' / '+VEH_BUS_CAP+'명</span></div>';
+    h+='<div class="bus-gender-stats">탑승인원 '+gs.total+' / '+VEH_BUS_CAP+'명 · 남성 '+gs.male+'명 · 여성 '+gs.female+'명 · 자녀 '+gs.child+'명</div>';
     h+='<div class="bus-front">🚪 출입구 · 🧑\u200d✈️ 기사석</div>';
     h+='<div class="bus-grid">';
     for(var r=1;r<=10;r++){ h+=vehRowHtml(busNum, r, borders); }
