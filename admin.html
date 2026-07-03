@@ -3787,6 +3787,71 @@ function closeEdit() {
   if (em) { em.textContent = ''; em.className = 'edit-msg'; }
 }
 
+// 명단 수정 저장 성공 시, 숙소배치·차량배치에 영향 있는 항목이면 즉시 동기화 + 알림
+var VEHACCOM_SYNC_FIELDS = ['사역팀','차량','숙소','이름','가족관계','배우자성명'];
+function syncAccomVehAfterEdit(rno, changes){
+  if(!changes || !changes.length) return;
+  var relevant = changes.filter(function(c){ return VEHACCOM_SYNC_FIELDS.indexOf(c.field)>=0; });
+  if(!relevant.length) return;
+
+  var nameChange  = changes.find(function(c){ return c.field==='이름'; });
+  var teamChange  = changes.find(function(c){ return c.field==='사역팀'; });
+  var transChange = changes.find(function(c){ return c.field==='차량'; });
+  var oldName = nameChange ? nameChange.before : null;
+  var newName = nameChange ? nameChange.after  : null;
+
+  // ── 차량배치 동기화 (이미 메모리에 로드된 경우에만) ──
+  try{
+    if(typeof vehLoaded!=='undefined' && vehLoaded){
+      [1,2].forEach(function(bus){
+        Object.keys(vehData[bus]||{}).forEach(function(seat){
+          var occ = vehData[bus][seat];
+          if(!occ) return;
+          if(oldName && occ!==oldName) return;
+          if(!oldName) return; // 이름변경이 아니면 occ 그대로 사용 (아래에서 처리)
+          // 이름이 바뀐 경우: 좌석 점유자명 갱신
+          vehData[bus][seat] = newName;
+          if(vehMeta[occ]){ vehMeta[newName]=vehMeta[occ]; delete vehMeta[occ]; }
+        });
+        // 이름변경이 아닌 경우, 사역팀/차량 변경은 현재 이름 기준으로 처리
+        var curName = newName || (allData.find(function(x){return x.rno===rno;})||{}).name;
+        if(curName){
+          Object.keys(vehData[bus]||{}).forEach(function(seat){
+            if(vehData[bus][seat]!==curName) return;
+            if(transChange && transChange.after!=='버스'){
+              vehData[bus][seat]=''; // 더 이상 버스탑승 아님 → 좌석에서 제거
+              delete vehMeta[curName];
+            } else if(teamChange && vehMeta[curName]){
+              vehMeta[curName].team = teamChange.after;
+            }
+          });
+        }
+      });
+      if(typeof renderVeh==='function'){ try{ renderVeh(); }catch(e){} }
+    }
+  }catch(e){ console.log('[동기화] 차량배치 오류:', e.message); }
+
+  // ── 숙소배치 동기화 (이름변경 시 회원목록 갱신 + 명단기준 정리) ──
+  try{
+    if(typeof ACCOM_ROOMS!=='undefined'){
+      if(oldName && newName){
+        ACCOM_ROOMS.forEach(function(r){
+          r.members = r.members.map(function(m){ return m===oldName ? newName : m; });
+        });
+      }
+      cleanAccomRooms();
+      if(document.getElementById('accomPanel') && typeof renderAccomTable==='function'){
+        try{ renderAccomTable(); }catch(e){}
+      }
+    }
+  }catch(e){ console.log('[동기화] 숙소배치 오류:', e.message); }
+
+  // ── 관리자 알림 ──
+  var personLabel = newName || oldName || (allData.find(function(x){return x.rno===rno;})||{}).name || rno;
+  var msgLines = relevant.map(function(c){ return '· '+c.field+': '+(c.before||'-')+' → '+(c.after||'-'); });
+  alert('⚠️ '+personLabel+'님 정보 변경 — 숙소배치/차량배치에 영향이 있어 자동 반영했습니다.\n\n'+msgLines.join('\n')+'\n\n해당 탭에서 확인해주세요.');
+}
+
 function saveEdit() {
   if (!canEdit()) return;
   var rno = _currentDetailRno;
@@ -3850,6 +3915,7 @@ function saveEdit() {
           document.body.style.right = '';
           document.body.style.width = '';
           window.scrollTo(0, _scrollY);
+          try{ syncAccomVehAfterEdit(rno, res.changes||[]); }catch(e){ console.log('동기화 오류:', e.message); }
           loadData(prevTab);
         } else {
           btn.disabled = false; btn.textContent = '💾 저장';
@@ -5427,7 +5493,7 @@ function accomShowToast(msg){
 // 좌석열: A/B열(왼쪽 2인), 통로, C/D열(오른쪽 2인) — 가족은 A·B 또는 C·D로 묶어서 배치
 // ============================================================
 var VEH_BUS_CAP = 45;
-var VEH_VERSION = 'v2.0 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
+var VEH_VERSION = 'v2.1 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
 function vehGenSeatLayout(){
   var seats=[];
   for(var r=1;r<=10;r++){
