@@ -808,7 +808,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
       <div class="detail-rno"  id="detailRno"></div>
     </div>
     <div class="detail-body" id="detailBody"></div>
-    <button class="detail-edit-btn" id="detailEditBtn" onclick="openEdit()" style="display:none;">✏️ 수정하기</button>
+    <button class="detail-edit-btn" id="detailEditBtn" onclick="openEditFresh()" style="display:none;">✏️ 수정하기</button>
     <button class="detail-close" onclick="closeDetail()">닫기</button>
   </div>
 </div>
@@ -1137,9 +1137,10 @@ function logout() {
 }
 
 // ── 데이터 로드 (새로고침) ──
-function loadData(returnTab) {
+function loadData(returnTab, callback) {
   if (TEST_MODE) {
     processData({ result:'ok', data: TEST_DATA, updated: '테스트 데이터' }, returnTab);
+    if (typeof callback === 'function') callback();
     return;
   }
   if (!currentUser) return;
@@ -1155,10 +1156,12 @@ function loadData(returnTab) {
       if (res.result === 'auth_error') { logout(); return; }
       if (res.result === 'ok') { processData(res, returnTab); }
       else { showListError(res.message || '데이터 오류'); }
+      if (typeof callback === 'function') callback();
     })
     .catch(function(e){
       btn.classList.remove('spinning');
       showListError('네트워크 오류: ' + e.message);
+      if (typeof callback === 'function') callback();
     });
 }
 
@@ -2341,7 +2344,7 @@ function renderMissing() {
 
   function editBtn(rno){
     if(!canEdit()) return '';
-    return '<button onclick="event.stopPropagation();_editFromTab=\'miss\';openMissDetail(\''+esc(rno)+'\');setTimeout(openEdit,200);" '
+    return '<button onclick="event.stopPropagation();_editFromTab=\'miss\';openMissDetail(\''+esc(rno)+'\');setTimeout(openEditFresh,200);" '
       +'style="margin-left:auto;padding:4px 10px;font-size:11px;font-weight:700;color:#1a3a9e;'
       +'background:rgba(32,80,200,0.08);border:1px solid rgba(32,80,200,0.25);border-radius:6px;cursor:pointer;">✏️ 수정</button>';
   }
@@ -3599,6 +3602,24 @@ var EDIT_FIELD_TO_HEADER = {
   pastor:'목자명', village:'마을', moksang:'목장', mteam:'사역팀', sched:'참여일정',
   trans:'차량', ride:'동승운전자', accom:'숙소', spouse:'배우자성명', note:'비고'
 };
+
+// "수정하기" 클릭 시 최신 데이터를 먼저 서버에서 다시 불러온 뒤 수정폼을 연다.
+// (오래된 화면값으로 편집 후 저장하면 방금 다른 곳에서 바뀐 최신값을 덮어써버리는 사고 방지)
+function openEditFresh(){
+  if (!canEdit()) return;
+  var rno = _currentDetailRno;
+  if (!rno) return;
+  var btn = document.getElementById('detailEditBtn');
+  var origText = btn ? btn.textContent : '';
+  if (btn) { btn.textContent = '⏳ 최신정보 확인 중...'; btn.disabled = true; }
+  loadData(null, function(){
+    if (btn) { btn.textContent = origText; btn.disabled = false; }
+    // 상세보기도 최신값으로 갱신 (이름 등이 바뀌었을 수 있으므로)
+    var d = allData.find(function(x){ return x.rno === rno; });
+    if (d) renderDetailFor(d);
+    openEdit();
+  });
+}
 
 function openEdit() {
   if (!canEdit()) return;
@@ -5507,7 +5528,7 @@ function accomShowToast(msg){
 // 좌석열: A/B열(왼쪽 2인), 통로, C/D열(오른쪽 2인) — 가족은 A·B 또는 C·D로 묶어서 배치
 // ============================================================
 var VEH_BUS_CAP = 45;
-var VEH_VERSION = 'v2.3 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
+var VEH_VERSION = 'v2.4 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
 function vehGenSeatLayout(){
   var seats=[];
   for(var r=1;r<=10;r++){
@@ -5719,7 +5740,6 @@ function vehPersonTags(name){
     isChild: !!(d && (d.rel||'').trim()==='자녀')
   };
 }
-function vehIsChild(name){ return vehPersonTags(name).isChild; }
 // 좌석 박스가 작아서 사역팀명을 줄여서 표시 (전체 이름은 title 툴팁으로 확인)
 function vehTeamAbbrev(team){
   if(!team) return '';
