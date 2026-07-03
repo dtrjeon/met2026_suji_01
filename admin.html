@@ -5125,6 +5125,7 @@ var accomLongPressTimer=null;
 var accomLongPressTimer2=null;  // 800ms → 미배치 이동
 var accomTouchStartX=0, accomTouchStartY=0;
 var accomLongPressChip=null;
+var accomDragMoved=false; // 드래그 시작(500ms) 후 실제로 손가락이 움직였는지 여부
 var ACCOM_LONG_PRESS_MS=500;   // 500ms: 드래그 시작
 var ACCOM_REMOVE_MS=900;       // 900ms: 미배치 이동 팝업
 var ACCOM_MOVE_THRESHOLD=8;
@@ -5135,8 +5136,9 @@ function accomTouchStart(e){
   accomTouchStartY=t.clientY;
   accomLongPressChip=e.currentTarget;
   accomLongPressChip.classList.add('pressing');
+  accomDragMoved=false;
 
-  // 500ms → 드래그 시작
+  // 500ms → 드래그 시작(픽업 표시). 이후 실제로 움직이지 않으면 900ms에 취소되고 팝업으로 전환됨
   accomLongPressTimer=setTimeout(function(){
     accomLongPressTimer=null;
     accomLongPressChip.classList.remove('pressing');
@@ -5146,20 +5148,31 @@ function accomTouchStart(e){
     document.addEventListener('touchend', accomTouchEnd);
   }, ACCOM_LONG_PRESS_MS);
 
-  // 900ms → 미배치 이동 선택 팝업 (드래그 없이 꾹 누른 경우)
+  // 900ms → 드래그가 실제로 움직이지 않았다면 취소하고 미배치 이동 팝업 표시
   accomLongPressTimer2=setTimeout(function(){
     accomLongPressTimer2=null;
-    // 드래그가 시작됐으면 무시
-    if(accomDragging) return;
     var chip=accomLongPressChip;
     if(!chip) return;
+
+    if(accomDragging && !accomDragMoved){
+      // 드래그는 시작됐지만 손가락이 거의 안 움직임 → 드래그 취소, 팝업으로 전환
+      accomDragging.el.classList.remove('dragging');
+      var g=document.getElementById('accomGhost'); if(g) g.style.display='none';
+      if(accomOverCell){ accomOverCell.classList.remove('drag-over'); accomOverCell=null; }
+      accomDragging=null;
+      document.removeEventListener('touchmove',accomTouchMove);
+      document.removeEventListener('touchend',accomTouchEnd);
+    } else if(accomDragging && accomDragMoved){
+      return; // 실제로 드래그 중 → 그대로 둠
+    } else {
+      // 드래그가 아직 시작 안 된 경우(타이머 순서가 바뀐 예외 상황 대비)
+      clearTimeout(accomLongPressTimer);
+      accomLongPressTimer=null;
+      document.removeEventListener('touchmove',accomTouchStartMove);
+    }
+
     chip.classList.remove('pressing');
-    // 드래그 취소
-    clearTimeout(accomLongPressTimer);
-    accomLongPressTimer=null;
-    document.removeEventListener('touchmove',accomTouchStartMove);
     if(navigator.vibrate) navigator.vibrate([40,30,40]);
-    // 미배치 이동 확인 팝업
     showAccomRemovePopup(chip.dataset.name, chip.dataset.roomid);
   }, ACCOM_REMOVE_MS);
 
@@ -5186,7 +5199,10 @@ function accomTouchStartEnd(){
 }
 function accomTouchMove(e){
   if(!accomDragging) return;
-  accomMoveDrag(e.touches[0].clientX,e.touches[0].clientY);
+  var t=e.touches[0];
+  var dx=Math.abs(t.clientX-accomTouchStartX), dy=Math.abs(t.clientY-accomTouchStartY);
+  if(dx>ACCOM_MOVE_THRESHOLD||dy>ACCOM_MOVE_THRESHOLD) accomDragMoved=true;
+  accomMoveDrag(t.clientX,t.clientY);
   e.preventDefault();
 }
 function accomTouchEnd(e){
@@ -5528,7 +5544,7 @@ function accomShowToast(msg){
 // 좌석열: A/B열(왼쪽 2인), 통로, C/D열(오른쪽 2인) — 가족은 A·B 또는 C·D로 묶어서 배치
 // ============================================================
 var VEH_BUS_CAP = 45;
-var VEH_VERSION = 'v2.5 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
+var VEH_VERSION = 'v2.6 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
 function vehGenSeatLayout(){
   var seats=[];
   for(var r=1;r<=10;r++){
