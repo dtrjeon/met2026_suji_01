@@ -533,7 +533,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .accom-team-cell{font-size:10px;color:#64748B;font-weight:600;white-space:normal;word-break:keep-all;line-height:1.4;width:76px;}
 .accom-members-cell{display:flex;flex-direction:column;gap:3px;padding:2px 0;}
 .accom-members-row{display:flex;flex-wrap:nowrap;gap:3px;align-items:center;}
-.accom-chip{padding:3px 7px;border-radius:11px;font-size:11px;font-weight:700;cursor:grab;border:0.5px solid transparent;transition:transform .1s,box-shadow .1s,opacity .15s;user-select:none;-webkit-user-select:none;touch-action:none;white-space:nowrap;}
+.accom-chip{padding:3px 7px;border-radius:11px;font-size:11px;font-weight:700;cursor:grab;border:0.5px solid transparent;transition:transform .1s,box-shadow .1s,opacity .15s;user-select:none;-webkit-user-select:none;touch-action:pan-y;white-space:nowrap;}
 .accom-chip:active{cursor:grabbing;}
 .accom-chip.dragging{opacity:.35;transform:scale(.92);}
 .accom-chip.여{background:#FFF0F6;color:#000000;border-color:#6B7280;}
@@ -5528,7 +5528,7 @@ function accomShowToast(msg){
 // 좌석열: A/B열(왼쪽 2인), 통로, C/D열(오른쪽 2인) — 가족은 A·B 또는 C·D로 묶어서 배치
 // ============================================================
 var VEH_BUS_CAP = 45;
-var VEH_VERSION = 'v2.4 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
+var VEH_VERSION = 'v2.5 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
 function vehGenSeatLayout(){
   var seats=[];
   for(var r=1;r<=10;r++){
