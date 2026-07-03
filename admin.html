@@ -4669,19 +4669,22 @@ function renderAccom(){
 // 명단(allData)에 없는 숙소자 자동 제거
 function cleanAccomRooms(){
   if(!allData||!allData.length) return;
-  var nameSet={};
-  allData.forEach(function(d){ if(d.name) nameSet[d.name.trim()]=true; });
-  var removed=[];
+  var accomMap={}; // name -> 숙소 필드값 (명단 최신 기준)
+  allData.forEach(function(d){ if(d.name) accomMap[d.name.trim()] = d.accom||''; });
+  var removed=[], removedAccomChanged=[];
   ACCOM_ROOMS.forEach(function(r){
-    var before=r.members.length;
     r.members=r.members.filter(function(m){
-      if(nameSet[m.trim()]) return true;
-      removed.push(m+'('+r.id+')');
-      return false;
+      var nm=m.trim();
+      if(!(nm in accomMap)){ removed.push(m+'('+r.id+')'); return false; } // 명단에 없음 → 제거
+      if(accomMap[nm] !== '단체(교회준비)'){ removedAccomChanged.push(m+'('+r.id+'→'+(accomMap[nm]||'-')+')'); return false; } // 숙소 필드가 단체준비가 아님 → 제거
+      return true;
     });
   });
   if(removed.length){
     console.log('[숙소배치] 명단 미등록으로 제거:', removed.join(', '));
+  }
+  if(removedAccomChanged.length){
+    console.log('[숙소배치] 숙소필드 변경으로 제거:', removedAccomChanged.join(', '));
   }
 }
 
@@ -5504,7 +5507,7 @@ function accomShowToast(msg){
 // 좌석열: A/B열(왼쪽 2인), 통로, C/D열(오른쪽 2인) — 가족은 A·B 또는 C·D로 묶어서 배치
 // ============================================================
 var VEH_BUS_CAP = 45;
-var VEH_VERSION = 'v2.2 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
+var VEH_VERSION = 'v2.3 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
 function vehGenSeatLayout(){
   var seats=[];
   for(var r=1;r<=10;r++){
