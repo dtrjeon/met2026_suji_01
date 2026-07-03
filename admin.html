@@ -3831,12 +3831,22 @@ function syncAccomVehAfterEdit(rno, changes){
     }
   }catch(e){ console.log('[동기화] 차량배치 오류:', e.message); }
 
-  // ── 숙소배치 동기화 (이름변경 시 회원목록 갱신 + 명단기준 정리) ──
+  // ── 숙소배치 동기화 (이름변경 시 회원목록 갱신 + 숙소필드 변경/명단기준 정리) ──
+  var accomRemoved = null;
   try{
     if(typeof ACCOM_ROOMS!=='undefined'){
       if(oldName && newName){
         ACCOM_ROOMS.forEach(function(r){
           r.members = r.members.map(function(m){ return m===oldName ? newName : m; });
+        });
+      }
+      var accomChange = changes.find(function(c){ return c.field==='숙소'; });
+      var curName2 = newName || (allData.find(function(x){return x.rno===rno;})||{}).name;
+      if(accomChange && curName2 && accomChange.after!=='단체(교회준비)'){
+        ACCOM_ROOMS.forEach(function(r){
+          var before=r.members.length;
+          r.members = r.members.filter(function(m){ return m!==curName2; });
+          if(r.members.length<before) accomRemoved = r.id;
         });
       }
       cleanAccomRooms();
@@ -3849,6 +3859,7 @@ function syncAccomVehAfterEdit(rno, changes){
   // ── 관리자 알림 ──
   var personLabel = newName || oldName || (allData.find(function(x){return x.rno===rno;})||{}).name || rno;
   var msgLines = relevant.map(function(c){ return '· '+c.field+': '+(c.before||'-')+' → '+(c.after||'-'); });
+  if(accomRemoved) msgLines.push('· 숙소배치 '+accomRemoved+'번 방에서 자동 제외되었습니다.');
   alert('⚠️ '+personLabel+'님 정보 변경 — 숙소배치/차량배치에 영향이 있어 자동 반영했습니다.\n\n'+msgLines.join('\n')+'\n\n해당 탭에서 확인해주세요.');
 }
 
@@ -5493,7 +5504,7 @@ function accomShowToast(msg){
 // 좌석열: A/B열(왼쪽 2인), 통로, C/D열(오른쪽 2인) — 가족은 A·B 또는 C·D로 묶어서 배치
 // ============================================================
 var VEH_BUS_CAP = 45;
-var VEH_VERSION = 'v2.1 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
+var VEH_VERSION = 'v2.2 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
 function vehGenSeatLayout(){
   var seats=[];
   for(var r=1;r<=10;r++){
