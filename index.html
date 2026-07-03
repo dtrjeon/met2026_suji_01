@@ -331,6 +331,7 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
 /* ── 스플래시 화면 (모바일 최적화) ── */
 #splashOvl{position:fixed;top:0;right:0;bottom:0;left:0;background:-webkit-linear-gradient(160deg,#0d1b4b 0%,#1a3ab0 55%,#2050c8 100%);background:linear-gradient(160deg,#0d1b4b 0%,#1a3ab0 55%,#2050c8 100%);z-index:9000;display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-orient:vertical;-webkit-box-direction:normal;-webkit-flex-direction:column;flex-direction:column;-webkit-box-align:center;-webkit-align-items:center;align-items:center;-webkit-box-pack:center;-webkit-justify-content:center;justify-content:center;padding:16px 16px 24px;padding-top:env(safe-area-inset-top,16px);padding-bottom:env(safe-area-inset-bottom,24px);-webkit-transition:opacity .4s;transition:opacity .4s;}
 #splashOvl.hide{opacity:0;pointer-events:none;}
+#splashOvl{display:none;}
 .sp-eyebrow{font-size:9px;letter-spacing:5px;color:rgba(255,255,255,0.4);margin-bottom:6px;text-align:center;}
 .sp-title{font-family:'Bebas Neue',sans-serif;font-size:10vw;font-size:clamp(36px,10vw,56px);letter-spacing:5px;color:#fff;line-height:1;margin-bottom:2px;text-align:center;}
 .sp-title span{color:#7eb3ff;}
@@ -450,7 +451,7 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
     </div><!-- /spBusData -->
 
     <div style="text-align:center;font-size:15px;font-weight:800;color:#ffd54a;margin-bottom:10px;letter-spacing:1px;">⚠️ 국내 선교 신청이 마감되었습니다</div>
-    <div class="sp-countdown"><b id="spSec">5</b>초 후 자동 이동 · 탭하면 바로 닫힘</div>
+    <div class="sp-countdown">탭하면 닫힙니다</div>
     <button type="button" class="sp-skip" onclick="splashDone()">수정/조회하기 →</button>
   </div>
 </div>
@@ -567,6 +568,11 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
   <div class="apply-toggle" id="applyToggle" onclick="toggleApplyForm()">
     <div class="apply-toggle-title">✍️ 신청하기 <span class="apply-toggle-arrow" id="applyToggleArrow">▾</span></div>
   </div>
+
+  <!-- 버스 신청 현황 (클릭 시 팝업) -->
+  <button type="button" class="lkup-btn" onclick="openBusStatus()">
+    🚌 버스신청현황
+  </button>
 
   <div class="apply-form-wrap" id="applyFormWrap">
   <div class="sec">
@@ -694,10 +700,9 @@ window.addEventListener('load', function(){ loadNameList(); });
 // 스플래시 화면
 // ============================================================
 (function(){
-  var SEC = 5;
-  var timer, remaining = SEC;
+  var timer;
 
-  var _splashGone = false;
+  var _splashGone = true; // 기본값: 닫혀있는 상태(자동표시 안함)
   function splashDone(){
     if(_splashGone) return;
     _splashGone = true;
@@ -711,6 +716,23 @@ window.addEventListener('load', function(){ loadNameList(); });
     setTimeout(function(){ el.style.display='none'; }, 450);
   }
   window.splashDone = splashDone;
+
+  // 🚌 버스신청현황 버튼 클릭 시 팝업 오픈 (자동표시 대신 사용자가 원할 때만 확인)
+  function openBusStatus(){
+    _splashGone = false;
+    var el = document.getElementById('splashOvl');
+    if(!el) return;
+    el.style.display = 'flex';
+    el.style.opacity = '1';
+    el.style.pointerEvents = 'auto';
+    el.style.webkitPointerEvents = 'auto';
+    var loading = document.getElementById('spLoading');
+    var busData = document.getElementById('spBusData');
+    if(loading) loading.style.display = 'block';
+    if(busData) busData.style.display = 'none';
+    fetchBusStat();
+  }
+  window.openBusStatus = openBusStatus;
 
   // ── iOS 호환 탭 감지 ──
   // passive 옵션 지원 여부 체크 (iOS 8 이하 대응)
@@ -741,13 +763,6 @@ window.addEventListener('load', function(){ loadNameList(); });
 
     // click: 마우스/포인터 기기 대응
     splashEl.addEventListener('click', splashDone);
-  }
-
-  function tick(){
-    remaining--;
-    var secEl = document.getElementById('spSec');
-    if(secEl) secEl.textContent = remaining;
-    if(remaining <= 0) splashDone();
   }
 
   // ── 좌석맵 렌더링 (뒤에서부터 채움, 총 40석) ──
@@ -797,14 +812,6 @@ window.addEventListener('load', function(){ loadNameList(); });
     grid.innerHTML = html;
   }
 
-  // 데이터 표시 후 카운트다운 시작
-  function startCountdown(){
-    remaining = SEC;
-    var secEl = document.getElementById('spSec');
-    if(secEl) secEl.textContent = SEC;
-    timer = setInterval(tick, 1000);
-  }
-
   // GAS에서 버스 현황 가져오기 — fetch + XHR 폴백 (iOS 10 이하 대응)
   function applyBusData(data){
     var loading = document.getElementById('spLoading');
@@ -831,7 +838,6 @@ window.addEventListener('load', function(){ loadNameList(); });
     } else {
       if(loading) loading.textContent = '현황을 불러올 수 없습니다';
     }
-    startCountdown();
   }
 
   function fetchBusStat(){
@@ -859,7 +865,6 @@ window.addEventListener('load', function(){ loadNameList(); });
       try{ xhr.send(); } catch(e){ applyBusData(null); }
     }
   }
-  fetchBusStat();
 })();
 
 // ============================================================
