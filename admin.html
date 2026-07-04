@@ -4863,6 +4863,22 @@ function createAccomGhost(){
   return g;
 }
 
+// 방에 실제 배정된 사람들의 성별을 기준으로 표시값 계산 (여만 있으면 '여', 남만 있으면 '남', 섞이면 '남/여')
+// 방이 비어있으면 방의 기본 설계 성별(fallback)을 그대로 보여줌
+function accomActualGenderInfo(members, fallbackGender){
+  if(!members || !members.length) return {text: fallbackGender||'─', cls: fallbackGender||'─'};
+  var genders={};
+  members.forEach(function(m){
+    var d=allData.find(function(x){ return x.name && x.name.trim()===m.trim(); });
+    var g=d?(d.gender||'').trim():'';
+    if(g==='남'||g==='여') genders[g]=true;
+  });
+  var keys=Object.keys(genders);
+  if(keys.length===0) return {text: fallbackGender||'─', cls: fallbackGender||'─'};
+  if(keys.length===1) return {text: keys[0], cls: keys[0]};
+  return {text:'남/여', cls:'혼합'};
+}
+
 function renderAccomTable(){
   var tb=document.getElementById('accomTbody');
   if(!tb) return;
@@ -4906,7 +4922,8 @@ function renderAccomTable(){
     html+=' data-id="'+r.id+'" data-gender="'+r.gender+'" data-team="'+teamStr+'" data-members="'+r.members.join(',')+'">'; 
     html+='<td><span class="accom-room-id">'+r.id+'</span></td>';
     html+='<td><span class="accom-type-badge">'+r.typeName+'</span></td>';
-    html+='<td><span class="accom-g-badge '+r.gender+'">'+r.gender+'</span></td>';
+    var genderInfo=accomActualGenderInfo(r.members, r.gender);
+    html+='<td><span class="accom-g-badge '+genderInfo.cls+'">'+genderInfo.text+'</span></td>';
     html+='<td><span class="accom-cap '+capCls+'">'+cnt+'/'+r.cap+'</span></td>';
     html+='<td class="accom-team-cell left">'+teamHtml+'</td>';
     html+='<td class="left"><div class="accom-members-cell" data-roomid="'+r.id+'">'+chips+'</div></td>';
@@ -5701,7 +5718,7 @@ function accomShowToast(msg){
 // 좌석열: A/B열(왼쪽 2인), 통로, C/D열(오른쪽 2인) — 가족은 A·B 또는 C·D로 묶어서 배치
 // ============================================================
 var VEH_BUS_CAP = 45;
-var VEH_VERSION = 'v3.5 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
+var VEH_VERSION = 'v3.6 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
 function vehGenSeatLayout(){
   var seats=[];
   for(var r=1;r<=10;r++){
