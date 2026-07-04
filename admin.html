@@ -4721,18 +4721,8 @@ function createAccomGhost(){
 function renderAccomTable(){
   var tb=document.getElementById('accomTbody');
   if(!tb) return;
-  var html='', prevG='';
+  var html='';
   ACCOM_ROOMS.forEach(function(r){
-    if(r.gender==='가족'&&prevG!=='가족'){
-      html+='<tr class="accom-divider" style="background:#FFFBEB;border-top-color:#F59E0B"><td colspan="6" style="color:#854D0E">🟡 가족방 (혼성)</td></tr>';
-    }
-    if(r.gender==='남'&&prevG!=='남'&&prevG!==''&&prevG!=='가족'){
-      html+='<tr class="accom-divider"><td colspan="6">🔵 남성 구역</td></tr>';
-    }
-    if(r.gender==='혼합'&&prevG!=='혼합'){
-      html+='<tr class="accom-divider" style="background:#ECFDF5;border-top-color:#065F46"><td colspan="6" style="color:#065F46">🟢 가족실 (남녀혼합)</td></tr>';
-    }
-    prevG=r.gender;
     var cnt=r.members.length;
     var capCls=cnt>r.cap?'over':cnt===r.cap?'full':cnt===0?'empty':'part';
     var isEmpty=cnt===0;
@@ -5561,7 +5551,7 @@ function accomShowToast(msg){
 // 좌석열: A/B열(왼쪽 2인), 통로, C/D열(오른쪽 2인) — 가족은 A·B 또는 C·D로 묶어서 배치
 // ============================================================
 var VEH_BUS_CAP = 45;
-var VEH_VERSION = 'v2.7 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
+var VEH_VERSION = 'v2.9 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
 function vehGenSeatLayout(){
   var seats=[];
   for(var r=1;r<=10;r++){
