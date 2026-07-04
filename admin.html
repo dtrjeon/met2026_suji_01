@@ -4718,6 +4718,22 @@ function createAccomGhost(){
   return g;
 }
 
+// 방 실제 배정 인원의 성별 구성 계산 → 남/여/남·여(혼합) 뱃지
+function accomRoomGenderInfo(r){
+  if(!r.members || !r.members.length) return {cls:r.gender, label:r.gender};
+  var hasM=false, hasF=false;
+  r.members.forEach(function(m){
+    var d=allData.find(function(x){return x.name && x.name.trim()===m.trim();});
+    var g=d&&d.gender?d.gender.trim():'';
+    if(g==='남') hasM=true;
+    else if(g==='여') hasF=true;
+  });
+  if(hasM&&hasF) return {cls:'혼합', label:'남/여'};
+  if(hasM) return {cls:'남', label:'남'};
+  if(hasF) return {cls:'여', label:'여'};
+  return {cls:r.gender, label:r.gender}; // 성별 정보 없으면 방 기본 성별 표시
+}
+
 function renderAccomTable(){
   var tb=document.getElementById('accomTbody');
   if(!tb) return;
@@ -4761,7 +4777,8 @@ function renderAccomTable(){
     html+=' data-id="'+r.id+'" data-gender="'+r.gender+'" data-team="'+teamStr+'" data-members="'+r.members.join(',')+'">'; 
     html+='<td><span class="accom-room-id">'+r.id+'</span></td>';
     html+='<td><span class="accom-type-badge">'+r.typeName+'</span></td>';
-    html+='<td><span class="accom-g-badge '+r.gender+'">'+r.gender+'</span></td>';
+    var gInfo=accomRoomGenderInfo(r);
+    html+='<td><span class="accom-g-badge '+gInfo.cls+'">'+gInfo.label+'</span></td>';
     html+='<td><span class="accom-cap '+capCls+'">'+cnt+'/'+r.cap+'</span></td>';
     html+='<td class="accom-team-cell left">'+teamHtml+'</td>';
     html+='<td class="left"><div class="accom-members-cell" data-roomid="'+r.id+'">'+chips+'</div></td>';
