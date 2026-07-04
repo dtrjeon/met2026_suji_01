@@ -1468,13 +1468,76 @@ function _doListExcel(){
 
 // ── 전체현황 엑셀 내보내기: 사역팀/성명/식별기호/참석일/차량배치/숙소배치 ──
 function exportFullAssignExcel(){
+  function proceedOrWarn(hasVehData){
+    if(!hasVehData){
+      var cont=true;
+      try{
+        cont=confirm('⚠️ 차량배치 저장 이력이 없습니다.\n\n차량배치 탭에서 자동배분 후 "💾 저장" 버튼을 먼저 눌러주세요.\n\n그래도 계속 진행하시겠습니까? (차량배치 항목은 모두 "-"로 출력됩니다)');
+      }catch(e){ cont=true; }
+      if(!cont) return;
+      _doFullAssignExcel();
+      return;
+    }
+    // 메모리에 배치 데이터가 있으면, 확실히 하기 위해 저장 여부를 항상 물어봄
+    // (자동배분만 하고 저장을 안 눌렀을 수도 있어 vehHistory만으로는 판단이 부정확함)
+    var choice=true;
+    try{
+      choice=confirm('💾 지금 구글시트에 저장한 뒤 엑셀을 생성할까요?\n\n[확인] = 저장 후 엑셀 생성 (최신 상태 보장)\n[취소] = 저장 없이 현재 불러온 상태로 엑셀만 생성');
+    }catch(e){ choice=false; }
+    if(choice){
+      vehSaveCore(function(ok, msg){
+        if(!ok) alert('⚠️ 저장 실패: '+msg+'\n(저장 없이 현재 상태로 엑셀을 생성합니다)');
+        else vehHistory=[];
+        _doFullAssignExcel();
+      });
+      return;
+    }
+    _doFullAssignExcel();
+  }
+  function afterLib(){
+    // 차량배치 탭을 이번 세션에 한 번도 안 열었으면(vehLoaded=false) 서버에서 먼저 불러온 뒤 엑셀 생성
+    if(typeof vehLoaded!=='undefined' && !vehLoaded && typeof currentUser!=='undefined' && currentUser){
+      var pw=currentUser.name+':'+currentUser.phone;
+      fetch(GAS_URL+'?action=getVehicleData&pw='+encodeURIComponent(pw))
+        .then(function(r){ return r.json(); })
+        .then(function(j){
+          var hasVehData=false;
+          if(j.result==='ok' && j.seats && j.seats.length){
+            hasVehData=true;
+            j.seats.forEach(function(s){
+              if((s.bus===1||s.bus===2) && s.seat){
+                vehData[s.bus][s.seat]=s.name||'';
+                if(s.name){
+                  vehMeta[s.name]={
+                    type: s.family_id ? 'family' : (s.team && s.team!=='-' ? 'team' : 'individual'),
+                    team: s.team||'', family_id: s.family_id||''
+                  };
+                }
+              }
+            });
+          }
+          vehLoaded=true;
+          proceedOrWarn(hasVehData);
+        })
+        .catch(function(){ proceedOrWarn(false); }); // 권한 없음/네트워크 오류 시에도 나머지 항목은 정상 출력
+    } else {
+      // 이미 이번 세션에 로드된 경우: 실제로 배정된 좌석이 있는지 확인
+      var hasVehData=false;
+      if(typeof vehData!=='undefined' && vehData){
+        [1,2].forEach(function(bus){
+          Object.keys(vehData[bus]||{}).forEach(function(seat){ if(vehData[bus][seat]) hasVehData=true; });
+        });
+      }
+      proceedOrWarn(hasVehData);
+    }
+  }
   if(typeof XLSX==='undefined'){
     var s=document.createElement('script');
     s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-    s.onload=function(){ _doFullAssignExcel(); };
+    s.onload=afterLib;
     s.onerror=function(){ alert('엑셀 라이브러리 로드 실패'); };
     document.head.appendChild(s);
-  } else { _doFullAssignExcel(); }
+  } else { afterLib(); }
 }
 // 이름으로 현재 차량배치(호차만) 조회 — 차량배치 탭을 한 번도 안 열었으면 정보 없음
 function _fullAssignVehLabel(name){
@@ -5638,7 +5701,7 @@ function accomShowToast(msg){
 // 좌석열: A/B열(왼쪽 2인), 통로, C/D열(오른쪽 2인) — 가족은 A·B 또는 C·D로 묶어서 배치
 // ============================================================
 var VEH_BUS_CAP = 45;
-var VEH_VERSION = 'v3.3 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
+var VEH_VERSION = 'v3.5 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
 function vehGenSeatLayout(){
   var seats=[];
   for(var r=1;r<=10;r++){
@@ -6009,10 +6072,8 @@ function loadVehFromSheet(){
     })
     .catch(function(){ renderVeh(); }); // 저장된 데이터 없음/오류 → 빈 상태로 표시, 자동배분 유도
 }
-function vehSave(){
-  var btn=document.querySelector('.veh-btn-save');
-  if(!btn) return;
-  btn.textContent='저장 중...'; btn.disabled=true;
+// 실제 저장 로직 (UI 요소에 의존하지 않음) — vehSave()와 엑셀 내보내기 양쪽에서 재사용
+function vehSaveCore(onDone){
   var seats=[];
   [1,2].forEach(function(b){
     vehSeatLayout.forEach(function(seatId){
@@ -6027,11 +6088,17 @@ function vehSave(){
   fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
     body:'data='+encodeURIComponent(JSON.stringify({action:'saveVehicleAssign', pw:pw, seats:seats}))
   }).then(function(r){ return r.json(); })
-  .then(function(j){
-    if(j.result==='ok'){ vehHistory=[]; renderVeh(); vehShowToast('💾 구글시트 저장 완료!'); }
-    else vehShowToast('❌ 저장 실패: '+(j.message||'오류'));
-  }).catch(function(){ vehShowToast('❌ 네트워크 오류'); })
-  .finally(function(){ btn.textContent='💾 저장'; btn.disabled=false; });
+  .then(function(j){ onDone(j.result==='ok', j.message||''); })
+  .catch(function(){ onDone(false, '네트워크 오류'); });
+}
+function vehSave(){
+  var btn=document.querySelector('.veh-btn-save');
+  if(btn){ btn.textContent='저장 중...'; btn.disabled=true; }
+  vehSaveCore(function(ok, msg){
+    if(ok){ vehHistory=[]; if(typeof renderVeh==='function') renderVeh(); vehShowToast('💾 구글시트 저장 완료!'); }
+    else vehShowToast('❌ 저장 실패: '+msg);
+    if(btn){ btn.textContent='💾 저장'; btn.disabled=false; }
+  });
 }
 
 // ── 드래그&드롭 좌석 교체 (마우스+터치, 숙소배치와 동일한 방식) ──
