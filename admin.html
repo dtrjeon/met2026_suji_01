@@ -524,9 +524,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .accom-type-A .accom-type-badge{background:#DBEAFE;color:#1E3A8A;}.accom-type-B .accom-type-badge{background:#DCFCE7;color:#166534;}
 .accom-type-C .accom-type-badge{background:#FEF08A;color:#854D0E;}.accom-type-D .accom-type-badge{background:#FFEDD5;color:#9A3412;}
 .accom-type-E .accom-type-badge{background:#EDE9FE;color:#5B21B6;}.accom-type-F .accom-type-badge{background:#FFE4E6;color:#9F1239;}
-.accom-g-badge{display:inline-block;padding:2px 7px;border-radius:7px;font-size:10px;font-weight:800;}
+.accom-g-badge{display:inline-block;padding:2px 7px;border-radius:7px;font-size:10px;font-weight:800;white-space:nowrap;}
 .accom-g-badge.여{background:#FFF0F6;color:#BE185D;}.accom-g-badge.남{background:#DBEAFE;color:#1E3A8A;}
-.accom-g-badge.혼합{background:#ECFDF5;color:#065F46;}.accom-g-badge.가족{background:#FEF9C3;color:#854D0E;}
+.accom-g-badge.혼합{background:#ECFDF5;color:#065F46;font-size:8.5px;padding:2px 5px;}.accom-g-badge.가족{background:#FEF9C3;color:#854D0E;}
 .accom-g-badge.─{background:#F1F5F9;color:#94A3B8;}
 .accom-cap{font-size:11px;font-weight:700;}
 .accom-cap.full{color:#1E3A8A;}.accom-cap.part{color:#F59E0B;}.accom-cap.empty{color:#94A3B8;}.accom-cap.over{color:#DC2626;}
@@ -5718,7 +5718,7 @@ function accomShowToast(msg){
 // 좌석열: A/B열(왼쪽 2인), 통로, C/D열(오른쪽 2인) — 가족은 A·B 또는 C·D로 묶어서 배치
 // ============================================================
 var VEH_BUS_CAP = 45;
-var VEH_VERSION = 'v3.6 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
+var VEH_VERSION = 'v3.7 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
 function vehGenSeatLayout(){
   var seats=[];
   for(var r=1;r<=10;r++){
