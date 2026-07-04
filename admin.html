@@ -4547,6 +4547,7 @@ var ACCOM_ROOMS=[
 var ACCOM_KIDS=['박준서','박민서','한지호','고승유','이로운','고온조','윤상호','고석훈','정지원','김현호','고은송','모예은','이석진'];
 var ACCOM_MALES=['이덕우','도승재','손오성','이상훈','임동우','한지호','유원종','박준서','박민서','김현호','고석훈','고승유','정지원','윤상호','이로운','고온조','이석진'];
 var accomHistory=[], accomChangedRows=new Set();
+var accomManualUnassigned={}; // 방에서 수동으로 뺀 사람(name→true) — 숙소/일정 조건과 무관하게 항상 미배치 목록에 표시
 var accomFilter='전체', accomSearch='';
 var accomDragging=null, accomOverCell=null;
 
@@ -4873,7 +4874,8 @@ function getAccomUnassigned(){
   ACCOM_ROOMS.forEach(function(r){
     r.members.forEach(function(m){ placedNames[m.trim()]=true; });
   });
-  return allData.filter(function(d){
+  var resultNames={};
+  var result=allData.filter(function(d){
     if(!d.accom||d.accom.indexOf('단체')<0) return false;
     // 7/21~22 일정 포함 여부 (표기 방식 다양: "7/21~22", "7/21~7/22", "7/21~22(화~수)" 등)
     var sched=(d.sched||'').replace(/\s/g,'');
@@ -4882,6 +4884,20 @@ function getAccomUnassigned(){
     if(d.name&&d.name.trim()==='고영수') return false;
     return !placedNames[d.name&&d.name.trim()];
   });
+  result.forEach(function(d){ resultNames[d.name.trim()]=true; });
+
+  // 수동으로 "미배치로 이동" 처리된 사람은 숙소/일정 조건과 무관하게 항상 포함
+  // (다시 방에 배치되면 자동으로 추적 해제)
+  Object.keys(accomManualUnassigned).forEach(function(name){
+    if(placedNames[name]){ delete accomManualUnassigned[name]; return; }
+    if(resultNames[name]) return;
+    var d=allData.find(function(x){ return x.name && x.name.trim()===name; });
+    if(!d) return;
+    resultNames[name]=true;
+    result.push(d);
+  });
+
+  return result;
 }
 
 function renderAccomUnassigned(){
@@ -5521,6 +5537,7 @@ function moveToUnassigned(name, roomId){
   var room=ACCOM_ROOMS.find(function(r){return r.id===roomId;});
   if(!room) return;
   room.members=room.members.filter(function(m){return m!==name;});
+  accomManualUnassigned[name]=true; // 숙소/일정 조건과 무관하게 미배치 목록에 항상 표시되도록 등록
   accomHistory.push({name:name, fromId:roomId, toId:'(미배치)'});
   accomChangedRows.add(roomId);
   var modal=document.getElementById('accomRemoveModal');
@@ -5544,7 +5561,7 @@ function accomShowToast(msg){
 // 좌석열: A/B열(왼쪽 2인), 통로, C/D열(오른쪽 2인) — 가족은 A·B 또는 C·D로 묶어서 배치
 // ============================================================
 var VEH_BUS_CAP = 45;
-var VEH_VERSION = 'v2.6 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
+var VEH_VERSION = 'v2.7 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
 function vehGenSeatLayout(){
   var seats=[];
   for(var r=1;r<=10;r++){
