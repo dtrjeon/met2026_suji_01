@@ -4721,8 +4721,13 @@ function createAccomGhost(){
 function renderAccomTable(){
   var tb=document.getElementById('accomTbody');
   if(!tb) return;
-  var html='';
+  var html='', prevPrefix='';
   ACCOM_ROOMS.forEach(function(r){
+    var prefix=(r.id||'').charAt(0);
+    if(prevPrefix==='C'&&prefix==='D'){
+      html+='<tr class="accom-divider"><td colspan="6"></td></tr>';
+    }
+    prevPrefix=prefix;
     var cnt=r.members.length;
     var capCls=cnt>r.cap?'over':cnt===r.cap?'full':cnt===0?'empty':'part';
     var isEmpty=cnt===0;
@@ -5551,7 +5556,7 @@ function accomShowToast(msg){
 // 좌석열: A/B열(왼쪽 2인), 통로, C/D열(오른쪽 2인) — 가족은 A·B 또는 C·D로 묶어서 배치
 // ============================================================
 var VEH_BUS_CAP = 45;
-var VEH_VERSION = 'v2.9 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
+var VEH_VERSION = 'v3.0 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
 function vehGenSeatLayout(){
   var seats=[];
   for(var r=1;r<=10;r++){
