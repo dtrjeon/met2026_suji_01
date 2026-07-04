@@ -307,7 +307,7 @@ body { font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background:#
 <script>
 // ── 탑승자 명단 (구글시트 '차량배치' 탭 기준: 1호차/2호차) ──
 const people = [
-  // 1호차 (36명)
+  // 1호차 (36명) — 개인 → 가족(가족현황 기준) 순
   {name:"김범",   vehicle:"1호차"}, {name:"김종환", vehicle:"1호차"}, {name:"차충석", vehicle:"1호차"},
   {name:"최원현", vehicle:"1호차"}, {name:"조양환", vehicle:"1호차"}, {name:"서인식", vehicle:"1호차"},
   {name:"이승훈", vehicle:"1호차"}, {name:"안영주", vehicle:"1호차"}, {name:"박용수", vehicle:"1호차"},
@@ -317,22 +317,29 @@ const people = [
   {name:"이지영", vehicle:"1호차"}, {name:"박정신", vehicle:"1호차"}, {name:"양선희", vehicle:"1호차"},
   {name:"이태옥", vehicle:"1호차"}, {name:"원준환", vehicle:"1호차"}, {name:"이은영", vehicle:"1호차"},
   {name:"호창우", vehicle:"1호차"}, {name:"강동우", vehicle:"1호차"}, {name:"정현주", vehicle:"1호차"},
-  {name:"유연희", vehicle:"1호차"}, {name:"전태룡", vehicle:"1호차"}, {name:"최낙봉", vehicle:"1호차"},
-  {name:"오양근", vehicle:"1호차"}, {name:"박선영", vehicle:"1호차"}, {name:"김수현", vehicle:"1호차"},
-  {name:"송일령", vehicle:"1호차"}, {name:"김하연", vehicle:"1호차"}, {name:"고영수", vehicle:"1호차"},
-  // 2호차 (35명)
+  {name:"최낙봉", vehicle:"1호차"}, {name:"오양근", vehicle:"1호차"}, {name:"김하연", vehicle:"1호차"},
+  {name:"고영수", vehicle:"1호차"},
+  // 가족: 유연희·전태룡 / 박선영·김수현 / 송일령
+  {name:"유연희", vehicle:"1호차", family:"F004"}, {name:"전태룡", vehicle:"1호차", family:"F004"},
+  {name:"박선영", vehicle:"1호차", family:"F022"}, {name:"김수현", vehicle:"1호차", family:"F022"},
+  {name:"송일령", vehicle:"1호차", family:"F023"},
+  // 2호차 (35명) — 개인 → 가족(가족현황 기준) 순
   {name:"김영미", vehicle:"2호차"}, {name:"오은영", vehicle:"2호차"}, {name:"정명례", vehicle:"2호차"},
   {name:"정경숙", vehicle:"2호차"}, {name:"안선영", vehicle:"2호차"}, {name:"백현정", vehicle:"2호차"},
   {name:"임효창", vehicle:"2호차"}, {name:"이현주", vehicle:"2호차"}, {name:"김기정", vehicle:"2호차"},
-  {name:"김수경", vehicle:"2호차"}, {name:"박길종", vehicle:"2호차"}, {name:"홍은주", vehicle:"2호차"},
-  {name:"김선의", vehicle:"2호차"}, {name:"변정숙", vehicle:"2호차"}, {name:"박준서", vehicle:"2호차"},
-  {name:"박민서", vehicle:"2호차"}, {name:"고은송", vehicle:"2호차"}, {name:"진수진", vehicle:"2호차"},
-  {name:"차지현", vehicle:"2호차"}, {name:"이난희", vehicle:"2호차"}, {name:"고온조", vehicle:"2호차"},
-  {name:"정옥경", vehicle:"2호차"}, {name:"김의겸", vehicle:"2호차"}, {name:"이문숙", vehicle:"2호차"},
-  {name:"김연화", vehicle:"2호차"}, {name:"손오성", vehicle:"2호차"}, {name:"지희숙", vehicle:"2호차"},
-  {name:"모예은", vehicle:"2호차"}, {name:"도승재", vehicle:"2호차"}, {name:"장소라", vehicle:"2호차"},
-  {name:"유원종", vehicle:"2호차"}, {name:"차형심", vehicle:"2호차"}, {name:"황은성", vehicle:"2호차"},
-  {name:"박희철", vehicle:"2호차"}, {name:"김대욱", vehicle:"2호차"}
+  {name:"김수경", vehicle:"2호차"}, {name:"김선의", vehicle:"2호차"}, {name:"변정숙", vehicle:"2호차"},
+  {name:"진수진", vehicle:"2호차"}, {name:"차지현", vehicle:"2호차"}, {name:"이난희", vehicle:"2호차"},
+  {name:"김의겸", vehicle:"2호차"}, {name:"이문숙", vehicle:"2호차"}, {name:"도승재", vehicle:"2호차"},
+  {name:"장소라", vehicle:"2호차"}, {name:"김대욱", vehicle:"2호차"},
+  // 가족: 박길종·홍은주·박준서·박민서 / 고온조·정옥경·고은송 / 손오성·김연화 / 지희숙·모예은 / 유원종·차형심 / 황은성·박희철
+  {name:"박길종", vehicle:"2호차", family:"F005"}, {name:"홍은주", vehicle:"2호차", family:"F005"},
+  {name:"박준서", vehicle:"2호차", family:"F005"}, {name:"박민서", vehicle:"2호차", family:"F005"},
+  {name:"고온조", vehicle:"2호차", family:"F014"}, {name:"정옥경", vehicle:"2호차", family:"F014"},
+  {name:"고은송", vehicle:"2호차", family:"F014"},
+  {name:"손오성", vehicle:"2호차", family:"F001"}, {name:"김연화", vehicle:"2호차", family:"F001"},
+  {name:"지희숙", vehicle:"2호차", family:"F002"}, {name:"모예은", vehicle:"2호차", family:"F002"},
+  {name:"유원종", vehicle:"2호차", family:"F019"}, {name:"차형심", vehicle:"2호차", family:"F019"},
+  {name:"황은성", vehicle:"2호차", family:"F024"}, {name:"박희철", vehicle:"2호차", family:"F024"}
 ];
 
 // ── 스태프 목록 ──
