@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>bus_check</title>
+<style>
+/* ── 기본 ── */
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html { background:#dfe6ea; }
+body { font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background:#f0f4f1; min-height:100vh; max-width:480px; margin:0 auto; position:relative; }
+
+/* 태블릿/PC에서도 모바일 앱처럼 중앙 고정폭으로 표시 */
+@media (min-width:481px) {
+  body { box-shadow:0 0 30px rgba(0,0,0,.12); min-height:100vh; }
+  .submit-bar, .stats-bar { max-width:480px; left:50%; transform:translateX(-50%); }
+  .header, .main-tabs, .veh-filter { max-width:480px; margin:0 auto; }
+}
+
+/* ── 헤더 / 탭 ── */
+.header { background:linear-gradient(135deg,#1a4a8c,#2d6fd4); color:#fff; padding:16px; position:sticky; top:0; z-index:100; box-shadow:0 2px 8px rgba(0,0,0,.2); }
+.header h1 { font-size:18px; font-weight:800; }
+.header-sub { font-size:12px; opacity:.75; margin-top:2px; }
+.main-tabs { display:flex; background:#fff; border-bottom:2px solid #dde6f0; position:sticky; top:56px; z-index:90; }
+.main-tab { flex:1; padding:12px; text-align:center; font-size:14px; font-weight:700; color:#aaa; cursor:pointer; border-bottom:3px solid transparent; transition:all .15s; }
+.main-tab.active { color:#1a4a8c; border-bottom-color:#1a4a8c; }
+.page { display:none; }
+.page.active { display:block; }
+
+/* ── 탑승 체크 탭 ── */
+.guide-box { background:#fff8e1; border-left:4px solid #f9a825; padding:12px 16px; font-size:13px; color:#5d4037; line-height:1.5; }
+.guide-box strong { font-weight:800; }
+.admin-bar { background:#fff; padding:10px 16px; display:flex; gap:8px; border-bottom:1px solid #dde6f0; }
+.admin-btn { flex:1; padding:8px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; border:none; }
+.admin-btn.refresh { background:#e8f5e9; color:#27ae60; border:2px solid #b2dfdb; }
+.admin-btn.reset   { background:#fff0f0; color:#c0392b; border:2px solid #f5c0c0; }
+/* ── 차량 필터 칩 ── */
+.veh-filter { display:flex; gap:8px; padding:10px 16px 2px; background:#fff; border-bottom:1px solid #dde6f0; }
+.veh-chip { flex:1; padding:9px 4px; border-radius:20px; border:2px solid #dde6f0; background:#f4f7fc; font-size:12.5px; font-weight:700; color:#5a6b85; cursor:pointer; text-align:center; transition:all .15s; white-space:nowrap; }
+.veh-chip.active { background:#1a4a8c; border-color:#1a4a8c; color:#fff; }
+.veh-section-title { font-size:13px; font-weight:800; color:#1a4a8c; margin:14px 2px 8px; display:flex; align-items:center; gap:4px; }
+.veh-section-title:first-child { margin-top:2px; }
+.veh-tag { display:inline-block; font-size:10px; font-weight:700; color:#1a4a8c; background:#e8f0fe; padding:2px 6px; border-radius:8px; margin-left:5px; vertical-align:middle; }
+.bus-grid { padding:12px 16px; padding-bottom:110px; }
+.bus-grid-inner { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.bus-card { background:#fff; border-radius:12px; padding:14px 12px; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 4px rgba(0,0,0,.08); border:2px solid transparent; cursor:pointer; transition:all .15s; }
+.bus-card.selected { border-color:#2d6fd4; background:#ddeeff; transform:scale(1.03); }
+.bus-card.boarded  { border-color:#27ae60; background:#eafaf1; cursor:default; }
+.bus-num   { font-size:11px; color:#bbb; font-weight:600; margin-right:6px; flex-shrink:0; }
+.bus-name  { font-size:15px; font-weight:700; color:#1a2a3f; }
+.bus-card.selected .bus-name { color:#1a4a8c; }
+.bus-card.boarded  .bus-name { color:#27ae60; }
+.bus-check { margin-left:6px; font-size:14px; }
+.submit-bar { position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid #dde6f0; padding:12px 16px; z-index:50; box-shadow:0 -2px 12px rgba(0,0,0,.1); }
+.selected-name { font-size:13px; color:#666; margin-bottom:8px; min-height:18px; text-align:center; }
+.selected-name span { font-weight:800; color:#1a4a8c; }
+.submit-btn { width:100%; padding:14px; background:#1a4a8c; color:#fff; border:none; border-radius:12px; font-size:16px; font-weight:800; cursor:pointer; transition:all .15s; }
+.submit-btn:disabled { background:#ccc; cursor:not-allowed; }
+
+/* ── 확인 탭 ── */
+.confirm-page { padding:14px 16px; padding-bottom:80px; }
+.summary-box { background:linear-gradient(135deg,#1a4a8c,#2d6fd4); border-radius:14px; padding:16px; color:#fff; margin-bottom:14px; }
+.summary-title { font-size:13px; opacity:.75; margin-bottom:8px; }
+.summary-row { display:flex; justify-content:space-around; }
+.summary-item { text-align:center; }
+.summary-num { font-size:28px; font-weight:900; color:#a8c8f8; line-height:1; }
+.summary-label { font-size:11px; opacity:.7; margin-top:3px; }
+.section-title { font-size:13px; font-weight:700; color:#1a4a8c; margin-bottom:8px; padding-left:2px; }
+.confirm-tabs { display:flex; gap:8px; margin-bottom:14px; }
+.confirm-tab { flex:1; padding:9px 4px; border-radius:20px; border:2px solid #dde6f0; background:#fff; font-size:13px; font-weight:700; color:#5a6b85; cursor:pointer; text-align:center; transition:all .15s; }
+.confirm-tab.active { background:#1a4a8c; border-color:#1a4a8c; color:#fff; }
+.not-boarded-list { display:flex; flex-direction:column; gap:6px; }
+.nb-card { background:#fff; border-radius:12px; padding:12px 14px; display:flex; align-items:center; gap:12px; box-shadow:0 1px 4px rgba(0,0,0,.07); border-left:4px solid #e05555; }
+.ok-card { background:#fff; border-radius:12px; padding:12px 14px; display:flex; align-items:center; gap:12px; box-shadow:0 1px 4px rgba(0,0,0,.07); border-left:4px solid #27ae60; }
+.nb-num  { font-size:12px; color:#bbb; font-weight:600; width:20px; flex-shrink:0; }
+.nb-info { flex:1; }
+.nb-name { font-size:15px; font-weight:700; color:#1a2a3f; }
+
+.empty-msg { text-align:center; padding:40px 20px; color:#aaa; font-size:14px; }
+.stats-bar { position:fixed; bottom:0; left:0; right:0; background:#0f2a5c; color:#fff; padding:12px 20px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 -2px 12px rgba(0,0,0,.25); z-index:50; }
+.stats-num { font-size:24px; font-weight:900; color:#a8c8f8; }
+.stats-label { font-size:12px; opacity:.65; }
+.export-btn { background:#2d6fd4; color:#fff; border:none; padding:9px 18px; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer; }
+
+/* ── 자차이용 섹션 ── */
+.exempt-section { background:#fff8e1; border-radius:12px; padding:12px 14px; margin-bottom:14px; border-left:4px solid #f9a825; }
+.exempt-title { font-size:13px; font-weight:700; color:#e65100; margin-bottom:8px; }
+.exempt-search { display:flex; gap:8px; margin-bottom:8px; }
+.search-wrap { position:relative; flex:1; }
+.exempt-input { width:100%; padding:9px 12px; border:2px solid #ffe082; border-radius:10px; font-size:16px; outline:none; background:#fffde7; }
+.exempt-input:focus { border-color:#f9a825; }
+.exempt-add-btn { padding:9px 14px; background:#f9a825; color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; }
+.search-result { position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #ffe082; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,.12); z-index:200; max-height:200px; overflow-y:auto; display:none; }
+.search-item { padding:10px 14px; font-size:14px; cursor:pointer; border-bottom:1px solid #f5f5f5; }
+.search-item:last-child { border-bottom:none; }
+.search-item:hover { background:#fff8e1; }
+.search-item-name  { font-weight:700; color:#1a2a3f; }
+.search-item-phone { font-size:12px; color:#888; margin-top:1px; }
+.exempt-tags { display:flex; flex-wrap:wrap; gap:6px; min-height:10px; }
+.exempt-tag { display:flex; align-items:center; gap:4px; background:#fff3e0; border:1px solid #ffcc80; border-radius:20px; padding:4px 10px; font-size:13px; font-weight:600; color:#e65100; }
+.exempt-tag-del { background:none; border:none; color:#aaa; font-size:14px; cursor:pointer; padding:0 2px; line-height:1; }
+
+/* ── 다이얼로그 공통 ── */
+.dialog-bg, .confirm-dialog { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:300; align-items:center; justify-content:center; }
+.dialog-bg.show, .confirm-dialog.show { display:flex; }
+
+/* ── 탑승 완료 다이얼로그 ── */
+.dialog-box { background:#fff; border-radius:20px; padding:28px 24px; width:82%; max-width:320px; text-align:center; }
+.dialog-icon  { font-size:48px; margin-bottom:12px; }
+.dialog-title { font-size:18px; font-weight:900; color:#1a2a3f; margin-bottom:6px; }
+.dialog-msg   { font-size:14px; color:#666; margin-bottom:20px; line-height:1.5; }
+.dialog-ok    { width:100%; padding:13px; background:#1a4a8c; color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:800; cursor:pointer; }
+
+/* ── 스태프 인증 다이얼로그 ── */
+.cd-box   { background:#fff; border-radius:16px; padding:24px 20px; width:88%; max-width:340px; text-align:center; }
+.cd-title { font-size:16px; font-weight:800; color:#1a2a3f; margin-bottom:8px; }
+.cd-msg   { font-size:13px; color:#666; margin-bottom:20px; line-height:1.5; }
+.cd-btns  { display:flex; gap:10px; }
+.cd-btn   { flex:1; padding:12px; border-radius:10px; border:none; font-size:14px; font-weight:700; cursor:pointer; }
+.cd-btn.cancel { background:#f0f4fa; color:#666; }
+.cd-btn.ok     { background:#c0392b; color:#fff; }
+.pin-input { width:100%; padding:12px; border:2px solid #dde6f0; border-radius:10px; font-size:22px; text-align:center; letter-spacing:8px; outline:none; margin-bottom:8px; }
+.pin-error { font-size:12px; color:#c0392b; min-height:16px; margin-bottom:10px; }
+.staff-btn { width:100%; padding:11px; border-radius:10px; border:2px solid #dde6f0; background:#f4f7fc; font-size:15px; font-weight:700; color:#1a2a3f; cursor:pointer; margin-bottom:8px; }
+
+/* ── 내보내기 모달 ── */
+.modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:200; align-items:flex-end; }
+.modal-bg.show { display:flex; }
+.modal { background:#fff; width:100%; border-radius:20px 20px 0 0; padding:24px 20px 40px; }
+.modal h2 { font-size:16px; font-weight:800; color:#1a2a3f; margin-bottom:16px; }
+.modal-close { float:right; background:none; border:none; font-size:20px; cursor:pointer; color:#888; }
+.export-text { background:#f4f7fc; border:1px solid #c0cfe8; border-radius:10px; padding:12px; font-size:12px; color:#1a2a3f; white-space:pre-wrap; max-height:320px; overflow-y:auto; line-height:1.7; }
+.copy-btn { width:100%; margin-top:12px; padding:14px; background:#1a4a8c; color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<div class="header" style="display:flex;align-items:center;justify-content:space-between;">
+  <div>
+    <h1>🚌 셔틀버스 탑승 확인</h1>
+    <div class="header-sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;">
+      총 <span id="headerTotalCount">0</span>명 | 셔틀 <span id="headerBusCount">0</span>명 | 자차 <span id="headerExemptCount">0</span>명
+    </div>
+  </div>
+  <button id="logoutBtn" onclick="doLogout()" style="display:none;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;">🔓 로그아웃</button>
+</div>
+
+<div class="main-tabs">
+  <div class="main-tab active" onclick="switchPage('check')">✋ 탑승 체크</div>
+  <div class="main-tab" onclick="switchPage('confirm')">📋 확인</div>
+</div>
+
+<!-- ── 탑승 체크 탭 ── -->
+<div class="page active" id="page-check">
+  <div class="guide-box">
+    📌 <strong>본인 이름을 선택</strong>한 후 아래 <strong>제출하기</strong> 버튼을 눌러주세요
+  </div>
+  <div class="admin-bar">
+    <button class="admin-btn refresh" onclick="loadFromServer()">🔃 새로고침</button>
+  </div>
+  <div class="veh-filter" id="vehFilter">
+    <button class="veh-chip active" data-veh="all" onclick="setVehFilter('all')">전체 <span id="vfAllCount"></span></button>
+    <button class="veh-chip" data-veh="1호차" onclick="setVehFilter('1호차')">🚍1호차 <span id="vf1Count"></span></button>
+    <button class="veh-chip" data-veh="2호차" onclick="setVehFilter('2호차')">🚍2호차 <span id="vf2Count"></span></button>
+  </div>
+  <div class="bus-grid" id="busList"></div>
+  <div class="submit-bar">
+    <div class="selected-name" id="selectedLabel">이름을 선택해주세요</div>
+    <button class="submit-btn" id="submitBtn" disabled onclick="submitBoard()">제출하기</button>
+  </div>
+</div>
+
+<!-- ── 확인 탭 ── -->
+<div class="page" id="page-confirm">
+  <div class="confirm-page">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+      <button class="admin-btn reset" style="flex:none;padding:8px 18px;" onclick="tryReset()">🔄 전체 초기화</button>
+    </div>
+    <div class="summary-box">
+      <div class="summary-title">🚌 탑승 현황 요약</div>
+      <div class="summary-row">
+        <div class="summary-item">
+          <div class="summary-num" id="totalNum">0</div>
+          <div class="summary-label">총 인원</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-num" id="boardedNum" style="color:#a8f0c6">0</div>
+          <div class="summary-label">탑승 완료</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-num" id="notBoardedNum" style="color:#ffb3b3">0</div>
+          <div class="summary-label">미탑승</div>
+        </div>
+      </div>
+      <div class="summary-row" style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.18);">
+        <div class="summary-item">
+          <div class="summary-num" id="veh1Num" style="font-size:17px;color:#e8f0fe">0/0</div>
+          <div class="summary-label">🚍 1호차</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-num" id="veh2Num" style="font-size:17px;color:#e8f0fe">0/0</div>
+          <div class="summary-label">🚍 2호차</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 자차이용 섹션 -->
+    <div class="exempt-section">
+      <div class="exempt-title">🚗 자차이용자 등록 (탑승 명단에서 제외)</div>
+      <div class="exempt-search">
+        <div class="search-wrap">
+          <input class="exempt-input" id="exemptInput" type="text"
+            placeholder="이름 검색"
+            oninput="searchExempt(this.value)" autocomplete="off">
+          <div class="search-result" id="searchResult"></div>
+        </div>
+        <button class="exempt-add-btn" onclick="addExemptManual()">추가</button>
+      </div>
+      <div class="exempt-tags" id="exemptTags"></div>
+    </div>
+
+    <div class="confirm-tabs" id="confirmVehTabs">
+      <button class="confirm-tab active" data-cveh="all" onclick="setConfirmVehFilter('all')">전체</button>
+      <button class="confirm-tab" data-cveh="1호차" onclick="setConfirmVehFilter('1호차')">🚍 1호차</button>
+      <button class="confirm-tab" data-cveh="2호차" onclick="setConfirmVehFilter('2호차')">🚍 2호차</button>
+    </div>
+
+    <div class="section-title" id="boardedTitle">✅ 탑승자 (0명)</div>
+    <div class="not-boarded-list" id="boardedList" style="margin-bottom:14px"></div>
+    <div class="section-title" id="notBoardedTitle">⚠️ 미탑승자</div>
+    <div class="not-boarded-list" id="notBoardedList"></div>
+  </div>
+  <div class="stats-bar">
+    <div>
+      <div class="stats-label">탑승 인원</div>
+      <div><span class="stats-num" id="boardCount">0</span><span id="statsTotal" style="font-size:12px;opacity:.5"> / 0명</span></div>
+    </div>
+    <button class="export-btn" onclick="showExport()">📋 내보내기</button>
+  </div>
+</div>
+
+<!-- ── 탑승 완료 다이얼로그 ── -->
+<div class="dialog-bg" id="doneDialog">
+  <div class="dialog-box">
+    <div class="dialog-icon">🚌</div>
+    <div class="dialog-title" id="doneName"></div>
+    <div class="dialog-msg">탑승이 확인되었습니다!</div>
+    <button class="dialog-ok" onclick="closeDone()">확인</button>
+  </div>
+</div>
+
+<!-- ── 스태프 인증 다이얼로그 ── -->
+<div class="confirm-dialog" id="authDialog">
+  <div class="cd-box">
+    <div class="cd-title" id="authTitle">🔐 스태프 인증</div>
+    <div class="cd-msg" id="authMsg">초기화 권한이 있는 스태프만 가능합니다</div>
+
+    <!-- Step 1: 이름 선택 -->
+    <div id="authStep1">
+      <div style="font-size:12px;color:#888;margin-bottom:8px;text-align:left;font-weight:600;">스태프 이름 선택</div>
+      <div id="staffButtons"></div>
+      <div class="cd-btns" style="margin-top:4px;">
+        <button class="cd-btn cancel" onclick="hideAuthDialog()">취소</button>
+      </div>
+    </div>
+
+    <!-- Step 2: PIN 입력 -->
+    <div id="authStep2" style="display:none;">
+      <div style="font-size:13px;font-weight:700;color:#1a2a3f;margin-bottom:4px;" id="selectedStaffName"></div>
+      <div style="font-size:12px;color:#888;margin-bottom:10px;text-align:left;">전화번호 뒤 4자리를 입력하세요</div>
+      <input class="pin-input" id="pinInput" type="tel" maxlength="4" inputmode="numeric" placeholder="0000"
+        oninput="this.value=this.value.replace(/\D/g,'')"
+        onkeyup="if(this.value.length===4) verifyPin()">
+      <label style="display:flex;align-items:center;justify-content:center;gap:6px;margin:2px 0 10px;font-size:12px;color:#666;cursor:pointer;">
+        <input type="checkbox" id="pinRememberCheck" style="width:15px;height:15px;">
+        로그인 상태 유지 (다음에 자동 로그인)
+      </label>
+      <div class="pin-error" id="pinError"></div>
+      <div class="cd-btns">
+        <button class="cd-btn cancel" onclick="goAuthStep(1)">← 뒤로</button>
+        <button class="cd-btn ok" onclick="verifyPin()">확인</button>
+      </div>
+    </div>
+
+    <!-- Step 3: 최종 확인 -->
+    <div id="authStep3" style="display:none;">
+      <div style="font-size:13px;color:#27ae60;font-weight:700;margin-bottom:6px;">✅ 인증 완료</div>
+      <div class="cd-msg" id="authStep3Msg"></div>
+      <div class="cd-btns">
+        <button class="cd-btn cancel" onclick="hideAuthDialog()">취소</button>
+        <button class="cd-btn ok" id="authOkBtn" onclick="handleAuthOk()">확인</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 내보내기 모달 ── -->
+<div class="modal-bg" id="modalBg" onclick="hideExport(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="hideExport()">✕</button>
+    <h2>🚌 버스 탑승 명단</h2>
+    <div class="export-text" id="exportText"></div>
+    <button class="copy-btn" onclick="copyText()">클립보드에 복사</button>
+  </div>
+</div>
+
+<script>
+// ── 탑승자 명단 (구글시트 '차량배치' 탭 기준: 1호차/2호차) ──
+const people = [
+  // 1호차 (36명)
+  {name:"김범",   vehicle:"1호차"}, {name:"김종환", vehicle:"1호차"}, {name:"차충석", vehicle:"1호차"},
+  {name:"최원현", vehicle:"1호차"}, {name:"조양환", vehicle:"1호차"}, {name:"서인식", vehicle:"1호차"},
+  {name:"이승훈", vehicle:"1호차"}, {name:"안영주", vehicle:"1호차"}, {name:"박용수", vehicle:"1호차"},
+  {name:"강민봉", vehicle:"1호차"}, {name:"김경희", vehicle:"1호차"}, {name:"고혜현", vehicle:"1호차"},
+  {name:"이미숙", vehicle:"1호차"}, {name:"김미라", vehicle:"1호차"}, {name:"임동우", vehicle:"1호차"},
+  {name:"최난주", vehicle:"1호차"}, {name:"이영선", vehicle:"1호차"}, {name:"김미숙", vehicle:"1호차"},
+  {name:"이지영", vehicle:"1호차"}, {name:"박정신", vehicle:"1호차"}, {name:"양선희", vehicle:"1호차"},
+  {name:"이태옥", vehicle:"1호차"}, {name:"원준환", vehicle:"1호차"}, {name:"이은영", vehicle:"1호차"},
+  {name:"호창우", vehicle:"1호차"}, {name:"강동우", vehicle:"1호차"}, {name:"정현주", vehicle:"1호차"},
+  {name:"유연희", vehicle:"1호차"}, {name:"전태룡", vehicle:"1호차"}, {name:"최낙봉", vehicle:"1호차"},
+  {name:"오양근", vehicle:"1호차"}, {name:"박선영", vehicle:"1호차"}, {name:"김수현", vehicle:"1호차"},
+  {name:"송일령", vehicle:"1호차"}, {name:"김하연", vehicle:"1호차"}, {name:"고영수", vehicle:"1호차"},
+  // 2호차 (35명)
+  {name:"김영미", vehicle:"2호차"}, {name:"오은영", vehicle:"2호차"}, {name:"정명례", vehicle:"2호차"},
+  {name:"정경숙", vehicle:"2호차"}, {name:"안선영", vehicle:"2호차"}, {name:"백현정", vehicle:"2호차"},
+  {name:"임효창", vehicle:"2호차"}, {name:"이현주", vehicle:"2호차"}, {name:"김기정", vehicle:"2호차"},
+  {name:"김수경", vehicle:"2호차"}, {name:"박길종", vehicle:"2호차"}, {name:"홍은주", vehicle:"2호차"},
+  {name:"김선의", vehicle:"2호차"}, {name:"변정숙", vehicle:"2호차"}, {name:"박준서", vehicle:"2호차"},
+  {name:"박민서", vehicle:"2호차"}, {name:"고은송", vehicle:"2호차"}, {name:"진수진", vehicle:"2호차"},
+  {name:"차지현", vehicle:"2호차"}, {name:"이난희", vehicle:"2호차"}, {name:"고온조", vehicle:"2호차"},
+  {name:"정옥경", vehicle:"2호차"}, {name:"김의겸", vehicle:"2호차"}, {name:"이문숙", vehicle:"2호차"},
+  {name:"김연화", vehicle:"2호차"}, {name:"손오성", vehicle:"2호차"}, {name:"지희숙", vehicle:"2호차"},
+  {name:"모예은", vehicle:"2호차"}, {name:"도승재", vehicle:"2호차"}, {name:"장소라", vehicle:"2호차"},
+  {name:"유원종", vehicle:"2호차"}, {name:"차형심", vehicle:"2호차"}, {name:"황은성", vehicle:"2호차"},
+  {name:"박희철", vehicle:"2호차"}, {name:"김대욱", vehicle:"2호차"}
+];
+
+// ── 스태프 목록 ──
+const staffList = [
+  {name:"전태룡", title:"총무", pin:"7463"},
+  {name:"유원종", title:"장로", pin:"6142"},
+  {name:"고영수", title:"목사", pin:"0692"}
+];
+
+// ── GAS URL ──
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzvO5lEtq4xEmSrOy3oAR84M8_-hdG8SOm8xoWWCR65PRA2muH6BDvtgQjodnO9PfRq0g/exec';
+
+// ── 상태 변수 ──
+let busData = {};
+let selectedName = null;
+let currentPage = 'check';
+let exemptSet = new Set();
+let vehFilter = 'all'; // 'all' | '1호차' | '2호차'
+let confirmVehFilter = 'all'; // 확인 탭 서브탭: 'all' | '1호차' | '2호차'
+
+// ════════════════════════════════════════
+//  서버 연동
+// ════════════════════════════════════════
+async function loadFromServer() {
+  try {
+    const res  = await fetch(GAS_URL + '?action=getAll');
+    const json = await res.json();
+    if (json.ok) {
+      people.forEach(p => busData[p.name] = !!json.data[p.name]);
+      // 자차이용자 서버에서 복원
+      if (json.exempt && json.exempt.length) {
+        exemptSet = new Set(json.exempt);
+        if (currentPage === 'confirm') renderExemptTags();
+      }
+      currentPage === 'check' ? renderCheck() : renderConfirm();
+    }
+  } catch(e) { console.warn('서버 로드 실패', e); }
+}
+
+function init() {
+  people.forEach(p => busData[p.name] = false);
+  // 저장된 로그인 상태 복원 (PIN 저장 체크된 경우)
+  try {
+    const saved = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (saved) {
+      const staff = JSON.parse(saved);
+      if (staff && staff.name) {
+        staffAuthed = true;
+        document.getElementById('logoutBtn').style.display = 'block';
+      }
+    }
+  } catch(e) { console.warn('로그인 상태 복원 실패', e); }
+  loadFromServer();
+  setInterval(loadFromServer, 10000);
+}
+
+// ════════════════════════════════════════
+//  탑승 체크 탭
+// ════════════════════════════════════════
+function updateHeaderStats() {
+  const busCount    = people.filter(p => busData[p.name] && !exemptSet.has(p.name)).length;
+  const exemptCount = exemptSet.size;
+  const busTotal    = people.length - exemptCount; // 셔틀 대상 인원
+  document.getElementById('headerTotalCount').textContent  = people.length;
+  document.getElementById('headerBusCount').textContent    = busCount + '/' + busTotal;
+  document.getElementById('headerExemptCount').textContent = exemptCount;
+}
+
+function updateVehChipCounts() {
+  const active = people.filter(p => !exemptSet.has(p.name));
+  document.getElementById('vfAllCount').textContent = '(' + active.length + ')';
+  document.getElementById('vf1Count').textContent   = '(' + active.filter(p => p.vehicle === '1호차').length + ')';
+  document.getElementById('vf2Count').textContent   = '(' + active.filter(p => p.vehicle === '2호차').length + ')';
+}
+
+function setVehFilter(v) {
+  vehFilter = v;
+  document.querySelectorAll('.veh-chip').forEach(c => c.classList.toggle('active', c.dataset.veh === v));
+  renderCheck();
+}
+
+function renderCheck() {
+  const container = document.getElementById('busList');
+  updateHeaderStats();
+  updateVehChipCounts();
+
+  const activePeople = people.filter(p => !exemptSet.has(p.name));
+  const vehicles = vehFilter === 'all' ? ['1호차', '2호차'] : [vehFilter];
+
+  let html = '';
+  vehicles.forEach(v => {
+    const list = activePeople.filter(p => p.vehicle === v);
+    if (!list.length) return;
+    const boardedInV = list.filter(p => busData[p.name]).length;
+    html += `<div class="veh-section-title">🚍 ${v} (${boardedInV}/${list.length}명)</div>`;
+    html += '<div class="bus-grid-inner">' + list.map((p, i) => {
+      const boarded    = !!busData[p.name];
+      const isSelected = selectedName === p.name;
+      return `
+        <div class="bus-card${boarded ? ' boarded' : isSelected ? ' selected' : ''}"
+             ${!boarded ? `onclick="selectName('${p.name}')"` : ''}>
+          <div class="bus-num">${i+1}</div>
+          <div class="bus-name">${p.name}</div>
+          <div class="bus-check">${boarded ? '✅' : isSelected ? '👆' : ''}</div>
+        </div>`;
+    }).join('') + '</div>';
+  });
+  container.innerHTML = html || '<div class="empty-msg">표시할 인원이 없습니다</div>';
+  updateSubmitBar();
+}
+
+function selectName(name) {
+  if (busData[name]) return;
+  selectedName = selectedName === name ? null : name;
+  renderCheck();
+}
+
+function updateSubmitBar() {
+  const label = document.getElementById('selectedLabel');
+  const btn   = document.getElementById('submitBtn');
+  if (selectedName) {
+    label.innerHTML  = `선택: <span>${selectedName}</span>`;
+    btn.disabled     = false;
+  } else {
+    label.innerHTML  = '이름을 선택해주세요';
+    btn.disabled     = true;
+  }
+}
+
+async function submitBoard() {
+  if (!selectedName) return;
+  const name = selectedName;
+  busData[name] = true;
+  selectedName  = null;
+  renderCheck();
+  document.getElementById('doneName').textContent = name + ' 님';
+  document.getElementById('doneDialog').classList.add('show');
+  try {
+    await fetch(GAS_URL, { method:'POST', body: JSON.stringify({action:'board', name}) });
+    loadFromServer();
+  } catch(e) { alert('저장 실패. 네트워크를 확인해주세요.'); }
+}
+
+function closeDone() {
+  document.getElementById('doneDialog').classList.remove('show');
+}
+
+// ════════════════════════════════════════
+//  확인 탭
+// ════════════════════════════════════════
+function setConfirmVehFilter(v) {
+  confirmVehFilter = v;
+  document.querySelectorAll('.confirm-tab').forEach(t => t.classList.toggle('active', t.dataset.cveh === v));
+  renderConfirm();
+}
+
+function renderConfirm() {
+  updateHeaderStats();
+  const vehMatch    = p => confirmVehFilter === 'all' || p.vehicle === confirmVehFilter;
+  const activeTotal = people.filter(p => !exemptSet.has(p.name) && vehMatch(p)).length;
+  const boarded     = people.filter(p => busData[p.name]  && !exemptSet.has(p.name) && vehMatch(p));
+  const notBoarded  = people.filter(p => !busData[p.name] && !exemptSet.has(p.name) && vehMatch(p));
+
+  document.getElementById('totalNum').textContent     = activeTotal;
+  document.getElementById('boardedNum').textContent   = boarded.length;
+  document.getElementById('notBoardedNum').textContent= notBoarded.length;
+  document.getElementById('boardCount').textContent   = boarded.length;
+  document.getElementById('statsTotal').textContent   = ` / ${activeTotal}명`;
+
+  // 차량별 현황 (1호차/2호차)
+  ['1호차','2호차'].forEach((v, idx) => {
+    const vActive  = people.filter(p => p.vehicle === v && !exemptSet.has(p.name));
+    const vBoarded = vActive.filter(p => busData[p.name]);
+    document.getElementById('veh' + (idx+1) + 'Num').textContent = `${vBoarded.length}/${vActive.length}`;
+  });
+
+  // 탑승자 목록
+  document.getElementById('boardedTitle').textContent = `✅ 탑승자 (${boarded.length}명)`;
+  const bl = document.getElementById('boardedList');
+  bl.innerHTML = boarded.length === 0
+    ? '<div class="empty-msg" style="padding:16px;font-size:13px;">탑승자가 없습니다</div>'
+    : boarded.map((p,i) => `
+        <div class="ok-card">
+          <div class="nb-num">${i+1}</div>
+          <div class="nb-info"><div class="nb-name">🚌 ${p.name}<span class="veh-tag">${p.vehicle}</span></div></div>
+        </div>`).join('');
+
+  // 미탑승자 목록
+  document.getElementById('notBoardedTitle').textContent = `⚠️ 미탑승자 (${notBoarded.length}명)`;
+  const nl = document.getElementById('notBoardedList');
+  nl.innerHTML = notBoarded.length === 0
+    ? '<div class="empty-msg">🎉 전원 탑승 완료!</div>'
+    : notBoarded.map((p,i) => `
+        <div class="nb-card">
+          <div class="nb-num">${i+1}</div>
+          <div class="nb-info"><div class="nb-name">${p.name}<span class="veh-tag">${p.vehicle}</span></div></div>
+        </div>`).join('');
+}
+
+// ════════════════════════════════════════
+//  탭 전환
+// ════════════════════════════════════════
+function switchPage(page) {
+  if (page === 'confirm' && !staffAuthed) {
+    showAuthDialog(true); // 확인 탭 진입 인증
+    return;
+  }
+  currentPage = page;
+  document.querySelectorAll('.main-tab').forEach((t,i) =>
+    t.classList.toggle('active', (i===0 && page==='check') || (i===1 && page==='confirm'))
+  );
+  document.getElementById('page-check').classList.toggle('active',   page==='check');
+  document.getElementById('page-confirm').classList.toggle('active', page==='confirm');
+  if (page === 'confirm') { renderExemptTags(); renderConfirm(); }
+}
+
+// ════════════════════════════════════════
+//  자차이용 관리
+// ════════════════════════════════════════
+function searchExempt(val) {
+  const result = document.getElementById('searchResult');
+  const q = val.trim();
+  if (!q) { result.style.display = 'none'; return; }
+  const matches = people.filter(p => !exemptSet.has(p.name) && p.name.includes(q));
+  if (!matches.length) { result.style.display = 'none'; return; }
+  result.innerHTML = matches.map(p => `
+    <div class="search-item" onclick="addExempt('${p.name}')">
+      <div class="search-item-name">${p.name}</div>
+      <div class="search-item-phone">${p.vehicle}</div>
+    </div>`).join('');
+  result.style.display = 'block';
+}
+
+function addExemptManual() {
+  const q = document.getElementById('exemptInput').value.trim();
+  if (!q) return;
+  const match = people.find(p => p.name === q);
+  match ? addExempt(match.name) : alert('일치하는 탑승자를 찾을 수 없습니다.');
+}
+
+async function addExempt(name) {
+  exemptSet.add(name);
+  document.getElementById('exemptInput').value = '';
+  document.getElementById('searchResult').style.display = 'none';
+  renderExemptTags();
+  renderCheck();
+  renderConfirm();
+  try {
+    await fetch(GAS_URL, { method:'POST', body: JSON.stringify({action:'exemptAdd', name}) });
+  } catch(e) { console.warn('자차 저장 실패', e); }
+}
+
+async function removeExempt(name) {
+  exemptSet.delete(name);
+  renderExemptTags();
+  renderCheck();
+  renderConfirm();
+  try {
+    await fetch(GAS_URL, { method:'POST', body: JSON.stringify({action:'exemptRemove', name}) });
+  } catch(e) { console.warn('자차 삭제 실패', e); }
+}
+
+function renderExemptTags() {
+  const wrap = document.getElementById('exemptTags');
+  wrap.innerHTML = exemptSet.size === 0
+    ? '<span style="font-size:12px;color:#aaa;">등록된 자차이용자 없음</span>'
+    : [...exemptSet].map(name =>
+        `<span class="exempt-tag">${name}<button class="exempt-tag-del" onclick="removeExempt('${name}')">✕</button></span>`
+      ).join('');
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap'))
+    document.getElementById('searchResult').style.display = 'none';
+});
+
+// ════════════════════════════════════════
+//  스태프 인증 다이얼로그
+// ════════════════════════════════════════
+let authMode = 'reset'; // 'reset' | 'enter'
+let authSelectedStaff = null;
+let staffAuthed = false; // 한번 인증 후 로그아웃 전까지 유지
+const AUTH_STORAGE_KEY = 'busCheckAuthStaff'; // PIN 저장(로그인 유지) 로컬스토리지 키
+
+function showAuthDialog(isEnter) {
+  authMode = isEnter ? 'enter' : 'reset';
+  authSelectedStaff = null;
+  document.getElementById('authTitle').textContent = isEnter ? '🔐 확인 탭 인증' : '🔐 스태프 인증';
+  document.getElementById('authMsg').innerHTML     = isEnter
+    ? '스태프만 확인 탭에<br>접근할 수 있습니다'
+    : '초기화 권한이 있는 스태프만<br>가능합니다';
+  // 스태프 버튼 렌더링
+  document.getElementById('staffButtons').innerHTML = staffList.map((s,i) =>
+    `<button class="staff-btn" onclick="selectStaff(${i})">${s.name} ${s.title}</button>`
+  ).join('');
+  goAuthStep(1);
+  document.getElementById('authDialog').classList.add('show');
+}
+
+function hideAuthDialog() {
+  document.getElementById('authDialog').classList.remove('show');
+  authSelectedStaff = null;
+}
+
+function goAuthStep(n) {
+  [1,2,3].forEach(i =>
+    document.getElementById('authStep'+i).style.display = (i===n ? '' : 'none')
+  );
+  if (n === 1) {
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinError').textContent = '';
+    document.getElementById('pinRememberCheck').checked = false;
+    authSelectedStaff = null;
+  }
+}
+
+function selectStaff(idx) {
+  authSelectedStaff = staffList[idx];
+  document.getElementById('selectedStaffName').textContent = `👤 ${authSelectedStaff.name} ${authSelectedStaff.title}`;
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinError').textContent = '';
+  goAuthStep(2);
+  setTimeout(() => document.getElementById('pinInput').focus(), 100);
+}
+
+function verifyPin() {
+  const input = document.getElementById('pinInput').value;
+  if (input.length < 4) {
+    document.getElementById('pinError').textContent = '4자리를 모두 입력해주세요';
+    return;
+  }
+  if (authSelectedStaff && input === authSelectedStaff.pin) {
+    const isEnter = authMode === 'enter';
+    document.getElementById('authStep3Msg').innerHTML = isEnter
+      ? '확인 탭으로 이동합니다' : '모든 탑승 데이터를<br>초기화할까요?';
+    const okBtn = document.getElementById('authOkBtn');
+    okBtn.textContent        = isEnter ? '이동' : '초기화';
+    okBtn.style.background   = isEnter ? '#1a4a8c' : '#c0392b';
+    goAuthStep(3);
+  } else {
+    document.getElementById('pinError').textContent = '❌ 번호가 일치하지 않습니다';
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinInput').focus();
+  }
+}
+
+function handleAuthOk() {
+  if (authMode === 'enter') {
+    staffAuthed = true;
+    document.getElementById('logoutBtn').style.display = 'block';
+    // PIN 저장 체크 여부에 따라 로그인 상태를 로컬에 유지
+    const remember = document.getElementById('pinRememberCheck').checked;
+    if (remember && authSelectedStaff) {
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ name: authSelectedStaff.name, title: authSelectedStaff.title }));
+    } else {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+    }
+    hideAuthDialog();
+    switchPage('confirm');
+  } else {
+    doReset();
+  }
+}
+
+// 초기화 시도 - 인증됐으면 바로 Step3, 아니면 인증부터
+function tryReset() {
+  if (staffAuthed) {
+    // 이미 인증 상태 - 바로 확인창 표시
+    showResetConfirm();
+  } else {
+    showAuthDialog(false);
+  }
+}
+
+function showResetConfirm() {
+  document.getElementById('authTitle').textContent = '🔄 전체 초기화';
+  document.getElementById('authMsg').innerHTML = '';
+  document.getElementById('authStep3Msg').innerHTML = '탑승 데이터를 초기화할까요?<br><span style="font-size:11px;color:#aaa;">(자차이용자는 유지됩니다)</span>';
+  const okBtn = document.getElementById('authOkBtn');
+  okBtn.textContent      = '초기화';
+  okBtn.style.background = '#c0392b';
+  authMode = 'reset';
+  [1,2,3].forEach(i => document.getElementById('authStep'+i).style.display = (i===3?'':'none'));
+  document.getElementById('authDialog').classList.add('show');
+}
+
+async function doReset() {
+  // 탑승 데이터만 초기화 (자차이용자 exemptSet 유지)
+  people.forEach(p => busData[p.name] = false);
+  selectedName = null;
+  hideAuthDialog();
+  switchPage('check'); // 탑승 체크 탭으로 이동
+  renderCheck();
+  try {
+    await fetch(GAS_URL, { method:'POST', body: JSON.stringify({action:'reset'}) });
+    await loadFromServer(); // 서버 데이터로 갱신
+  } catch(e) { alert('초기화 실패. 네트워크를 확인해주세요.'); }
+}
+
+// ════════════════════════════════════════
+//  내보내기
+// ════════════════════════════════════════
+function showExport() {
+  const boarded    = people.filter(p =>  busData[p.name] && !exemptSet.has(p.name));
+  const notBoarded = people.filter(p => !busData[p.name] && !exemptSet.has(p.name));
+  const exempt     = [...exemptSet];
+  let text = `🚌 버스 탑승 명단\n${'='.repeat(28)}\n`;
+  text += `총 ${people.length - exempt.length}명 | 탑승 ${boarded.length}명 | 미탑승 ${notBoarded.length}명\n`;
+  if (boarded.length)    text += `\n[탑승 완료 ${boarded.length}명]\n`    + boarded.map((p,i)    => `${i+1}. ${p.name}  (${p.vehicle})`).join('\n') + '\n';
+  if (notBoarded.length) text += `\n[미탑승 ${notBoarded.length}명]\n`    + notBoarded.map((p,i) => `${i+1}. ${p.name}  (${p.vehicle})`).join('\n') + '\n';
+  if (exempt.length)     text += `\n[자차이용 ${exempt.length}명]\n`      + exempt.map((n,i)     => `${i+1}. ${n}`).join('\n') + '\n';
+  document.getElementById('exportText').textContent = text;
+  document.getElementById('modalBg').classList.add('show');
+}
+
+function hideExport(e) {
+  if (!e || e.target === document.getElementById('modalBg'))
+    document.getElementById('modalBg').classList.remove('show');
+}
+
+function copyText() {
+  navigator.clipboard.writeText(document.getElementById('exportText').textContent).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✅ 복사됨!';
+    setTimeout(() => btn.textContent = '클립보드에 복사', 1500);
+  });
+}
+
+function doLogout() {
+  staffAuthed = false;
+  localStorage.removeItem(AUTH_STORAGE_KEY);
+  document.getElementById('logoutBtn').style.display = 'none';
+  switchPage('check'); // 체크 탭으로 이동
+}
+
+// ── 시작 ──
+init();
+renderCheck();
+</script>
+</body>
+</html>
