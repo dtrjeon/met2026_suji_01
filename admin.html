@@ -874,7 +874,7 @@ var GAS_URL = 'https://script.google.com/macros/s/AKfycbzvO5lEtq4xEmSrOy3oAR84M8
 var TEST_MODE =  false;
 
 // ── admin.html 전체 버전 (배포 후 반영 여부 확인용 - 수정할 때마다 날짜/번호 갱신) ──
-var ADMIN_VERSION = 'v1.1-debug (2026-07-05)';
+var ADMIN_VERSION = 'v1.2-trace (2026-07-05)';
 
 
 // ── 사용자 권한 테이블 ──
@@ -1800,9 +1800,12 @@ function renderCard(d, i, total) {
 
 // ── 상세 보기 ──
 function openDetail(idx) {
+  alert('②openDetail idx='+idx+' canPopup='+canPopup()+' currentUser='+(currentUser?currentUser.name+'/'+currentUser.detailPopup:'null'));
   if (!canPopup()) return; // 팝업 권한 없으면 차단
-  var d = filtered[idx]; if(!d) return;
+  var d = filtered[idx]; if(!d) { alert('③d 없음 (idx가 filtered 범위를 벗어남)'); return; }
+  alert('④renderDetailFor 호출 직전: '+d.name);
   renderDetailFor(d);
+  alert('⑤renderDetailFor 완료');
 }
 // 확인필요 탭 등에서 rno로 직접 상세보기를 열 때 사용 (슈퍼바이저 전용)
 function openDetailByRno(rno){
@@ -4466,6 +4469,7 @@ function updateVehSelBar() {
 }
 
 function onCardClick(event, idx) {
+  alert('①탭됨 idx='+idx+' selMode='+_selMode+' vehSelMode='+_vehSelMode+' filtered.length='+filtered.length);
   if (_selMode) {
     var d = filtered[idx];
     if (d) toggleSelCard(d.rno);
