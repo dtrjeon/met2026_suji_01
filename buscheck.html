@@ -71,6 +71,8 @@ body { font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background:#
 .confirm-tab.active { background:#1a4a8c; border-color:#1a4a8c; color:#fff; }
 .not-boarded-list { display:flex; flex-direction:column; gap:6px; }
 .nb-card { background:#fff; border-radius:12px; padding:12px 14px; display:flex; align-items:center; gap:12px; box-shadow:0 1px 4px rgba(0,0,0,.07); border-left:4px solid #e05555; }
+.nb-phone { font-size:12px; color:#888; margin-top:2px; }
+.nb-call { flex-shrink:0; display:flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:50%; background:#e8f8ee; color:#1a8c4a; font-size:16px; text-decoration:none; }
 .ok-card { background:#fff; border-radius:12px; padding:12px 14px; display:flex; align-items:center; gap:12px; box-shadow:0 1px 4px rgba(0,0,0,.07); border-left:4px solid #27ae60; }
 .nb-num  { font-size:12px; color:#bbb; font-weight:600; width:20px; flex-shrink:0; }
 .nb-info { flex:1; }
@@ -359,6 +361,7 @@ let currentPage = 'check';
 let exemptSet = new Set();
 let vehFilter = 'all'; // 'all' | '1호차' | '2호차'
 let confirmVehFilter = 'all'; // 확인 탭 서브탭: 'all' | '1호차' | '2호차'
+let phoneMap = {}; // 이름 → 전화번호 (구글시트 MET2026신청 원본에서 가져옴)
 
 // ════════════════════════════════════════
 //  서버 연동
@@ -379,6 +382,18 @@ async function loadFromServer() {
   } catch(e) { console.warn('서버 로드 실패', e); }
 }
 
+// 전화번호는 자주 안 바뀌므로 초기 1회만 불러옴 (10초마다 도는 loadFromServer와 별개)
+async function loadRoster() {
+  try {
+    const res  = await fetch(GAS_URL + '?action=busRoster');
+    const json = await res.json();
+    if (json.result === 'ok' && json.data) {
+      json.data.forEach(r => { if (r.phone) phoneMap[r.name] = r.phone; });
+      if (currentPage === 'confirm') renderConfirm();
+    }
+  } catch(e) { console.warn('전화번호 로드 실패', e); }
+}
+
 function init() {
   people.forEach(p => busData[p.name] = false);
   // 저장된 로그인 상태 복원 (PIN 저장 체크된 경우)
@@ -393,6 +408,7 @@ function init() {
     }
   } catch(e) { console.warn('로그인 상태 복원 실패', e); }
   loadFromServer();
+  loadRoster();
   setInterval(loadFromServer, 10000);
 }
 
@@ -532,11 +548,17 @@ function renderConfirm() {
   const nl = document.getElementById('notBoardedList');
   nl.innerHTML = notBoarded.length === 0
     ? '<div class="empty-msg">🎉 전원 탑승 완료!</div>'
-    : notBoarded.map((p,i) => `
+    : notBoarded.map((p,i) => {
+        const phone = phoneMap[p.name] || '';
+        const phoneHtml = phone ? `<div class="nb-phone">${phone}</div>` : '';
+        const callHtml  = phone ? `<a class="nb-call" href="tel:${phone}" onclick="event.stopPropagation()">📞</a>` : '';
+        return `
         <div class="nb-card">
           <div class="nb-num">${i+1}</div>
-          <div class="nb-info"><div class="nb-name">${p.name}<span class="veh-tag">${p.vehicle}</span></div></div>
-        </div>`).join('');
+          <div class="nb-info"><div class="nb-name">${p.name}<span class="veh-tag">${p.vehicle}</span></div>${phoneHtml}</div>
+          ${callHtml}
+        </div>`;
+      }).join('');
 }
 
 // ════════════════════════════════════════
