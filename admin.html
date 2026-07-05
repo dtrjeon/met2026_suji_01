@@ -16,7 +16,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html{height:-webkit-fill-available;background:#d7dee6;}
-body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:-webkit-fill-available;-webkit-text-size-adjust:100%;max-width:480px;margin:0 auto;position:relative;transform:translateZ(0);box-shadow:0 0 28px rgba(0,0,0,0.18);}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:-webkit-fill-available;-webkit-text-size-adjust:100%;max-width:480px;margin:0 auto;position:relative;box-shadow:0 0 28px rgba(0,0,0,0.18);}
 
 /* ── 비밀번호 화면 ── */
 .pw-screen{position:fixed;inset:0;background:linear-gradient(160deg,#1a2a6c,#1a3ab0);display:flex;align-items:center;justify-content:center;z-index:999;padding:24px;}
@@ -862,11 +862,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <div class="status-toast" id="statusToast"></div>
 
 <script>
-// ── 🐞 임시 디버그: 에러가 나면 화면에 바로 알림으로 표시 (원인 파악 후 제거 예정) ──
-window.addEventListener('error', function(e){
-  alert('⚠️ 오류 발생!\n\n메시지: ' + e.message + '\n파일: ' + (e.filename||'').split('/').pop() + '\n줄: ' + e.lineno + ':' + e.colno);
-});
-
 // ★ GAS 배포 URL — Code.gs 배포 후 발급된 URL로 교체하세요
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbzvO5lEtq4xEmSrOy3oAR84M8_-hdG8SOm8xoWWCR65PRA2muH6BDvtgQjodnO9PfRq0g/exec';
 
@@ -874,7 +869,7 @@ var GAS_URL = 'https://script.google.com/macros/s/AKfycbzvO5lEtq4xEmSrOy3oAR84M8
 var TEST_MODE =  false;
 
 // ── admin.html 전체 버전 (배포 후 반영 여부 확인용 - 수정할 때마다 날짜/번호 갱신) ──
-var ADMIN_VERSION = 'v1.2-trace (2026-07-05)';
+var ADMIN_VERSION = 'v2.0 (2026-07-05) - 상세보기 안열림 수정';
 
 
 // ── 사용자 권한 테이블 ──
@@ -1800,12 +1795,9 @@ function renderCard(d, i, total) {
 
 // ── 상세 보기 ──
 function openDetail(idx) {
-  alert('②openDetail idx='+idx+' canPopup='+canPopup()+' currentUser='+(currentUser?currentUser.name+'/'+currentUser.detailPopup:'null'));
   if (!canPopup()) return; // 팝업 권한 없으면 차단
-  var d = filtered[idx]; if(!d) { alert('③d 없음 (idx가 filtered 범위를 벗어남)'); return; }
-  alert('④renderDetailFor 호출 직전: '+d.name);
+  var d = filtered[idx]; if(!d) return;
   renderDetailFor(d);
-  alert('⑤renderDetailFor 완료');
 }
 // 확인필요 탭 등에서 rno로 직접 상세보기를 열 때 사용 (슈퍼바이저 전용)
 function openDetailByRno(rno){
@@ -4469,7 +4461,6 @@ function updateVehSelBar() {
 }
 
 function onCardClick(event, idx) {
-  alert('①탭됨 idx='+idx+' selMode='+_selMode+' vehSelMode='+_vehSelMode+' filtered.length='+filtered.length);
   if (_selMode) {
     var d = filtered[idx];
     if (d) toggleSelCard(d.rno);
