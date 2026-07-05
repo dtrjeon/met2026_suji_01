@@ -662,6 +662,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
         <div>
           <div class="hd-title" id="hdTitle" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;">MET2026 블레싱 삼척</div>
           <div class="hd-updated" id="updatedAt">데이터 불러오는 중…</div>
+          <div id="hdVersion" style="font-size:8px;color:rgba(255,255,255,0.35);margin-top:1px;letter-spacing:0.5px;"></div>
         </div>
         <div class="hd-right">
           <div class="hd-count" id="totalCount" style="display:flex;align-items:center;gap:5px;"><span id="cntTotal">— 명</span><span id="cntSub" style="font-size:9px;opacity:0.7;display:none;white-space:nowrap;"></span></div>
@@ -866,6 +867,9 @@ var GAS_URL = 'https://script.google.com/macros/s/AKfycbzvO5lEtq4xEmSrOy3oAR84M8
 
 // ── 테스트 모드 (true = 서버 없이 가짜 데이터로 확인) ──
 var TEST_MODE =  false;
+
+// ── admin.html 전체 버전 (배포 후 반영 여부 확인용 - 수정할 때마다 날짜/번호 갱신) ──
+var ADMIN_VERSION = 'v1.0 (2026-07-05)';
 
 
 // ── 사용자 권한 테이블 ──
@@ -1101,6 +1105,7 @@ function showApp(res) {
   document.getElementById('hdTitle').textContent =
     'MET2026 블레싱 삼척' + (TEST_MODE?' 🧪':'');
   if (TEST_MODE) document.getElementById('hdTitle').style.color = '#ffe066';
+  document.getElementById('hdVersion').textContent = ADMIN_VERSION;
   // 로그인 사용자 표시
   document.getElementById('hdLoggedIn').textContent = currentUser.name + ' (' + roleLabel + ')';
   // 슈퍼 관리자 자물쇠 아이콘
