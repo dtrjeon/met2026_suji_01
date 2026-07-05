@@ -862,6 +862,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <div class="status-toast" id="statusToast"></div>
 
 <script>
+// ── 🐞 임시 디버그: 에러가 나면 화면에 바로 알림으로 표시 (원인 파악 후 제거 예정) ──
+window.addEventListener('error', function(e){
+  alert('⚠️ 오류 발생!\n\n메시지: ' + e.message + '\n파일: ' + (e.filename||'').split('/').pop() + '\n줄: ' + e.lineno + ':' + e.colno);
+});
+
 // ★ GAS 배포 URL — Code.gs 배포 후 발급된 URL로 교체하세요
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbzvO5lEtq4xEmSrOy3oAR84M8_-hdG8SOm8xoWWCR65PRA2muH6BDvtgQjodnO9PfRq0g/exec';
 
@@ -869,7 +874,7 @@ var GAS_URL = 'https://script.google.com/macros/s/AKfycbzvO5lEtq4xEmSrOy3oAR84M8
 var TEST_MODE =  false;
 
 // ── admin.html 전체 버전 (배포 후 반영 여부 확인용 - 수정할 때마다 날짜/번호 갱신) ──
-var ADMIN_VERSION = 'v1.0 (2026-07-05)';
+var ADMIN_VERSION = 'v1.1-debug (2026-07-05)';
 
 
 // ── 사용자 권한 테이블 ──
