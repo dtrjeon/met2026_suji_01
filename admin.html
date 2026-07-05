@@ -869,7 +869,7 @@ var GAS_URL = 'https://script.google.com/macros/s/AKfycbzvO5lEtq4xEmSrOy3oAR84M8
 var TEST_MODE =  false;
 
 // ── admin.html 전체 버전 (배포 후 반영 여부 확인용 - 수정할 때마다 날짜/번호 갱신) ──
-var ADMIN_VERSION = 'v2.0 (2026-07-05) - 상세보기 안열림 수정';
+var ADMIN_VERSION = 'v2.1 (2026-07-05) - 1호차1번 고영수 고정';
 
 
 // ── 사용자 권한 테이블 ──
@@ -5730,7 +5730,50 @@ function accomShowToast(msg){
 // 좌석열: A/B열(왼쪽 2인), 통로, C/D열(오른쪽 2인) — 가족은 A·B 또는 C·D로 묶어서 배치
 // ============================================================
 var VEH_BUS_CAP = 45;
-var VEH_VERSION = 'v3.7 (' + '2026-07-02' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
+var VEH_VERSION = 'v3.8 (' + '2026-07-05' + ')'; // 요청 반영 확인용 — 배포 후 이 텍스트로 최신 버전 여부 확인
+
+// ── 고정석: 1호차 1번(맨 앞줄 A석) = 고영수 목사님 (자동배분/드래그/초기화와 무관하게 항상 유지) ──
+var VEH_FIXED_SEATS = { 1: { 'R1A': '고영수' } };
+function vehFindFreeSeat(busNum, excludeSeatId){
+  for (var i=0;i<vehSeatLayout.length;i++){
+    var sid=vehSeatLayout[i];
+    if (sid===excludeSeatId) continue;
+    if (!vehData[busNum][sid]) return sid;
+  }
+  return null;
+}
+function vehEnforceFixedSeats(){
+  Object.keys(VEH_FIXED_SEATS).forEach(function(busKey){
+    var busNum = Number(busKey);
+    Object.keys(VEH_FIXED_SEATS[busNum]).forEach(function(seatId){
+      var name = VEH_FIXED_SEATS[busNum][seatId];
+      // 1) 이 사람이 실수로 다른 자리에 들어가 있으면 제거 (중복 탑승 방지)
+      [1,2].forEach(function(b){
+        Object.keys(vehData[b]).forEach(function(sid){
+          if (b===busNum && sid===seatId) return;
+          if (vehData[b][sid] === name) vehData[b][sid] = '';
+        });
+      });
+      // 2) 고정석에 다른 사람이 있으면 같은 버스의 빈자리로, 없으면 반대편 버스 빈자리로 옮겨줌
+      var cur = vehData[busNum][seatId];
+      if (cur && cur !== name) {
+        var free = vehFindFreeSeat(busNum, seatId);
+        if (free) {
+          vehData[busNum][free] = cur;
+        } else {
+          var otherBus = busNum===1 ? 2 : 1;
+          var freeOther = vehFindFreeSeat(otherBus, null);
+          if (freeOther) vehData[otherBus][freeOther] = cur;
+          // 그래도 자리가 없으면(양쪽 버스 만석) 부득이하게 미배정으로 빠짐
+        }
+      }
+      // 3) 고정석 배정
+      vehData[busNum][seatId] = name;
+      if (!vehMeta[name]) vehMeta[name] = {type:'individual', team:'', family_id:''};
+    });
+  });
+}
+
 function vehGenSeatLayout(){
   var seats=[];
   for(var r=1;r<=10;r++){
@@ -6003,6 +6046,7 @@ function renderVeh(){
   }
 
   var riders=vehGetBusRiders();
+  vehEnforceFixedSeats(); // 고정석(1호차 1번=고영수) 항상 유지 — 자동배분/드래그/초기화 이후에도 적용
   var assigned=vehGetAssignedNames();
   var unassigned=riders.filter(function(d){ return !assigned[d.name.trim()]; });
   var cnt1=Object.keys(vehData[1]).filter(function(s){return vehData[1][s];}).length;
