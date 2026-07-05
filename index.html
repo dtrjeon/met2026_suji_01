@@ -7,8 +7,12 @@
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
-<meta name="theme-color" content="#fdf9f4"/>
+<meta name="theme-color" content="#1a3ab0"/>
 <title>블레싱 삼척 안내 (수지2)</title>
+<link rel="manifest" href="manifest.json"/>
+<link rel="icon" href="icon-192.png"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<meta name="apple-mobile-web-app-title" content="MET2026"/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Bebas+Neue&display=swap" rel="stylesheet"/>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -2430,6 +2434,14 @@ document.getElementById('restovl').className='restovl show';
     <button type="button" class="donereset" onclick="doFinish()">수고하셨습니다. 눌러주세요</button>
   </div>
 </div>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(e){ console.log('SW 등록 실패', e); });
+  });
+}
+</script>
 
 <!-- 종료 화면 (wrap 밖 - Android/iOS 터치 보장) -->
 <div class="endovl" id="endovl">
