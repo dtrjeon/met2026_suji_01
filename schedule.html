@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MET2026 수지2지구 국내전도 사역 일정</title>
+<style>
+  :root{
+    --navy:#1a3a9e;
+    --blue:#2050c8;
+    --bg:#f4f6fb;
+    --card:#ffffff;
+    --line:#dde4f5;
+    --text:#1f2430;
+    --sub:#6b7280;
+    --accent:#e8823c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Noto Sans KR',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    padding-bottom:40px;
+  }
+  header{
+    background:linear-gradient(135deg,var(--navy),var(--blue));
+    padding:28px 20px 24px;
+    color:#fff;
+  }
+  .eyebrow{
+    font-size:11px;
+    letter-spacing:4px;
+    color:rgba(255,255,255,0.65);
+    margin-bottom:6px;
+  }
+  h1{
+    font-size:22px;
+    font-weight:900;
+    letter-spacing:1px;
+    margin:0 0 4px;
+  }
+  .sub{
+    font-size:13px;
+    color:rgba(255,255,255,0.85);
+  }
+
+  .info-card{
+    margin:-14px 16px 0;
+    background:var(--card);
+    border-radius:14px;
+    box-shadow:0 6px 20px rgba(20,30,80,0.10);
+    padding:16px 18px;
+    position:relative;
+    z-index:2;
+    display:none;
+  }
+  .info-card.active{display:block;}
+  .info-row{
+    display:flex;
+    gap:10px;
+    padding:7px 0;
+    font-size:13.5px;
+    border-bottom:1px solid #f0f2f8;
+    line-height:1.5;
+  }
+  .info-row:last-child{border-bottom:none;}
+  .info-num{
+    flex:0 0 18px;
+    color:var(--blue);
+    font-weight:700;
+  }
+  .info-label{
+    flex:0 0 62px;
+    color:var(--sub);
+    font-weight:600;
+  }
+  .info-val{flex:1; word-break:keep-all;}
+  .info-val a{color:var(--blue); text-decoration:none; border-bottom:1px solid var(--line);}
+
+  .notice{
+    margin:18px 16px 10px;
+    font-size:13px;
+    font-weight:700;
+    color:var(--navy);
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .notice::before{content:"◆";}
+  .notice .warn{
+    font-weight:500;
+    color:var(--sub);
+    font-size:11.5px;
+  }
+
+  .tabs{
+    display:flex;
+    gap:8px;
+    margin:0 16px 14px;
+  }
+  .tabs.main-tabs{
+    margin-top:-14px;
+    position:relative;
+    z-index:2;
+  }
+  .tab{
+    flex:1;
+    text-align:center;
+    padding:11px 4px;
+    border-radius:10px;
+    background:#fff;
+    border:1px solid var(--line);
+    font-weight:700;
+    font-size:14px;
+    color:var(--sub);
+  }
+  .tab.active{
+    background:linear-gradient(135deg,var(--navy),var(--blue));
+    color:#fff;
+    border-color:transparent;
+  }
+
+  .day{display:none; padding:0 16px;}
+  .day.active{display:block;}
+
+  .item{
+    background:var(--card);
+    border-radius:12px;
+    border:1px solid var(--line);
+    margin-bottom:10px;
+    padding:12px 14px;
+    display:flex;
+    gap:12px;
+  }
+  .item.highlight{
+    border-color:var(--navy);
+    box-shadow:0 2px 10px rgba(26,58,158,0.08);
+  }
+  .time{
+    flex:0 0 74px;
+    font-weight:800;
+    font-size:13px;
+    color:var(--navy);
+    line-height:1.35;
+    padding-top:1px;
+  }
+  .body{flex:1; min-width:0;}
+  .title{
+    font-weight:700;
+    font-size:14.5px;
+    margin-bottom:4px;
+  }
+  .detail{
+    font-size:12.5px;
+    color:#3a4256;
+    line-height:1.55;
+    white-space:pre-line;
+  }
+  .note{
+    margin-top:6px;
+    font-size:11.5px;
+    color:#fff;
+    background:var(--navy);
+    display:inline-block;
+    padding:3px 8px;
+    border-radius:6px;
+    white-space:pre-line;
+    line-height:1.5;
+  }
+  .note.soft{
+    background:#eef1fb;
+    color:var(--navy);
+  }
+
+  footer{
+    text-align:center;
+    font-size:11px;
+    color:var(--sub);
+    margin-top:26px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">MISSION EXPLOSION TEAM</div>
+  <h1>MET2026 수지2지구 국내전도 사역</h1>
+  <div class="sub">블레싱 삼척 · 07.21(화) ~ 07.22(수)</div>
+</header>
+
+<div class="tabs main-tabs">
+  <div class="tab active" data-day="info">📋 행사안내</div>
+  <div class="tab" data-day="d1">☀️ 7/21(화)</div>
+  <div class="tab" data-day="d2">☀️ 7/22(수)</div>
+</div>
+
+<div class="info-card active" id="info">
+  <div class="info-row"><div class="info-num">1</div><div class="info-label">사역교회</div><div class="info-val">동해 큰사랑순복음교회 (유준규 목사님, 곽미영 사모님)<br><a href="https://naver.me/GsjP7xaq" target="_blank">https://naver.me/GsjP7xaq</a></div></div>
+  <div class="info-row"><div class="info-num">2</div><div class="info-label">사역일정</div><div class="info-val">07.21(화)~07.22(수) ; 수요일 오후 7시 30분 연합집회(삼척 실내체육관)</div></div>
+  <div class="info-row"><div class="info-num">3</div><div class="info-label">주요사역</div><div class="info-val">전도, 짐금이, 포토(메이크업), 의료(이비인후과), 이미용, 마사지, 바자회, 마을잔치, 간식, 사역지원(시설지원, 차량지원, 안내지원), 어린이·청소년, 중보기도</div></div>
+  <div class="info-row"><div class="info-num">4</div><div class="info-label">선교인원</div><div class="info-val">115명 (버스 69명, 자차 및 동승 46명)</div></div>
+  <div class="info-row"><div class="info-num">5</div><div class="info-label">이동수단</div><div class="info-val">버스 2대 및 개별차량</div></div>
+  <div class="info-row"><div class="info-num">6</div><div class="info-label">숙소</div><div class="info-val">청원모텔 (033-533-4429)</div></div>
+</div>
+
+<!-- DAY 1 -->
+<div class="day" id="d1">
+
+  <div class="item highlight">
+    <div class="time">06:00<br>~06:30</div>
+    <div class="body">
+      <div class="title">집결, 짐정리 &amp; 출발</div>
+      <div class="detail">버스 2대 교회 출발(배정된 차량 탑승)
+사역팀별 준비물 정리</div>
+      <div class="note">아침은 김밥으로! 개별출발자: 교회에서 김밥 수령</div>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="time">06:30<br>~10:00</div>
+    <div class="body">
+      <div class="title">교회 도착</div>
+      <div class="detail"><b>차량:</b> 아파트정문 밖 오른쪽 공터 주차</div>
+    </div>
+  </div>
+
+  <div class="item highlight">
+    <div class="time">10:00<br>~10:30</div>
+    <div class="body">
+      <div class="title">사역짐정리</div>
+      <div class="detail">테이블 8개, 천막 2개(미용실앞, 옥상)
+사역팀별 짐 정리</div>
+      <div class="note">사역중에 사용할 개인짐 외에는 버스에 놓아둘 것</div>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="time">10:30<br>~11:00</div>
+    <div class="body">
+      <div class="title">도착예배</div>
+      <div class="detail">모든 팀원 예배 참석</div>
+      <div class="note soft">본당 장의자 7개*2열</div>
+    </div>
+  </div>
+
+  <div class="item highlight">
+    <div class="time">11:00<br>~12:00</div>
+    <div class="body">
+      <div class="title">사역준비</div>
+      <div class="detail">장의자 옥상 이동, 바닥 깔판 설치
+♣사역배치: 본당:사진팀, 맛사지팀 / 뒷자리:전도팀, 어린이팀 / 식당:장금이팀</div>
+      <div class="note">의료:목양실 · 간식:로비 · 시설지원:외부
+이미용팀:미용실 · 바자회팀:미용실앞
+*중보기도: 현장에서 명찰기재 지정시간</div>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="time">12:00<br>~13:00</div>
+    <div class="body">
+      <div class="title">점심식사</div>
+      <div class="detail">장금이팀 준비</div>
+      <div class="note soft">본당 등</div>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="time">13:00<br>~15:30</div>
+    <div class="body"><div class="title">오후사역 1</div></div>
+  </div>
+
+  <div class="item">
+    <div class="time">15:30<br>~16:00</div>
+    <div class="body">
+      <div class="title">브레이크타임 (간식)</div>
+      <div class="detail">팀별 사역 현장으로!!</div>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="time">16:00<br>~19:00</div>
+    <div class="body"><div class="title">오후사역 2</div></div>
+  </div>
+
+  <div class="item">
+    <div class="time">19:00<br>~20:00</div>
+    <div class="body">
+      <div class="title">저녁식사</div>
+      <div class="detail">장금이팀 준비</div>
+      <div class="note soft">본당 등</div>
+    </div>
+  </div>
+
+  <div class="item highlight">
+    <div class="time">20:00<br>~20:30</div>
+    <div class="body">
+      <div class="title">청원모텔 이동</div>
+      <div class="detail">이동후 전체모임 운영 어려움ㅠ
+방별, 팀별로 시간을 잘 보내시길....</div>
+      <div class="note">시설팀 찜질방(9명), 개별준비 11명</div>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="time">21:30~</div>
+    <div class="body">
+      <div class="title">자유시간 및 취침</div>
+      <div class="detail">♣준비물: 침구, 세면도구, 수건 등등</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- DAY 2 -->
+<div class="day" id="d2">
+
+  <div class="item highlight">
+    <div class="time">07:30</div>
+    <div class="body">
+      <div class="title">모텔 출발</div>
+      <div class="detail"><b>*시간 엄수</b></div>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="time">08:00<br>~09:00</div>
+    <div class="body">
+      <div class="title">아침식사</div>
+      <div class="detail">사역지원팀 준비
+김치찌개, 콩나물국, 계란말이 등등</div>
+      <div class="note soft">본당 등</div>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="time">09:00<br>~09:30</div>
+    <div class="body"><div class="title">팀별기도 및 사역준비</div></div>
+  </div>
+
+  <div class="item">
+    <div class="time">09:30<br>~12:00</div>
+    <div class="body">
+      <div class="title">오전사역</div>
+      <div class="detail">팀별 사역 현장으로!!</div>
+    </div>
+  </div>
+
+  <div class="item highlight">
+    <div class="time">12:00<br>~14:00</div>
+    <div class="body">
+      <div class="title">점심식사 &amp; 마을잔치</div>
+      <div class="detail">1. 마술쇼
+2. 공연 (해선 댄스팀, 해선 무언극팀)
+3. 레크레이션</div>
+      <div class="note">우리팀 식사는 언제 / 어디서?
+VIP식사중, 공연중 / 옥상 등등</div>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="time">14:00<br>~15:30</div>
+    <div class="body">
+      <div class="title">오후사역</div>
+      <div class="detail">팀별 사역 현장으로!!</div>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="time">15:30<br>~16:30</div>
+    <div class="body"><div class="title">사역정리</div></div>
+  </div>
+
+  <div class="item">
+    <div class="time">16:30<br>~17:30</div>
+    <div class="body">
+      <div class="title">사역보고 및 예배</div>
+      <div class="detail">모든 팀원 참석</div>
+      <div class="note soft">어린이팀 5시에 짬뽕관에서 식사</div>
+    </div>
+  </div>
+
+  <div class="item highlight">
+    <div class="time">17:30<br>~19:00</div>
+    <div class="body">
+      <div class="title">교회출발 및 저녁식사</div>
+      <div class="detail">삼척 실내체육관 근처 식당에서</div>
+      <div class="note">짬뽕관 삼척점(70석)
+무청감자탕 삼척점(50석)</div>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="time">19:30~</div>
+    <div class="body">
+      <div class="title">연합집회</div>
+      <div class="detail">삼척 실내체육관</div>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="time">21:30~</div>
+    <div class="body"><div class="title">동해출발</div></div>
+  </div>
+
+</div>
+
+<footer>MET2026 블레싱 삼척 · 수지2지구</footer>
+
+<script>
+  var panels = document.querySelectorAll('.info-card, .day');
+  document.querySelectorAll('.tab').forEach(function(tab){
+    tab.addEventListener('click', function(){
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      panels.forEach(p=>p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.day).classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>
