@@ -981,6 +981,7 @@ window.addEventListener('load', function(){ loadNameList(); });
     var open = box.classList.toggle('show');
     btn.textContent = open ? '접기 ▴' : ('이전 공지 '+box.children.length+'건 더보기 ▾');
   }
+  window.toggleOlderNotices = toggleOlderNotices;
 
   function fetchNotices(){
     var url = GSURL + '?action=notices';
