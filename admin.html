@@ -6379,6 +6379,11 @@ function vehExportExcel(){
   } else { _doVehExcel(); }
 }
 function _doVehExcel(){
+  var phoneByName={};
+  allData.forEach(function(d){
+    var nm=(d.name||'').trim();
+    if(nm && !phoneByName[nm]) phoneByName[nm]=d.phone||'';
+  });
   var rows=[];
   [1,2].forEach(function(b){
     vehSeatLayout.forEach(function(seatId){
@@ -6388,6 +6393,7 @@ function _doVehExcel(){
         '호차': b+'호차',
         '좌석': seatId,
         '이름': name,
+        '전화번호': name?(phoneByName[name]||''):'',
         '구분': meta.type==='family'?'가족':meta.type==='team'?'사역팀':(name?'개인':''),
         '사역팀': meta.team||''
       });
