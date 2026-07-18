@@ -606,11 +606,6 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
     <div class="apply-toggle-title">✍️ 신청하기 <span class="apply-toggle-arrow" id="applyToggleArrow">▾</span></div>
   </div>
 
-  <!-- 버스 신청 현황 (클릭 시 팝업) -->
-  <button type="button" class="lkup-btn" onclick="openBusStatus()">
-    🚌 버스신청현황
-  </button>
-
   <!-- 숙소배치 현황 (클릭 시 팝업) -->
   <button type="button" class="lkup-btn" onclick="openRoomStatus()">
     🏠 숙소배치 현황
@@ -816,12 +811,12 @@ window.addEventListener('load', function(){ loadNameList(); });
   function renderRoomStatus(data){
     var list = document.getElementById('roomStatusList');
     if(!list) return;
-    if(!data || data.result!=='ok' || !data.rooms || !data.rooms.length){
+    if(!data || data.result!=='ok' || (!data.rooms.length && !(data.unassigned&&data.unassigned.length))){
       list.innerHTML = '<div class="lkup-msg" style="color:rgba(120,130,160,0.5);">등록된 숙소배치가 없습니다</div>';
       return;
     }
     var html = '';
-    data.rooms.forEach(function(r){
+    (data.rooms||[]).forEach(function(r){
       var genderCls = r.gender==='여'?' gender-f':(r.gender==='남'?' gender-m':'');
       html += '<div class="room-card">'
         +'<div class="room-card-hd">'
@@ -834,6 +829,16 @@ window.addEventListener('load', function(){ loadNameList(); });
         +'</div>'
         +'</div>';
     });
+    if(data.unassigned && data.unassigned.length){
+      html += '<div class="room-card" style="background:#fff8e1;border-color:rgba(245,127,23,0.35);">'
+        +'<div class="room-card-hd">'
+        +'<span class="room-card-id" style="color:#b85c00;">❗ 미배치 ('+data.unassigned.length+'명)</span>'
+        +'</div>'
+        +'<div class="room-card-members">'
+        +data.unassigned.map(function(m){ return '<span class="team-name-chip" style="border-color:rgba(245,127,23,0.4);color:#b85c00;">'+roomEsc(m)+'</span>'; }).join('')
+        +'</div>'
+        +'</div>';
+    }
     list.innerHTML = html;
   }
   function fetchRoomStatus(){
