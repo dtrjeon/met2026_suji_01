@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MET2026 블레싱 삼척 중보기도 담당자</title>
+<style>
+  :root{
+    --navy:#1a3a9e;
+    --blue:#2050c8;
+    --bg:#f4f6fb;
+    --card:#ffffff;
+    --line:#dde4f5;
+    --text:#1f2430;
+    --sub:#6b7280;
+    --accent:#e8823c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Noto Sans KR',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    padding-bottom:40px;
+  }
+  header{
+    background:linear-gradient(135deg,var(--navy),var(--blue));
+    padding:28px 20px 24px;
+    color:#fff;
+  }
+  .eyebrow{
+    font-size:11px;
+    letter-spacing:4px;
+    color:rgba(255,255,255,0.65);
+    margin-bottom:6px;
+  }
+  h1{
+    font-size:22px;
+    font-weight:900;
+    letter-spacing:1px;
+    margin:0 0 4px;
+  }
+  .sub{
+    font-size:13px;
+    color:rgba(255,255,255,0.85);
+  }
+
+  .search-wrap{
+    margin:-14px 16px 0;
+    position:relative;
+    z-index:3;
+  }
+  .search-inp{
+    width:100%;
+    padding:13px 16px;
+    border:none;
+    border-radius:14px;
+    box-shadow:0 6px 20px rgba(20,30,80,0.12);
+    font-size:15px;
+    font-family:inherit;
+    box-sizing:border-box;
+  }
+  .search-inp:focus{outline:2px solid var(--blue);}
+  .search-results{
+    position:absolute;
+    left:0;right:0;top:100%;margin-top:6px;
+    background:var(--card);
+    border-radius:12px;
+    box-shadow:0 8px 24px rgba(20,30,80,0.16);
+    overflow:hidden;
+    display:none;
+    max-height:280px;
+    overflow-y:auto;
+  }
+  .search-results.show{display:block;}
+  .search-item{
+    padding:12px 16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    font-size:14px;
+    border-bottom:1px solid var(--line);
+    cursor:pointer;
+  }
+  .search-item:last-child{border-bottom:none;}
+  .search-item:active{background:#f4f7fc;}
+  .search-item-name{font-weight:700;color:var(--text);}
+  .search-item-time{font-size:11px;font-weight:700;color:var(--navy);background:#e8f0fe;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+  .search-empty{padding:14px 16px;font-size:13px;color:var(--sub);text-align:center;}
+
+  .day-sec{margin:20px 16px 0;}
+  .day-sec{display:none;}
+  .day-sec.active{display:block;}
+  .tabs{
+    display:flex;
+    gap:8px;
+    margin:14px 16px 0;
+  }
+  .tab{
+    flex:1;
+    text-align:center;
+    padding:11px 4px;
+    border-radius:10px;
+    background:#fff;
+    border:1px solid var(--line);
+    font-weight:700;
+    font-size:14px;
+    color:var(--sub);
+    cursor:pointer;
+  }
+  .tab.active{
+    background:linear-gradient(135deg,var(--navy),var(--blue));
+    color:#fff;
+    border-color:transparent;
+  }
+  .day-hd{
+    font-size:14px;
+    font-weight:800;
+    color:var(--navy);
+    margin-bottom:8px;
+    padding-left:2px;
+  }
+  .p-list{
+    background:var(--card);
+    border-radius:14px;
+    box-shadow:0 4px 14px rgba(20,30,80,0.08);
+    overflow:hidden;
+  }
+  .p-row{
+    padding:11px 16px;
+    border-bottom:1px solid var(--line);
+    font-size:13.5px;
+    transition:background .5s;
+  }
+  .p-row:last-child{border-bottom:none;}
+  .p-row.found{background:#fff3d6;}
+  .p-main{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:6px 10px;
+  }
+  .p-time{
+    flex:0 0 92px;
+    color:var(--sub);
+    font-weight:700;
+    font-size:12px;
+  }
+  .p-name{
+    flex:0 0 auto;
+    font-weight:800;
+    color:var(--text);
+  }
+  .p-phone{
+    font-size:12px;
+    color:var(--blue);
+    text-decoration:none;
+    white-space:nowrap;
+  }
+  .p-team-wrap{
+    margin:5px 0 0 92px;
+  }
+  .p-team{
+    display:inline-block;
+    font-size:11px;
+    font-weight:600;
+    color:var(--navy);
+    background:#eef2fd;
+    padding:3px 10px;
+    border-radius:20px;
+    white-space:nowrap;
+    max-width:100%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .empty-msg{
+    margin:24px 16px;
+    text-align:center;
+    color:var(--sub);
+    font-size:13px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">MISSION EXPLOSION TEAM</div>
+  <h1>🙏 중보기도 담당자</h1>
+  <div class="sub">블레싱 삼척 · 10분 단위로 각자 정해진 시간에 함께 기도해주세요</div>
+</header>
+
+<div class="search-wrap">
+  <input type="text" class="search-inp" id="searchInput" placeholder="🔍 이름으로 찾기"
+         oninput="searchName(this.value)" onfocus="searchName(this.value)">
+  <div class="search-results" id="searchResults"></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-day="d21">☀️ 7/21(화)</div>
+  <div class="tab" data-day="d22">☀️ 7/22(수)</div>
+</div>
+
+  <div class="day-sec active" id="d21">
+    <div class="p-list">
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">10:30~10:40</span>
+          <span class="p-name">강동우</span>
+          <a class="p-phone" href="tel:010-8339-0162">010-8339-0162</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">10:40~10:50</span>
+          <span class="p-name">강민봉</span>
+          <a class="p-phone" href="tel:010-6348-4178">010-6348-4178</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">10:50~11:00</span>
+          <span class="p-name">고온조</span>
+          <a class="p-phone" href="tel:010-6787-4565">010-6787-4565</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">어린이(청소년)팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">11:00~11:10</span>
+          <span class="p-name">고혜현</span>
+          <a class="p-phone" href="tel:010-6552-0455">010-6552-0455</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">의료팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">11:10~11:20</span>
+          <span class="p-name">권민희</span>
+          <a class="p-phone" href="tel:010-6747-4875">010-6747-4875</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">맛사지팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">11:20~11:30</span>
+          <span class="p-name">기재호</span>
+          <a class="p-phone" href="tel:010-6300-5483">010-6300-5483</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">11:30~11:40</span>
+          <span class="p-name">김경희</span>
+          <a class="p-phone" href="tel:010-8295-2641">010-8295-2641</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">의료팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">11:40~11:50</span>
+          <span class="p-name">김기정</span>
+          <a class="p-phone" href="tel:010-5158-8041">010-5158-8041</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">장수사진/메이크업팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">11:50~12:00</span>
+          <span class="p-name">김영미</span>
+          <a class="p-phone" href="tel:010-3136-5065">010-3136-5065</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">간식팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">12:00~12:10</span>
+          <span class="p-name">김미라</span>
+          <a class="p-phone" href="tel:010-6435-8964">010-6435-8964</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">의료팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">12:10~12:20</span>
+          <span class="p-name">김미숙</span>
+          <a class="p-phone" href="tel:010-3719-8064">010-3719-8064</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">맛사지팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">12:20~12:30</span>
+          <span class="p-name">김범</span>
+          <a class="p-phone" href="tel:010-8254-7184">010-8254-7184</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">12:30~12:40</span>
+          <span class="p-name">김선의</span>
+          <a class="p-phone" href="tel:010-3288-8154">010-3288-8154</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">장수사진/메이크업팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">12:40~12:50</span>
+          <span class="p-name">김수경</span>
+          <a class="p-phone" href="tel:010-7724-4700">010-7724-4700</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">장수사진/메이크업팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">12:50~13:00</span>
+          <span class="p-name">김의겸</span>
+          <a class="p-phone" href="tel:010-7191-5384">010-7191-5384</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">바자회팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">13:00~13:10</span>
+          <span class="p-name">김종혁</span>
+          <a class="p-phone" href="tel:010-8917-9700">010-8917-9700</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">13:10~13:20</span>
+          <span class="p-name">김종환</span>
+          <a class="p-phone" href="tel:010-6474-3462">010-6474-3462</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">13:20~13:30</span>
+          <span class="p-name">김학중</span>
+          <a class="p-phone" href="tel:010-7459-9083">010-7459-9083</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">13:30~13:40</span>
+          <span class="p-name">마승호</span>
+          <a class="p-phone" href="tel:010-6651-1121">010-6651-1121</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">13:40~13:50</span>
+          <span class="p-name">모예은</span>
+          <a class="p-phone" href="tel:010-3350-4862">010-3350-4862</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">어린이(청소년)팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">13:50~14:00</span>
+          <span class="p-name">문동훈</span>
+          <a class="p-phone" href="tel:010-6201-1792">010-6201-1792</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">14:00~14:10</span>
+          <span class="p-name">박길종</span>
+          <a class="p-phone" href="tel:010-9943-3574">010-9943-3574</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">14:10~14:20</span>
+          <span class="p-name">박용수</span>
+          <a class="p-phone" href="tel:010-8894-6761">010-8894-6761</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">14:20~14:30</span>
+          <span class="p-name">박중서</span>
+          <a class="p-phone" href="tel:010-5223-3239">010-5223-3239</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">14:30~14:40</span>
+          <span class="p-name">박희철</span>
+          <a class="p-phone" href="tel:010-3309-7997">010-3309-7997</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">14:40~14:50</span>
+          <span class="p-name">변인우</span>
+          <a class="p-phone" href="tel:010-9596-0905">010-9596-0905</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">14:50~15:00</span>
+          <span class="p-name">변정숙</span>
+          <a class="p-phone" href="tel:010-9163-8217">010-9163-8217</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">장수사진/메이크업팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">15:00~15:10</span>
+          <span class="p-name">서인식</span>
+          <a class="p-phone" href="tel:010-9348-2548">010-9348-2548</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">15:10~15:20</span>
+          <span class="p-name">송일령</span>
+          <a class="p-phone" href="tel:010-5801-9102">010-5801-9102</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">바자회팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">15:20~15:30</span>
+          <span class="p-name">안영주</span>
+          <a class="p-phone" href="tel:010-8763-8350">010-8763-8350</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">15:30~15:40</span>
+          <span class="p-name">오은영</span>
+          <a class="p-phone" href="tel:010-9329-8962">010-9329-8962</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">어린이(청소년)팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">15:40~15:50</span>
+          <span class="p-name">유수영</span>
+          <a class="p-phone" href="tel:010-2365-5128">010-2365-5128</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">이미용팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">15:50~16:00</span>
+          <span class="p-name">유은석</span>
+          <a class="p-phone" href="tel:010-7212-3000">010-7212-3000</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">16:00~16:10</span>
+          <span class="p-name">윤성원</span>
+          <a class="p-phone" href="tel:010-2315-8050">010-2315-8050</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">16:10~16:20</span>
+          <span class="p-name">윤소요</span>
+          <a class="p-phone" href="tel:010-3780-9011">010-3780-9011</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">16:20~16:30</span>
+          <span class="p-name">이경민</span>
+          <a class="p-phone" href="tel:010-5382-2174">010-5382-2174</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">장수사진/메이크업팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">16:30~16:40</span>
+          <span class="p-name">이길태</span>
+          <a class="p-phone" href="tel:010-9273-7058">010-9273-7058</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">16:40~16:50</span>
+          <span class="p-name">이난희</span>
+          <a class="p-phone" href="tel:010-2812-7439">010-2812-7439</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">의료팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">16:50~17:00</span>
+          <span class="p-name">이로운</span>
+          <a class="p-phone" href="tel:010-8324-1646">010-8324-1646</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">어린이(청소년)팀</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-sec" id="d22">
+    <div class="p-list">
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">10:00~10:10</span>
+          <span class="p-name">이문숙</span>
+          <a class="p-phone" href="tel:010-3433-4563">010-3433-4563</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">바자회팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">10:10~10:20</span>
+          <span class="p-name">이미숙</span>
+          <a class="p-phone" href="tel:010-9023-1044">010-9023-1044</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">의료팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">10:20~10:30</span>
+          <span class="p-name">이상훈</span>
+          <a class="p-phone" href="tel:010-3716-5347">010-3716-5347</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">장수사진/메이크업팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">10:30~10:40</span>
+          <span class="p-name">이석진</span>
+          <a class="p-phone" href="tel:010-8291-0866">010-8291-0866</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">10:40~10:50</span>
+          <span class="p-name">이수진</span>
+          <a class="p-phone" href="tel:010-2261-8617">010-2261-8617</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">이미용팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">10:50~11:00</span>
+          <span class="p-name">이승훈</span>
+          <a class="p-phone" href="tel:010-8864-6109">010-8864-6109</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">11:00~11:10</span>
+          <span class="p-name">이영선</span>
+          <a class="p-phone" href="tel:010-9138-2959">010-9138-2959</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">맛사지팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">11:10~11:20</span>
+          <span class="p-name">이은주</span>
+          <a class="p-phone" href="tel:010-3476-6857">010-3476-6857</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">이미용팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">11:20~11:30</span>
+          <span class="p-name">이지영</span>
+          <a class="p-phone" href="tel:010-5207-9039">010-5207-9039</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">맛사지팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">11:30~11:40</span>
+          <span class="p-name">이지은</span>
+          <a class="p-phone" href="tel:010-8390-3739">010-8390-3739</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">어린이(청소년)팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">11:40~11:50</span>
+          <span class="p-name">이현주</span>
+          <a class="p-phone" href="tel:010-6557-7061">010-6557-7061</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">장수사진/메이크업팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">11:50~12:00</span>
+          <span class="p-name">임동우</span>
+          <a class="p-phone" href="tel:010-3260-5320">010-3260-5320</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">의료팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">12:00~12:10</span>
+          <span class="p-name">임수현</span>
+          <a class="p-phone" href="tel:010-8265-5347">010-8265-5347</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">장수사진/메이크업팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">12:10~12:20</span>
+          <span class="p-name">임영재</span>
+          <a class="p-phone" href="tel:010-6410-5811">010-6410-5811</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">12:20~12:30</span>
+          <span class="p-name">임효창</span>
+          <a class="p-phone" href="tel:010-7767-5458">010-7767-5458</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">장수사진/메이크업팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">12:30~12:40</span>
+          <span class="p-name">장소라</span>
+          <a class="p-phone" href="tel:010-7372-2552">010-7372-2552</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">의료팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">12:40~12:50</span>
+          <span class="p-name">정병재</span>
+          <a class="p-phone" href="tel:010-3459-0385">010-3459-0385</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">12:50~13:00</span>
+          <span class="p-name">정소윤</span>
+          <a class="p-phone" href="tel:010-2777-9666">010-2777-9666</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">이미용팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">13:00~13:10</span>
+          <span class="p-name">정옥경</span>
+          <a class="p-phone" href="tel:010-6632-4554">010-6632-4554</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">어린이(청소년)팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">13:10~13:20</span>
+          <span class="p-name">정유진</span>
+          <a class="p-phone" href="tel:010-2819-0385">010-2819-0385</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">바자회팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">13:20~13:30</span>
+          <span class="p-name">전태룡</span>
+          <a class="p-phone" href="tel:010-2753-7463">010-2753-7463</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">13:30~13:40</span>
+          <span class="p-name">정혜정</span>
+          <a class="p-phone" href="tel:010-3047-0191">010-3047-0191</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">이미용팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">13:40~13:50</span>
+          <span class="p-name">조양환</span>
+          <a class="p-phone" href="tel:010-6608-9693">010-6608-9693</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">13:50~14:00</span>
+          <span class="p-name">조윤미</span>
+          <a class="p-phone" href="tel:010-9248-4365">010-9248-4365</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">바자회팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">14:10~14:20</span>
+          <span class="p-name">지희숙</span>
+          <a class="p-phone" href="tel:010-3350-4862">010-3350-4862</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">어린이(청소년)팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">14:20~14:30</span>
+          <span class="p-name">차충석</span>
+          <a class="p-phone" href="tel:010-4711-1639">010-4711-1639</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">14:30~14:40</span>
+          <span class="p-name">최난주</span>
+          <a class="p-phone" href="tel:010-2343-7048">010-2343-7048</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">맛사지팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">14:40~14:50</span>
+          <span class="p-name">최원현</span>
+          <a class="p-phone" href="tel:010-3000-5775">010-3000-5775</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">14:50~15:00</span>
+          <span class="p-name">최은홍</span>
+          <a class="p-phone" href="tel:010-2817-0912">010-2817-0912</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">이미용팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">15:00~15:10</span>
+          <span class="p-name">한연주</span>
+          <a class="p-phone" href="tel:010-9871-0905">010-9871-0905</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">이미용팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">15:10~15:20</span>
+          <span class="p-name">현미숙</span>
+          <a class="p-phone" href="tel:010-6283-1799">010-6283-1799</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">맛사지팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">15:20~15:30</span>
+          <span class="p-name">호창우</span>
+          <a class="p-phone" href="tel:010-7332-1753">010-7332-1753</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">시설지원팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">15:30~15:40</span>
+          <span class="p-name">홍은주</span>
+          <a class="p-phone" href="tel:010-7460-8026">010-7460-8026</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">이미용팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">15:40~15:50</span>
+          <span class="p-name">정지원</span>
+          <a class="p-phone" href="tel:010-2744-5128">010-2744-5128</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">어린이(청소년)팀</span></div>
+      </div>
+      <div class="p-row">
+        <div class="p-main">
+          <span class="p-time">15:50~16:00</span>
+          <span class="p-name">유원종</span>
+          <a class="p-phone" href="tel:010-4875-6142">010-4875-6142</a>
+        </div>
+        <div class="p-team-wrap"><span class="p-team">어린이(청소년)팀</span></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  document.querySelectorAll('.tab').forEach(function(tab){
+    tab.addEventListener('click', function(){
+      document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+      document.querySelectorAll('.day-sec').forEach(function(d){ d.classList.remove('active'); });
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.day).classList.add('active');
+    });
+  });
+
+  var ALL_ROWS = [];
+  document.querySelectorAll('.p-row').forEach(function(row){
+    ALL_ROWS.push({
+      el: row,
+      name: row.querySelector('.p-name').textContent.trim(),
+      time: row.querySelector('.p-time').textContent.trim()
+    });
+  });
+
+  function searchName(val){
+    var box = document.getElementById('searchResults');
+    var q = val.trim();
+    if(!q){ box.classList.remove('show'); box.innerHTML=''; return; }
+    var hits = ALL_ROWS.filter(function(r){ return r.name.indexOf(q) >= 0; });
+    if(!hits.length){
+      box.innerHTML = '<div class="search-empty">일치하는 이름이 없습니다</div>';
+      box.classList.add('show');
+      return;
+    }
+    box.innerHTML = hits.slice(0,15).map(function(h, i){
+      return '<div class="search-item" onclick="jumpTo(' + ALL_ROWS.indexOf(h) + ')">' +
+        '<span class="search-item-name">' + h.name + '</span>' +
+        '<span class="search-item-time">' + h.time + '</span>' +
+        '</div>';
+    }).join('');
+    box.classList.add('show');
+  }
+
+  function jumpTo(idx){
+    document.getElementById('searchInput').value = '';
+    document.getElementById('searchResults').classList.remove('show');
+    var target = ALL_ROWS[idx];
+    if(!target) return;
+    var daySec = target.el.closest('.day-sec');
+    if(daySec && !daySec.classList.contains('active')){
+      document.querySelectorAll('.day-sec').forEach(function(d){ d.classList.remove('active'); });
+      document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('active', t.dataset.day === daySec.id); });
+      daySec.classList.add('active');
+    }
+    setTimeout(function(){
+      target.el.scrollIntoView({behavior:'smooth', block:'center'});
+      target.el.classList.add('found');
+      setTimeout(function(){ target.el.classList.remove('found'); }, 2200);
+    }, 50);
+  }
+
+  document.addEventListener('click', function(e){
+    if(!e.target.closest('.search-wrap'))
+      document.getElementById('searchResults').classList.remove('show');
+  });
+</script>
+
+</body>
+</html>
