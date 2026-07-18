@@ -338,6 +338,15 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
 .lkup-inp:focus{border-color:#2050c8;}
 .lkup-search{padding:11px 18px;background:#2050c8;border:none;border-radius:8px;color:#fff;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;-webkit-appearance:none;}
 .lkup-result{margin-top:4px;max-height:320px;overflow-y:auto;}
+/* 숙소배치 현황 팝업 */
+.room-status-list{margin-top:4px;max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;}
+.room-card{background:#f7f9ff;border:1px solid rgba(32,80,200,0.15);border-radius:10px;padding:12px 14px;}
+.room-card-hd{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.room-card-id{font-size:14px;font-weight:800;color:#1a3a9e;}
+.room-card-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(32,80,200,0.08);color:#1a3a9e;}
+.room-card-tag.gender-f{background:rgba(220,50,120,0.1);color:#c02870;}
+.room-card-tag.gender-m{background:rgba(32,80,200,0.1);color:#1a3a9e;}
+.room-card-members{display:flex;flex-wrap:wrap;gap:6px;}
 .lkup-card{background:#f7f9ff;border:1px solid rgba(32,80,200,0.15);border-radius:10px;padding:13px 14px;margin-bottom:8px;cursor:pointer;}
 .lkup-card:active{background:rgba(32,80,200,0.08);}
 .lkup-card-name{font-size:14px;font-weight:700;color:#1a1e3a;margin-bottom:4px;}
@@ -602,6 +611,11 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
     🚌 버스신청현황
   </button>
 
+  <!-- 숙소배치 현황 (클릭 시 팝업) -->
+  <button type="button" class="lkup-btn" onclick="openRoomStatus()">
+    🏠 숙소배치 현황
+  </button>
+
   <div class="apply-form-wrap" id="applyFormWrap">
   <div class="sec">
     <div class="sec-lbl">신청 유형</div>
@@ -681,6 +695,23 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
         <div class="lkup-msg" style="color:rgba(120,130,160,0.5);">이름을 입력하고 조회하세요</div>
       </div>
       <button type="button" class="lkup-close" onclick="closeLookup()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 숙소배치 현황 팝업 -->
+<div class="lkup-ovl" id="roomStatusOvl" onclick="closeRoomStatus(event)">
+  <div class="lkup-sheet">
+    <div class="lkup-handle"></div>
+    <div class="lkup-hd">
+      <div class="lkup-title">🏠 숙소배치 현황</div>
+      <div class="lkup-sub">방번호별 배정 인원을 확인합니다</div>
+    </div>
+    <div class="lkup-body">
+      <div class="room-status-list" id="roomStatusList">
+        <div class="lkup-msg" style="color:rgba(120,130,160,0.5);">불러오는 중…</div>
+      </div>
+      <button type="button" class="lkup-close" onclick="closeRoomStatus()">닫기</button>
     </div>
   </div>
 </div>
@@ -779,6 +810,51 @@ window.addEventListener('load', function(){ loadNameList(); });
     fetchBusStat();
   }
   window.openBusStatus = openBusStatus;
+
+  // 🏠 숙소배치 현황 팝업
+  function roomEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function renderRoomStatus(data){
+    var list = document.getElementById('roomStatusList');
+    if(!list) return;
+    if(!data || data.result!=='ok' || !data.rooms || !data.rooms.length){
+      list.innerHTML = '<div class="lkup-msg" style="color:rgba(120,130,160,0.5);">등록된 숙소배치가 없습니다</div>';
+      return;
+    }
+    var html = '';
+    data.rooms.forEach(function(r){
+      var genderCls = r.gender==='여'?' gender-f':(r.gender==='남'?' gender-m':'');
+      html += '<div class="room-card">'
+        +'<div class="room-card-hd">'
+        +'<span class="room-card-id">🚪 '+roomEsc(r.id)+'호</span>'
+        +(r.gender?'<span class="room-card-tag'+genderCls+'">'+roomEsc(r.gender)+'</span>':'')
+        +(r.team?'<span class="room-card-tag">'+roomEsc(r.team)+'</span>':'')
+        +'</div>'
+        +'<div class="room-card-members">'
+        +r.members.map(function(m){ return '<span class="team-name-chip">'+roomEsc(m)+'</span>'; }).join('')
+        +'</div>'
+        +'</div>';
+    });
+    list.innerHTML = html;
+  }
+  function fetchRoomStatus(){
+    fetch(GSURL + '?action=roomPeople')
+      .then(function(r){ return r.json(); })
+      .then(function(data){ renderRoomStatus(data); })
+      .catch(function(){ renderRoomStatus(null); });
+  }
+  function openRoomStatus(){
+    var el = document.getElementById('roomStatusOvl');
+    if(!el) return;
+    el.className = 'lkup-ovl show';
+    document.getElementById('roomStatusList').innerHTML = '<div class="lkup-msg" style="color:rgba(120,130,160,0.5);">불러오는 중…</div>';
+    fetchRoomStatus();
+  }
+  function closeRoomStatus(e){
+    if(e && e.target.id !== 'roomStatusOvl') return;
+    document.getElementById('roomStatusOvl').className = 'lkup-ovl';
+  }
+  window.openRoomStatus = openRoomStatus;
+  window.closeRoomStatus = closeRoomStatus;
 
   // ── iOS 호환 탭 감지 ──
   // passive 옵션 지원 여부 체크 (iOS 8 이하 대응)
