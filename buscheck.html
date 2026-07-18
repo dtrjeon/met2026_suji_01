@@ -35,6 +35,25 @@ body { font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background:#
 .admin-btn.refresh { background:#e8f5e9; color:#27ae60; border:2px solid #b2dfdb; }
 .admin-btn.reset   { background:#fff0f0; color:#c0392b; border:2px solid #f5c0c0; }
 /* ── 차량 필터 칩 ── */
+/* ── 이름 찾기 ── */
+.name-search { position:relative; padding:10px 16px 0; background:#fff; }
+.name-search-input { width:100%; padding:10px 14px; border:2px solid #dde6f0; border-radius:10px; font-size:15px; outline:none; box-sizing:border-box; }
+.name-search-input:focus { border-color:#2d6fd4; }
+.name-search-results { position:absolute; left:16px; right:16px; top:100%; margin-top:4px; background:#fff; border:1px solid #dde6f0; border-radius:10px; box-shadow:0 4px 14px rgba(0,0,0,.12); z-index:250; max-height:260px; overflow-y:auto; display:none; }
+.name-search-results.show { display:block; }
+.name-search-item { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:11px 14px; font-size:14px; cursor:pointer; border-bottom:1px solid #f2f4f8; }
+.name-search-item:last-child { border-bottom:none; }
+.name-search-item:active { background:#f4f7fc; }
+.name-search-item-name { font-weight:700; color:#1a2a3f; }
+.name-search-item-veh { font-size:11px; font-weight:700; color:#2d6fd4; background:#e8f0fe; padding:3px 9px; border-radius:20px; white-space:nowrap; }
+.name-search-item-veh.boarded { color:#27ae60; background:#e8f8ee; }
+.name-search-empty { padding:14px; text-align:center; font-size:13px; color:#aaa; }
+.bus-card.found { animation: foundPulse 1.4s ease 2; }
+@keyframes foundPulse {
+  0%, 100% { box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  50% { box-shadow: 0 0 0 4px rgba(45,111,212,.45); }
+}
+
 .veh-filter { display:flex; gap:8px; padding:10px 16px 2px; background:#fff; border-bottom:1px solid #dde6f0; }
 .veh-chip { flex:1; padding:9px 4px; border-radius:20px; border:2px solid #dde6f0; background:#f4f7fc; font-size:12.5px; font-weight:700; color:#5a6b85; cursor:pointer; text-align:center; transition:all .15s; white-space:nowrap; }
 .veh-chip.active { background:#1a4a8c; border-color:#1a4a8c; color:#fff; }
@@ -160,10 +179,15 @@ body { font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background:#
   <div class="admin-bar">
     <button class="admin-btn refresh" onclick="loadFromServer()">🔃 새로고침</button>
   </div>
+  <div class="name-search">
+    <input type="text" class="name-search-input" id="nameSearchInput" placeholder="🔍 이름으로 찾기"
+           oninput="searchName(this.value)" onfocus="searchName(this.value)">
+    <div class="name-search-results" id="nameSearchResults"></div>
+  </div>
   <div class="veh-filter" id="vehFilter">
-    <button class="veh-chip active" data-veh="all" onclick="setVehFilter('all')">전체 <span id="vfAllCount"></span></button>
     <button class="veh-chip" data-veh="1호차" onclick="setVehFilter('1호차')">🚍1호차 <span id="vf1Count"></span></button>
     <button class="veh-chip" data-veh="2호차" onclick="setVehFilter('2호차')">🚍2호차 <span id="vf2Count"></span></button>
+    <button class="veh-chip active" data-veh="all" onclick="setVehFilter('all')">전체 <span id="vfAllCount"></span></button>
   </div>
   <div class="bus-grid" id="busList"></div>
   <div class="submit-bar">
@@ -476,6 +500,7 @@ function renderCheck() {
       const isSelected = selectedName === p.name;
       return `
         <div class="bus-card${boarded ? ' boarded' : isSelected ? ' selected' : ''}"
+             data-name="${p.name}"
              ${!boarded ? `onclick="selectName('${p.name}')"` : ''}>
           <div class="bus-num">${i+1}</div>
           <div class="bus-name">${p.name}</div>
@@ -492,6 +517,54 @@ function selectName(name) {
   selectedName = selectedName === name ? null : name;
   renderCheck();
 }
+
+// ════════════════════════════════════════
+//  이름으로 찾기 (탑승 체크 탭)
+// ════════════════════════════════════════
+function searchName(val) {
+  const box = document.getElementById('nameSearchResults');
+  const q = val.trim();
+  if (!q) { box.classList.remove('show'); box.innerHTML = ''; return; }
+  const matches = people.filter(p => p.name.includes(q));
+  if (!matches.length) {
+    box.innerHTML = '<div class="name-search-empty">일치하는 이름이 없습니다</div>';
+    box.classList.add('show');
+    return;
+  }
+  box.innerHTML = matches.slice(0, 15).map(p => {
+    const boarded = !!busData[p.name];
+    const tag = exemptSet.has(p.name) ? '자차이용' : (boarded ? '✅ 탑승완료' : p.vehicle);
+    return `
+      <div class="name-search-item" onclick="jumpToPerson('${p.name}')">
+        <span class="name-search-item-name">${p.name}</span>
+        <span class="name-search-item-veh${boarded ? ' boarded' : ''}">${tag}</span>
+      </div>`;
+  }).join('');
+  box.classList.add('show');
+}
+
+function jumpToPerson(name) {
+  document.getElementById('nameSearchInput').value = '';
+  document.getElementById('nameSearchResults').classList.remove('show');
+
+  // 어떤 차량 필터로 보고 있었든 해당 카드가 보이도록 '전체'로 전환
+  vehFilter = 'all';
+  document.querySelectorAll('.veh-chip').forEach(c => c.classList.toggle('active', c.dataset.veh === 'all'));
+  renderCheck();
+
+  setTimeout(() => {
+    const card = document.querySelector(`.bus-card[data-name="${CSS.escape(name)}"]`);
+    if (!card) return;
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.classList.add('found');
+    setTimeout(() => card.classList.remove('found'), 2800);
+  }, 50);
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.name-search'))
+    document.getElementById('nameSearchResults').classList.remove('show');
+});
 
 function updateSubmitBar() {
   const label = document.getElementById('selectedLabel');
