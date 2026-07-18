@@ -517,6 +517,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .accom-table td{padding:6px 7px;vertical-align:middle;text-align:center;}
 .accom-table td.left{text-align:left;}
 .accom-room-id{font-size:11px;font-weight:800;}
+.accom-realroom-inp{width:100%;max-width:50px;padding:3px 4px;border:1px solid var(--border);border-radius:5px;font-size:11px;font-weight:700;text-align:center;color:#1E3A8A;background:#F8FAFC;font-family:inherit;}
+.accom-realroom-inp:focus{outline:none;border-color:#2563EB;background:#fff;}
 .accom-type-A .accom-room-id{color:#1E3A8A;}.accom-type-B .accom-room-id{color:#166534;}
 .accom-type-C .accom-room-id{color:#854D0E;}.accom-type-D .accom-room-id{color:#9A3412;}
 .accom-type-E .accom-room-id{color:#5B21B6;}.accom-type-F .accom-room-id{color:#9F1239;}
@@ -4704,6 +4706,7 @@ var ACCOM_ROOMS=[
 var ACCOM_KIDS=['박준서','박민서','한지호','고승유','이로운','고온조','윤상호','고석훈','정지원','김현호','고은송','모예은','이석진'];
 var ACCOM_MALES=['이덕우','도승재','손오성','이상훈','임동우','한지호','유원종','박준서','박민서','김현호','고석훈','고승유','정지원','윤상호','이로운','고온조','이석진'];
 var accomHistory=[], accomChangedRows=new Set();
+var accomRealRoomChanged=new Set(); // 실호수 입력만 바뀌어 아직 저장 안 된 방 id
 var accomManualUnassigned={}; // 방에서 수동으로 뺀 사람(name→true) — 숙소/일정 조건과 무관하게 항상 미배치 목록에 표시
 var accomFilter='전체', accomSearch='';
 var accomDragging=null, accomOverCell=null;
@@ -4763,6 +4766,7 @@ function loadAccomFromSheet(callback){
           if(room){
             room.members=rd.members||[];
             if(rd.gender) room.gender=rd.gender;
+            room.realRoom=rd.realRoom||'';
           }
         });
         accomHistory=[];
@@ -4821,9 +4825,9 @@ function renderAccom(){
   h+='<div class="accom-summary" id="accomSummary"></div>';
   h+='<div class="accom-unassigned-box" id="accomUnassignedBox"></div>';
   h+='<div class="accom-tbl-wrap"><table class="accom-table">';
-  h+='<colgroup><col style="width:42px"><col style="width:50px"><col style="width:12px"><col style="width:12px"><col style="width:76px"><col></colgroup>';
+  h+='<colgroup><col style="width:42px"><col style="width:55px"><col style="width:50px"><col style="width:12px"><col style="width:12px"><col style="width:76px"><col></colgroup>';
   h+='<thead><tr>';
-  h+='<th>방번호</th><th>숙소타입</th><th>성별</th><th>인원</th><th>팀명</th>';
+  h+='<th>방번호</th><th>실호수</th><th>숙소타입</th><th>성별</th><th>인원</th><th>팀명</th>';
   h+='<th style="text-align:left;min-width:200px">숙소자 <span style="font-weight:400;opacity:.7">(길게 눌러 이동)</span></th>';
   h+='</tr></thead><tbody id="accomTbody"></tbody></table></div>';
   h+='<div id="accomToast"></div>';
@@ -4933,6 +4937,7 @@ function renderAccomTable(){
     html+='<tr class="accom-type-'+r.type+(isEmpty?' empty-row':'')+(isChanged?' accom-changed':'')+'"';
     html+=' data-id="'+r.id+'" data-gender="'+r.gender+'" data-team="'+teamStr+'" data-members="'+r.members.join(',')+'">'; 
     html+='<td><span class="accom-room-id">'+r.id+'</span></td>';
+    html+='<td><input type="text" class="accom-realroom-inp" value="'+(r.realRoom?esc(r.realRoom):'')+'" placeholder="-" maxlength="10" data-id="'+r.id+'" oninput="accomSetRealRoom(this.dataset.id,this.value)"></td>';
     html+='<td><span class="accom-type-badge">'+r.typeName+'</span></td>';
     var genderInfo=accomActualGenderInfo(r.members, r.gender);
     html+='<td><span class="accom-g-badge '+genderInfo.cls+'">'+genderInfo.text+'</span></td>';
@@ -5471,8 +5476,16 @@ function accomUpdateChangeBar(){
   var bar=document.getElementById('accomChangeBar');
   var msg=document.getElementById('accomChangeMsg');
   if(!bar)return;
-  if(accomHistory.length===0){bar.classList.remove('show');}
-  else{bar.classList.add('show');msg.textContent='변경 '+accomHistory.length+'건 (미저장)';}
+  var total=accomHistory.length+accomRealRoomChanged.size;
+  if(total===0){bar.classList.remove('show');}
+  else{bar.classList.add('show');msg.textContent='변경 '+total+'건 (미저장)';}
+}
+function accomSetRealRoom(id, val){
+  var room=ACCOM_ROOMS.find(function(r){return r.id===id;});
+  if(!room) return;
+  room.realRoom=val.trim();
+  accomRealRoomChanged.add(id);
+  accomUpdateChangeBar();
 }
 function accomSave(){
   var btn=document.querySelector('.accom-btn-save');
@@ -5495,6 +5508,7 @@ function accomSave(){
     var teamStr=cnt===0?'(여유)':accomGetTeam(r.members);
     return {
       id:       r.id,
+      realRoom: r.realRoom||'',
       typeName: r.typeName,
       gender:   r.gender,
       cnt:      cnt,
@@ -5519,6 +5533,7 @@ function accomSave(){
     if(j.result==='ok'){
       accomHistory=[];
       accomChangedRows=new Set();
+      accomRealRoomChanged=new Set();
       renderAccomTable();
       accomUpdateChangeBar();
       accomShowToast('💾 구글시트 저장 완료!');
