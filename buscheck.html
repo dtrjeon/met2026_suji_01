@@ -307,8 +307,10 @@ body { font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background:#
 </div>
 
 <script>
-// ── 탑승자 명단 (구글시트 '차량배치' 탭 기준: 1호차/2호차) ──
-const people = [
+// ── 탑승자 명단 백업본 (구글시트 '차량배치' 탭 기준: 1호차/2호차) ──
+// 서버(action=busPeople)에서 최신 명단을 못 불러올 때만 사용되는 오프라인 백업.
+// 실제 배차가 바뀌면 이 배열도 함께 갱신해두는 것을 권장.
+const FALLBACK_PEOPLE = [
   // 1호차 (36명) — 개인 → 가족(가족현황 기준) 순
   {name:"김범",   vehicle:"1호차"}, {name:"김종환", vehicle:"1호차"}, {name:"차충석", vehicle:"1호차"},
   {name:"최원현", vehicle:"1호차"}, {name:"조양환", vehicle:"1호차"}, {name:"서인식", vehicle:"1호차"},
@@ -343,6 +345,23 @@ const people = [
   {name:"유원종", vehicle:"2호차", family:"F019"}, {name:"차형심", vehicle:"2호차", family:"F019"},
   {name:"황은성", vehicle:"2호차", family:"F024"}, {name:"박희철", vehicle:"2호차", family:"F024"}
 ];
+
+// 실제로 화면에서 쓰는 명단 (초기값 = 백업본, 서버 로드 성공 시 교체됨)
+let people = FALLBACK_PEOPLE.slice();
+
+// 서버(구글시트 '차량배치' 탭)에서 최신 탑승자 명단을 불러온다.
+// 성공하면 people을 교체하고, 실패(네트워크 오류/시트 미저장 등)하면 FALLBACK_PEOPLE을 그대로 사용한다.
+async function loadPeopleFromServer(){
+  try{
+    const res  = await fetch(GAS_URL + '?action=busPeople');
+    const json = await res.json();
+    if(json.result === 'ok' && json.data && json.data.length){
+      people = json.data.map(p => ({name:p.name, vehicle:p.vehicle, family:p.family}));
+    }
+  }catch(e){
+    console.warn('명단 서버 로드 실패 — 백업 명단 사용', e);
+  }
+}
 
 // ── 스태프 목록 ──
 const staffList = [
@@ -394,7 +413,8 @@ async function loadRoster() {
   } catch(e) { console.warn('전화번호 로드 실패', e); }
 }
 
-function init() {
+async function init() {
+  await loadPeopleFromServer(); // 명단부터 확보 (실패 시 백업 명단 유지)
   people.forEach(p => busData[p.name] = false);
   // 저장된 로그인 상태 복원 (PIN 저장 체크된 경우)
   try {
@@ -407,7 +427,7 @@ function init() {
       }
     }
   } catch(e) { console.warn('로그인 상태 복원 실패', e); }
-  loadFromServer();
+  await loadFromServer();
   loadRoster();
   setInterval(loadFromServer, 10000);
 }
@@ -798,8 +818,7 @@ function doLogout() {
 }
 
 // ── 시작 ──
-init();
-renderCheck();
+init().then(renderCheck);
 </script>
 </body>
 </html>
