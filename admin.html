@@ -612,7 +612,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .veh-unassigned{background:#fff;border-radius:12px;box-shadow:var(--shadow);padding:12px;margin-bottom:14px;}
 .veh-unassigned-title{font-size:12px;font-weight:800;color:#B91C1C;margin-bottom:6px;}
 .veh-unassigned-chips{display:flex;flex-wrap:wrap;gap:5px;}
-.veh-unassigned-chip{padding:4px 9px;border-radius:11px;font-size:11px;font-weight:700;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;}
+.veh-unassigned-chip{padding:4px 9px;border-radius:11px;font-size:11px;font-weight:700;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;cursor:pointer;}
+.veh-unassigned-chip.picked{background:#1E3A8A;color:#fff;border-color:#1E3A8A;}
+.veh-place-bar{position:fixed;left:12px;right:12px;bottom:calc(70px + env(safe-area-inset-bottom));background:#1E3A8A;color:#fff;border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;box-shadow:0 6px 20px rgba(0,0,0,.3);z-index:150;}
+.veh-place-cancel{margin-left:auto;padding:6px 10px;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:#fff;background:#475569;}
+.veh-seat.empty.placeable{background:#FEF3C7;border:2px dashed #F59E0B;cursor:pointer;}
 #vehGhost{position:fixed;pointer-events:none;z-index:9999;padding:4px 9px;border-radius:8px;font-size:10px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.25);transform:translate(-50%,-50%);display:none;background:#1E3A8A;color:#fff;}
 #vehToast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1E293B;color:#fff;padding:9px 18px;border-radius:18px;font-size:12px;font-weight:600;z-index:200;display:none;white-space:nowrap;}
 #vehToast.show{display:block;}
@@ -1134,7 +1138,7 @@ function logout() {
   currentUser = null;
   _pw = '';
   allData = []; filtered = [];
-  vehLoaded = false; vehData = {1:{}, 2:{}}; vehMeta = {}; vehHistory = []; vehGroupMode = false; vehSelectedSeats = [];
+  vehLoaded = false; vehData = {1:{}, 2:{}}; vehMeta = {}; vehHistory = []; vehGroupMode = false; vehSelectedSeats = []; vehPendingPlace = null;
   document.getElementById('pwScreen').className = 'pw-screen';
   document.getElementById('app').className = 'app';
   // 저장 체크 OFF 상태면 입력창 비우기
@@ -5807,6 +5811,7 @@ var vehLoaded = false;
 var vehToastTimer;
 var vehGroupMode = false;
 var vehSelectedSeats = []; // [{bus,seat,name}] 가족묶기 선택모드에서 선택된 좌석
+var vehPendingPlace = null; // 미배정 인원 칩을 탭해 선택한 이름 (다음 빈 좌석 탭에서 배치됨)
 
 function vehGetBusRiders(){
   var seen={};
@@ -5875,7 +5880,7 @@ function vehAutoAssign(){
   if(!riders.length){ vehShowToast('⚠️ 버스 탑승자가 없습니다.'); return; }
 
   try{
-  vehData={1:{},2:{}}; vehMeta={}; vehHistory=[];
+  vehData={1:{},2:{}}; vehMeta={}; vehHistory=[]; vehPendingPlace=null;
   var consumed={};
   var units=[];
   var famKeyMap = vehBuildFamilyMap(); // rno -> 가족키 (가족현황 탭과 동일 기준)
@@ -5973,7 +5978,10 @@ function vehAutoAssign(){
 function vehSeatHtml(busNum, seatId, borderSpec, extraStyle){
   var name=vehData[busNum][seatId]||'';
   extraStyle = extraStyle || '';
-  if(!name) return '<div class="veh-seat empty" style="'+extraStyle+'" data-bus="'+busNum+'" data-seat="'+seatId+'">·</div>';
+  if(!name){
+    var placeableCls = vehPendingPlace ? ' placeable' : '';
+    return '<div class="veh-seat empty'+placeableCls+'" style="'+extraStyle+'" data-bus="'+busNum+'" data-seat="'+seatId+'">·</div>';
+  }
   var meta=vehMeta[name]||{type:'individual'};
   var teamAbbr = vehTeamAbbrev(meta.team);
   var teamHtml = teamAbbr ? '<span class="veh-seat-team">'+teamAbbr+'</span>' : '';
@@ -6113,11 +6121,16 @@ function renderVeh(){
   });
 
   if(unassigned.length){
-    h+='<div class="veh-unassigned"><div class="veh-unassigned-title">⚠ 미배정 인원 ('+unassigned.length+'명)</div><div class="veh-unassigned-chips">';
+    h+='<div class="veh-unassigned"><div class="veh-unassigned-title">⚠ 미배정 인원 ('+unassigned.length+'명) <span style="font-weight:400;color:#94A3B8;">— 탭해서 좌석에 배치</span></div><div class="veh-unassigned-chips">';
     unassigned.forEach(function(d){
-      h+='<span class="veh-unassigned-chip">'+d.name+(d.mteam&&d.mteam!=='-'?' · '+d.mteam:'')+'</span>';
+      var nm=d.name;
+      var picked=(vehPendingPlace===nm);
+      h+='<span class="veh-unassigned-chip'+(picked?' picked':'')+'" onclick="vehSelectUnassignedChip(\''+nm.replace(/'/g,"\\'")+'\')">'+nm+(d.mteam&&d.mteam!=='-'?' · '+d.mteam:'')+'</span>';
     });
     h+='</div></div>';
+  }
+  if(vehPendingPlace){
+    h+='<div class="veh-place-bar">🎯 <b>'+vehPendingPlace+'</b>님을 배치할 빈 좌석을 탭하세요 <button class="veh-place-cancel" onclick="vehCancelPlace()">취소</button></div>';
   }
 
   h+='<div id="vehToast"></div>';
@@ -6199,6 +6212,12 @@ function createVehGhost(){
 }
 function bindVehDrag(){
   if(!document.getElementById('vehGhost')) createVehGhost();
+  document.querySelectorAll('.veh-seat.empty').forEach(function(seat){
+    seat.addEventListener('click', function(){
+      if(!vehPendingPlace) return;
+      vehPlaceInSeat(Number(seat.dataset.bus), seat.dataset.seat);
+    });
+  });
   if(vehGroupMode){
     document.querySelectorAll('.veh-seat[data-name]').forEach(function(seat){
       seat.addEventListener('click', vehSeatTap);
@@ -6358,6 +6377,31 @@ function vehEndDrag(x,y){
   }
   vehDragging=null; vehOverSeat=null;
 }
+// ── 미배정 인원 칩 탭 → 빈 좌석 탭으로 배치 ──
+function vehSelectUnassignedChip(name){
+  vehPendingPlace = (vehPendingPlace===name) ? null : name;
+  renderVeh();
+}
+function vehCancelPlace(){
+  vehPendingPlace = null;
+  renderVeh();
+}
+function vehPlaceInSeat(bus, seatId){
+  var name = vehPendingPlace;
+  if(!name) return;
+  if(vehData[bus][seatId]){ vehShowToast('⚠️ 이미 배정된 좌석입니다.'); return; }
+  if(!vehMeta[name]){
+    var d = allData.find(function(x){ return x.name && x.name.trim()===name; });
+    var fk = d ? (vehBuildFamilyMap()[d.rno]||'') : '';
+    var team = d ? (d.mteam||'').trim() : '';
+    vehMeta[name] = { type: fk?'family':(team&&team!=='-'?'team':'individual'), team:team, family_id:fk };
+  }
+  vehData[bus][seatId] = name;
+  vehHistory.push({name:name, fromBus:null, fromSeat:null, toBus:bus, toSeat:seatId, swappedName:''});
+  vehPendingPlace = null;
+  renderVeh();
+  vehShowToast('✅ '+name+' → '+bus+'호차 '+seatId+' 배치완료');
+}
 function vehDoSwap(name, fromBus, fromSeat, toBus, toSeat){
   var targetName = vehData[toBus][toSeat] || '';
   vehData[toBus][toSeat] = name;
@@ -6369,8 +6413,13 @@ function vehDoSwap(name, fromBus, fromSeat, toBus, toSeat){
 function vehUndo(){
   if(!vehHistory.length) return;
   var last=vehHistory.pop();
-  vehData[last.fromBus][last.fromSeat]=last.name;
-  vehData[last.toBus][last.toSeat]=last.swappedName||'';
+  if(last.fromBus==null){
+    // 미배정 인원을 좌석에 배치했던 것을 되돌림 → 그 좌석만 비움
+    vehData[last.toBus][last.toSeat] = '';
+  } else {
+    vehData[last.fromBus][last.fromSeat]=last.name;
+    vehData[last.toBus][last.toSeat]=last.swappedName||'';
+  }
   renderVeh();
   vehShowToast('↩ 되돌리기');
 }
@@ -6378,7 +6427,7 @@ function vehReset(){
   var ok=true;
   try{ ok=confirm('모든 차량배치를 초기화하시겠습니까?'); }catch(e){ ok=true; }
   if(!ok) return;
-  vehData={1:{},2:{}}; vehHistory=[]; vehMeta={}; vehGroupMode=false; vehSelectedSeats=[];
+  vehData={1:{},2:{}}; vehHistory=[]; vehMeta={}; vehGroupMode=false; vehSelectedSeats=[]; vehPendingPlace=null;
   renderVeh();
   vehShowToast('🔄 초기화 완료');
 }
