@@ -1128,7 +1128,7 @@ window.addEventListener('load', function(){ loadNameList(); });
         +'<div class="notice-item-meta">'+noticeEsc(n.name||'익명')+' · '+noticeEsc(n.time||'')+'</div>'
         +'</div>';
     }
-    var VISIBLE_COUNT = 2;
+    var VISIBLE_COUNT = 3;
     var latestList = data.data.slice(0, VISIBLE_COUNT);
     var older  = data.data.slice(VISIBLE_COUNT);
     var html = latestList.map(noticeHtml).join('');
