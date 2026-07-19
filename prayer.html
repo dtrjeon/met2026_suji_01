@@ -46,7 +46,7 @@
   }
 
   .search-wrap{
-    margin:-14px 16px 0;
+    margin:14px 16px 0;
     position:relative;
     z-index:3;
   }
@@ -180,6 +180,60 @@
     color:var(--sub);
     font-size:13px;
   }
+
+  .topics-sec{
+    margin:-14px 16px 0;
+    position:relative;
+    z-index:2;
+    background:var(--card);
+    border-radius:14px;
+    box-shadow:0 4px 14px rgba(20,30,80,0.08);
+    overflow:hidden;
+  }
+  .topics-hd{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 16px;
+    cursor:pointer;
+    font-weight:800;
+    font-size:14.5px;
+    color:var(--navy);
+  }
+  .topics-hd .chevron{
+    transition:transform .25s;
+    color:var(--sub);
+    font-size:13px;
+  }
+  .topics-sec.open .topics-hd .chevron{
+    transform:rotate(180deg);
+  }
+  .topics-body{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height .3s ease;
+  }
+  .topics-sec.open .topics-body{
+    max-height:2000px;
+  }
+  .topics-list{
+    padding:0 16px 16px;
+  }
+  .topic-item{
+    display:flex;
+    gap:10px;
+    padding:9px 0;
+    border-top:1px solid var(--line);
+    font-size:13px;
+    line-height:1.55;
+    color:var(--text);
+  }
+  .topic-item:first-child{border-top:none;}
+  .topic-num{
+    flex:0 0 20px;
+    font-weight:800;
+    color:var(--accent);
+  }
 </style>
 </head>
 <body>
@@ -189,6 +243,24 @@
   <h1>🙏 중보기도 담당자</h1>
   <div class="sub">블레싱 삼척 · 10분 단위로 각자 정해진 시간에 함께 기도해주세요</div>
 </header>
+
+<div class="topics-sec" id="topicsSec">
+  <div class="topics-hd" onclick="document.getElementById('topicsSec').classList.toggle('open')">
+    <span>🙏 중보기도제목</span>
+    <span class="chevron">▾</span>
+  </div>
+  <div class="topics-body">
+    <div class="topics-list">
+      <div class="topic-item"><span class="topic-num">1</span><span>동해 큰사랑 순복음교회의 목사님과 사모님이 국내전도를 통해 위로받고, 지역 복음화를 위해 더욱 쓰임받는 충성된 동역자가 될 수 있도록</span></div>
+      <div class="topic-item"><span class="topic-num">2</span><span>동해 큰사랑 순복음교회 모든 성도들이 국내선교를 통해 도전받고 복음 전도의 사역에 헌신하는 기회가 되도록</span></div>
+      <div class="topic-item"><span class="topic-num">3</span><span>수지 2지구 모든 사역팀이 하나된 마음으로 각자에게 맡겨주신 사역에 기쁨으로 동참하도록</span></div>
+      <div class="topic-item"><span class="topic-num">4</span><span>우리가 만나는 모든 VIP들을 하나님의 마음으로 바라보게 하시고, 우리가 전하는 예수님의 사랑과 복음의 메시지를 통해 하나님의 때에 아름다운 열매 맺을 수 있도록</span></div>
+      <div class="topic-item"><span class="topic-num">5</span><span>우리를 통해 일하시는 하나님을 경험하는 국내선교가 되게 하시고, 수지 2지구 모든 성도들이 계속해서 복음의 일꾼으로 쓰임받을 수 있도록</span></div>
+      <div class="topic-item"><span class="topic-num">6</span><span>수요일 저녁에 진행되는 연합집회를 통해 삼척과 동해지역의 VIP들이 살아계신 예수님을 만나 구원의 기쁨을 누리도록</span></div>
+      <div class="topic-item"><span class="topic-num">7</span><span>큰사랑순복음교회가 계속해서 지역사회에 거룩하고 선한 영향력을 나타내는 교회로 쓰임받을 수 있도록</span></div>
+    </div>
+  </div>
+</div>
 
 <div class="search-wrap">
   <input type="text" class="search-inp" id="searchInput" placeholder="🔍 이름으로 찾기"
