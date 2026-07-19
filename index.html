@@ -288,6 +288,7 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
 .notice-form-btns{display:flex;gap:8px;}
 .notice-form-btns button{flex:1;padding:10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;-webkit-appearance:none;font-family:'Noto Sans KR',sans-serif;touch-action:manipulation;border:none;min-height:40px;}
 .notice-cancel-btn{background:#f0f2f8;color:rgba(20,30,70,0.7);}
+.notice-delete-btn{background:#fdecea;color:#c62828;}
 .notice-submit-btn{background:linear-gradient(135deg,#2a5cd8,#1a3ab0);color:#fff;}
 .notice-submit-btn:disabled{opacity:0.6;}
 .notice-form-msg{font-size:11px;color:#c00;margin-top:6px;min-height:14px;}
@@ -1127,9 +1128,10 @@ window.addEventListener('load', function(){ loadNameList(); });
         +'<div class="notice-item-meta">'+noticeEsc(n.name||'익명')+' · '+noticeEsc(n.time||'')+'</div>'
         +'</div>';
     }
-    var latest = data.data[0];
-    var older  = data.data.slice(1);
-    var html = noticeHtml(latest);
+    var VISIBLE_COUNT = 2;
+    var latestList = data.data.slice(0, VISIBLE_COUNT);
+    var older  = data.data.slice(VISIBLE_COUNT);
+    var html = latestList.map(noticeHtml).join('');
     if(older.length){
       html += '<button type="button" class="notice-older-toggle" id="noticeOlderToggle" onclick="toggleOlderNotices()">이전 공지 '+older.length+'건 더보기 ▾</button>';
       html += '<div class="notice-older" id="noticeOlder">'+older.map(noticeHtml).join('')+'</div>';
@@ -1286,6 +1288,7 @@ window.addEventListener('load', function(){ loadNameList(); });
           +'<textarea id="nedtext-'+noticeEsc(n.id)+'" maxlength="500">'+noticeEsc(n.content||'')+'</textarea>'
           +'<div class="notice-form-btns">'
           +'<button type="button" class="notice-cancel-btn" onclick="document.getElementById(\'ned-'+noticeEsc(n.id)+'\').remove()">닫기</button>'
+          +'<button type="button" class="notice-delete-btn" onclick="deleteMyNotice(\''+noticeEsc(n.id)+'\')">삭제</button>'
           +'<button type="button" class="notice-submit-btn" onclick="saveMyNoticeEdit(\''+noticeEsc(n.id)+'\')">저장</button>'
           +'</div>'
           +'<div class="notice-edit-msg" id="nedmsg-'+noticeEsc(n.id)+'"></div>'
@@ -1333,6 +1336,35 @@ window.addEventListener('load', function(){ loadNameList(); });
     });
   }
   window.saveMyNoticeEdit = saveMyNoticeEdit;
+
+  function deleteMyNotice(id){
+    if(!window.confirm('이 공지를 삭제하시겠습니까?')) return;
+    var phone   = document.getElementById('myNoticePhone').value.trim();
+    var msgEl   = document.getElementById('nedmsg-'+id);
+    if(msgEl){ msgEl.style.color = 'rgba(40,50,90,0.6)'; msgEl.textContent = '삭제 중…'; }
+
+    fetch(GSURL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'data=' + encodeURIComponent(JSON.stringify({ action:'deleteNotice', id:id, phone:phone }))
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(res.result === 'ok'){
+        var item = document.getElementById('ned-'+id);
+        if(item) item.remove();
+        var doneMsg = document.getElementById('myNoticeMsg');
+        if(doneMsg){ doneMsg.style.color='#0a6e38'; doneMsg.textContent='✅ 삭제되었습니다.'; }
+        fetchNotices();
+      } else {
+        if(msgEl){ msgEl.style.color = '#c00'; msgEl.textContent = res.message || '삭제에 실패했습니다.'; }
+      }
+    })
+    .catch(function(){
+      if(msgEl){ msgEl.style.color = '#c00'; msgEl.textContent = '네트워크 오류가 발생했습니다.'; }
+    });
+  }
+  window.deleteMyNotice = deleteMyNotice;
 
   fetchNotices();
 })();
