@@ -135,6 +135,8 @@
   }
   .p-row:last-child{border-bottom:none;}
   .p-row.found{background:#fff3d6;}
+  .p-row.unassigned{background:#f7f8fa;cursor:pointer;}
+  .p-row.unassigned .p-name{color:var(--sub);font-style:italic;font-weight:600;}
   .p-main{
     display:flex;
     flex-wrap:wrap;
@@ -987,12 +989,19 @@
         var toRemove = ALL_ROWS.filter(function(r){ return !rosterNames[r.name]; });
 
         if(toRemove.length){
-          var ok = confirm('명단에 없는 '+toRemove.length+'명을 기도표에서 삭제합니다:\n' + toRemove.map(function(r){return r.name;}).join(', ') + '\n\n계속하시겠습니까?');
+          var ok = confirm('명단에 없는 '+toRemove.length+'명을 기도표에서 삭제합니다 (시간대는 남기고 이름만 비웁니다):\n' + toRemove.map(function(r){return r.name;}).join(', ') + '\n\n계속하시겠습니까?');
           if(ok){
             toRemove.forEach(function(r){
-              if(r.el && r.el.parentNode) r.el.parentNode.removeChild(r.el);
-              var idx = ALL_ROWS.indexOf(r);
-              if(idx>=0) ALL_ROWS.splice(idx,1);
+              // 행(시간대) 자체는 남기고, 이름/전화번호/사역팀만 비워서 "미배정" 상태로 만듦
+              var nameEl = r.el.querySelector('.p-name');
+              if(nameEl) nameEl.textContent = '(미배정)';
+              var phoneEl = r.el.querySelector('.p-phone');
+              if(phoneEl) phoneEl.parentNode.removeChild(phoneEl);
+              var teamWrap = r.el.querySelector('.p-team-wrap');
+              if(teamWrap) teamWrap.parentNode.removeChild(teamWrap);
+              r.el.classList.add('unassigned');
+              r.el.onclick = function(){ assignRow(r); };
+              r.name = ''; // 더 이상 어떤 사람도 아님 (검색/재동기화에서 제외되도록)
             });
           }
         }
@@ -1029,6 +1038,32 @@
     }
     box.innerHTML = html;
     box.style.display = 'block';
+  }
+
+  function assignRow(r){
+    var time = r.time;
+    var name = prompt('이 시간대('+time+')에 배정할 이름을 입력하세요', '');
+    if(!name) return;
+    var team = prompt(name+'님의 사역팀을 입력하세요 (없으면 빈칸으로 확인)', '') || '';
+    var phone = prompt(name+'님의 전화번호를 입력하세요 (없으면 빈칸으로 확인)', '') || '';
+
+    var nameEl = r.el.querySelector('.p-name');
+    if(nameEl) nameEl.textContent = name;
+    var mainEl = r.el.querySelector('.p-main');
+    if(phone && mainEl){
+      var a = document.createElement('a');
+      a.className = 'p-phone'; a.href = 'tel:'+phone; a.textContent = phone;
+      mainEl.appendChild(a);
+    }
+    if(team){
+      var wrap = document.createElement('div');
+      wrap.className = 'p-team-wrap';
+      wrap.innerHTML = '<span class="p-team">'+escHtml(team)+'</span>';
+      r.el.appendChild(wrap);
+    }
+    r.el.classList.remove('unassigned');
+    r.el.onclick = null;
+    r.name = name;
   }
 
   function addMissing(chipEl){
