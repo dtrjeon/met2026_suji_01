@@ -974,19 +974,26 @@
 
   function escHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 
+  var ROSTER_BASIC = {}; // name -> {phone, team}
+
   function syncRoster(){
     var btn = document.getElementById('syncBtn');
     btn.disabled = true; btn.textContent = '⏳ 명단 확인 중...';
-    fetch(PRAYER_GAS_URL + '?action=names')
+    fetch(PRAYER_GAS_URL + '?action=rosterBasic')
       .then(function(r){ return r.json(); })
       .then(function(res){
         btn.disabled = false; btn.textContent = '🔄 admin 명단과 동기화 (삭제/추가 대상 확인)';
         if(res.result !== 'ok'){ alert('명단 조회 실패: ' + (res.message||'')); return; }
         var rosterNames = {};
-        (res.data||[]).forEach(function(p){ if(p.name) rosterNames[p.name.trim()] = true; });
+        (res.data||[]).forEach(function(p){
+          if(!p.name) return;
+          var n = p.name.trim();
+          rosterNames[n] = true;
+          ROSTER_BASIC[n] = { phone: p.phone||'', team: p.team||'' };
+        });
 
         // 1) 명단에 없는 사람 찾기
-        var toRemove = ALL_ROWS.filter(function(r){ return !rosterNames[r.name]; });
+        var toRemove = ALL_ROWS.filter(function(r){ return r.name && !rosterNames[r.name]; });
 
         if(toRemove.length){
           var ok = confirm('명단에 없는 '+toRemove.length+'명을 기도표에서 삭제합니다 (시간대는 남기고 이름만 비웁니다):\n' + toRemove.map(function(r){return r.name;}).join(', ') + '\n\n계속하시겠습니까?');
@@ -1008,8 +1015,9 @@
 
         // 2) 명단엔 있지만 기도표엔 없는 사람 찾기
         var scheduled = {};
-        ALL_ROWS.forEach(function(r){ scheduled[r.name] = true; });
+        ALL_ROWS.forEach(function(r){ if(r.name) scheduled[r.name] = true; });
         var missing = Object.keys(rosterNames).filter(function(n){ return !scheduled[n]; }).sort(function(a,b){ return a.localeCompare(b,'ko'); });
+        window._missingNamesCache = missing;
 
         renderSyncResult(toRemove, missing);
       })
@@ -1040,16 +1048,12 @@
     box.style.display = 'block';
   }
 
-  function assignRow(r){
-    var time = r.time;
-    var name = prompt('이 시간대('+time+')에 배정할 이름을 입력하세요', '');
-    if(!name) return;
-    var team = prompt(name+'님의 사역팀을 입력하세요 (없으면 빈칸으로 확인)', '') || '';
-    var phone = prompt(name+'님의 전화번호를 입력하세요 (없으면 빈칸으로 확인)', '') || '';
-
+  function fillRow(r, name, phone, team){
     var nameEl = r.el.querySelector('.p-name');
     if(nameEl) nameEl.textContent = name;
     var mainEl = r.el.querySelector('.p-main');
+    var oldPhone = r.el.querySelector('.p-phone'); if(oldPhone) oldPhone.parentNode.removeChild(oldPhone);
+    var oldTeamWrap = r.el.querySelector('.p-team-wrap'); if(oldTeamWrap) oldTeamWrap.parentNode.removeChild(oldTeamWrap);
     if(phone && mainEl){
       var a = document.createElement('a');
       a.className = 'p-phone'; a.href = 'tel:'+phone; a.textContent = phone;
@@ -1066,34 +1070,71 @@
     r.name = name;
   }
 
+  function closeAssignModal(){
+    document.getElementById('assignModal').style.display = 'none';
+    window._assignCtx = null;
+  }
+
+  function confirmAssignModal(){
+    var ctx = window._assignCtx;
+    if(!ctx) return;
+    var sel = document.getElementById('assignSlotSelect');
+    var idx = parseInt(sel.value, 10);
+
+    if(ctx.mode === 'missing'){
+      var r = ctx.slots[idx];
+      if(!r){ closeAssignModal(); return; }
+      var info = ROSTER_BASIC[ctx.name] || {};
+      fillRow(r, ctx.name, info.phone||'', info.team||'');
+      if(ctx.chipEl && ctx.chipEl.parentNode) ctx.chipEl.parentNode.removeChild(ctx.chipEl);
+      if(window._missingNamesCache) window._missingNamesCache = window._missingNamesCache.filter(function(n){ return n!==ctx.name; });
+      if(!document.querySelectorAll('#missingList .miss-chip').length){
+        var box = document.getElementById('syncResultBox');
+        if(box) box.innerHTML += '<div style="color:var(--sub);margin-top:6px;">➕ 추가할 인원 없음</div>';
+      }
+    } else if(ctx.mode === 'reassign'){
+      var name = (window._missingNamesCache||[])[idx];
+      if(!name){ closeAssignModal(); return; }
+      var info2 = ROSTER_BASIC[name] || {};
+      fillRow(ctx.row, name, info2.phone||'', info2.team||'');
+      var chip = document.querySelector('.miss-chip[data-name="'+CSS.escape(name)+'"]');
+      if(chip && chip.parentNode) chip.parentNode.removeChild(chip);
+      window._missingNamesCache = (window._missingNamesCache||[]).filter(function(n){ return n!==name; });
+    }
+    closeAssignModal();
+  }
+
+  // 특정 시간대(미배정 상태)를 탭했을 때 — 명단에는 있으나 기도표에 없는 사람 중에서 드롭다운으로 선택
+  function assignRow(r){
+    var missing = window._missingNamesCache || [];
+    if(!missing.length){
+      alert('배정할 후보가 없습니다. 먼저 "🔄 동기화"를 눌러 명단을 확인해주세요.');
+      return;
+    }
+    window._assignCtx = { mode:'reassign', row:r };
+    var sel = document.getElementById('assignSlotSelect');
+    sel.innerHTML = missing.map(function(n,i){ return '<option value="'+i+'">'+escHtml(n)+'</option>'; }).join('');
+    document.getElementById('assignModalTitle').textContent = r.time+' 시간대에 배정할 사람 선택';
+    document.getElementById('assignModal').style.display = 'flex';
+  }
+
+  // 명단에는 있으나 기도표에 없는 사람(칩)을 탭했을 때 — 현재 미배정 시간대 중에서 드롭다운으로 선택
   function addMissing(chipEl){
     var name = chipEl.getAttribute('data-name');
-    var day = prompt(name+'님을 추가할 날짜를 입력하세요 (21 또는 22)', '21');
-    if(day === null) return;
-    day = day.trim();
-    if(day !== '21' && day !== '22'){ alert('21 또는 22만 입력해주세요.'); return; }
-    var time = prompt(name+'님의 기도 시간을 입력하세요 (예: 10:30~10:40)', '');
-    if(!time) return;
-    var team = prompt(name+'님의 사역팀을 입력하세요 (없으면 빈칸으로 확인)', '') || '';
-    var phone = prompt(name+'님의 전화번호를 입력하세요 (없으면 빈칸으로 확인)', '') || '';
-
-    var daySec = document.getElementById('d'+day);
-    var list = daySec ? daySec.querySelector('.p-list') : null;
-    if(!list){ alert('해당 날짜 탭을 찾을 수 없습니다.'); return; }
-
-    var row = document.createElement('div');
-    row.className = 'p-row';
-    row.innerHTML = '<div class="p-main"><span class="p-time">'+escHtml(time)+'</span><span class="p-name">'+escHtml(name)+'</span>'
-      + (phone ? '<a class="p-phone" href="tel:'+escHtml(phone)+'">'+escHtml(phone)+'</a>' : '') + '</div>'
-      + (team ? '<div class="p-team-wrap"><span class="p-team">'+escHtml(team)+'</span></div>' : '');
-    list.appendChild(row);
-
-    ALL_ROWS.push({el: row, name: name, time: time});
-    chipEl.parentNode.removeChild(chipEl);
-    if(!document.querySelectorAll('#missingList .miss-chip').length){
-      var box = document.getElementById('syncResultBox');
-      box.innerHTML += '<div style="color:var(--sub);margin-top:6px;">➕ 추가할 인원 없음</div>';
+    var unassigned = ALL_ROWS.filter(function(r){ return !r.name && r.el.classList.contains('unassigned'); });
+    if(!unassigned.length){
+      alert('현재 미배정 시간대가 없습니다. "🔄 동기화"로 명단에서 빠진 사람을 먼저 정리하면 빈 시간대가 생깁니다.');
+      return;
     }
+    window._assignCtx = { mode:'missing', name:name, chipEl:chipEl, slots:unassigned };
+    var sel = document.getElementById('assignSlotSelect');
+    sel.innerHTML = unassigned.map(function(r,i){
+      var daySec = r.el.closest('.day-sec');
+      var day = daySec ? daySec.id.replace('d','') : '';
+      return '<option value="'+i+'">7/'+day+' '+escHtml(r.time)+'</option>';
+    }).join('');
+    document.getElementById('assignModalTitle').textContent = name+'님을 배정할 시간대 선택';
+    document.getElementById('assignModal').style.display = 'flex';
   }
 
   function searchName(val){
@@ -1139,5 +1180,15 @@
   });
 </script>
 
+<div id="assignModal" style="display:none;position:fixed;inset:0;background:rgba(20,25,50,0.55);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:20px;width:88%;max-width:360px;">
+    <div style="font-weight:800;font-size:15px;margin-bottom:12px;" id="assignModalTitle">배정</div>
+    <select id="assignSlotSelect" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;font-size:14px;margin-bottom:14px;"></select>
+    <div style="display:flex;gap:8px;">
+      <button onclick="closeAssignModal()" style="flex:1;padding:11px;border:none;border-radius:10px;background:#eee;font-weight:700;cursor:pointer;">취소</button>
+      <button onclick="confirmAssignModal()" style="flex:1;padding:11px;border:none;border-radius:10px;background:var(--navy);color:#fff;font-weight:700;cursor:pointer;">배정</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
