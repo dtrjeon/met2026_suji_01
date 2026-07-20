@@ -602,7 +602,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .bus-row{display:flex;align-items:stretch;gap:4px;}
 .bus-back-row{display:flex;gap:5px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);}
 .bus-back-row .veh-seat{flex:1;min-width:auto;}
-.veh-seat{aspect-ratio:1/0.95;flex:1;min-width:0;border-radius:7px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;text-align:left;padding:3px 4px;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:pan-y;border:1px solid transparent;overflow:hidden;transition:transform .1s,box-shadow .1s,opacity .15s;}
+.veh-seat{position:relative;aspect-ratio:1/0.95;flex:1;min-width:0;border-radius:7px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;text-align:left;padding:3px 4px;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:pan-y;border:1px solid transparent;overflow:hidden;transition:transform .1s,box-shadow .1s,opacity .15s;}
+.veh-seat-del{position:absolute;top:-1px;right:-1px;width:14px;height:14px;line-height:14px;text-align:center;font-size:9px;font-weight:900;color:#fff;background:#DC2626;border-radius:0 6px 0 6px;cursor:pointer;z-index:2;}
 .veh-seat.empty{align-items:center;justify-content:center;background:#F1F5F9;color:#CBD5E1;cursor:default;border:1px dashed #E2E8F0;}
 .veh-seat.family{background:#DBEAFE;color:#1E3A8A;border-color:#93C5FD;}
 .veh-seat.team{background:#DCFCE7;color:#166534;border-color:#86EFAC;}
@@ -6106,7 +6107,8 @@ function vehSeatHtml(busNum, seatId, borderSpec, extraStyle){
   if(tags.gender) tagParts.push(tags.gender);
   if(tags.isChild) tagParts.push('자');
   var tagStr = tagParts.length ? ' ('+tagParts.join(',')+')' : '';
-  return '<div class="veh-seat '+meta.type+(isSel?' selected':'')+'" style="'+extraStyle+borderCss+'" data-bus="'+busNum+'" data-seat="'+seatId+'" data-name="'+name+'" title="'+name+tagStr+(meta.team?' · '+meta.team:'')+'">'+teamHtml+'<span class="veh-seat-name">'+name+tagStr+'</span></div>';
+  var delBtn = vehIsInRoster(name) ? '' : '<span class="veh-seat-del" title="명단에 없음 · 탭하여 삭제" onclick="event.stopPropagation();vehDeleteSeat('+busNum+',\''+seatId+'\',\''+name.replace(/'/g,"\\'")+'\')">✕</span>';
+  return '<div class="veh-seat '+meta.type+(isSel?' selected':'')+'" style="'+extraStyle+borderCss+'" data-bus="'+busNum+'" data-seat="'+seatId+'" data-name="'+name+'" title="'+name+tagStr+(meta.team?' · '+meta.team:'')+'">'+delBtn+teamHtml+'<span class="veh-seat-name">'+name+tagStr+'</span></div>';
 }
 // 명단 데이터에서 성별/자녀여부 조회
 function vehPersonTags(name){
@@ -6115,6 +6117,22 @@ function vehPersonTags(name){
     gender: d ? (d.gender||'').trim() : '',
     isChild: !!(d && (d.rel||'').trim()==='자녀')
   };
+}
+// 현재 명단(allData)에 해당 이름이 존재하는지 확인 (동명이인 있어도 1명이라도 있으면 true)
+function vehIsInRoster(name){
+  return allData.some(function(x){ return x.name && x.name.trim()===name; });
+}
+// 좌석에서 탑승자 삭제 — 명단에 없는(이미 삭제/변경된) 인원만 허용
+function vehDeleteSeat(bus, seatId, name){
+  if(vehIsInRoster(name)){
+    vehShowToast('⚠️ 명단에 있는 인원은 삭제할 수 없습니다. 차량 정보를 수정해주세요.');
+    return;
+  }
+  if(!confirm(name+'님은 현재 명단에 없습니다.\n좌석에서 삭제하시겠습니까?')) return;
+  vehData[bus][seatId]='';
+  vehHistory.push({name:name, fromBus:bus, fromSeat:seatId, toBus:null, toSeat:null, swappedName:'', deleted:true});
+  renderVeh();
+  vehShowToast('🗑 '+name+'님을 좌석에서 삭제했습니다.');
 }
 // 좌석 박스가 작아서 사역팀명을 줄여서 표시 (전체 이름은 title 툴팁으로 확인)
 function vehTeamAbbrev(team){
@@ -6521,7 +6539,10 @@ function vehDoSwap(name, fromBus, fromSeat, toBus, toSeat){
 function vehUndo(){
   if(!vehHistory.length) return;
   var last=vehHistory.pop();
-  if(last.fromBus==null){
+  if(last.deleted){
+    // 좌석 삭제(명단에 없는 인원 제거)를 되돌림 → 원래 좌석에 복원
+    vehData[last.fromBus][last.fromSeat]=last.name;
+  } else if(last.fromBus==null){
     // 미배정 인원을 좌석에 배치했던 것을 되돌림 → 그 좌석만 비움
     vehData[last.toBus][last.toSeat] = '';
   } else {
