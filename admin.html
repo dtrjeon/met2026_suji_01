@@ -2505,6 +2505,7 @@ function switchTab(tab) {
   if(tab==='veh')      renderVeh();
   if(tab==='accom'){
     renderAccom();
+    loadAccomFromSheet();
   } else {
     // 숙소탭 벗어나면 fixed 헤더 숨김
     var fh=document.getElementById('accomFixedHeader');
