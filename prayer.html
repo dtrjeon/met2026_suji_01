@@ -1035,8 +1035,9 @@
       : '<div style="margin-bottom:10px;color:var(--sub);">🗑 삭제할 인원 없음</div>';
 
     if(missing.length){
-      html += '<div><b>➕ 명단에는 있으나 기도표에 없는 '+missing.length+'명 — 탭하여 추가</b></div>';
-      html += '<div id="missingList" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">' +
+      html += '<div id="missingToggle" onclick="toggleMissingList()" style="cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:800;">'
+        + '<span id="missingToggleIcon">🔒</span><span>미배치 대상자 ('+missing.length+'명) — 탭하여 보기</span></div>';
+      html += '<div id="missingList" style="display:none;flex-wrap:wrap;gap:6px;margin-top:8px;">' +
         missing.map(function(n){
           return '<span class="miss-chip" data-name="'+escHtml(n)+'" onclick="addMissing(this)" '
             + 'style="padding:6px 12px;border-radius:20px;background:#eef2fd;color:var(--navy);font-size:12.5px;font-weight:700;cursor:pointer;">'+escHtml(n)+'</span>';
@@ -1046,6 +1047,27 @@
     }
     box.innerHTML = html;
     box.style.display = 'block';
+  }
+
+  var MISSING_LIST_PW = '1230'; // 미배치 대상자 목록 확인용 비밀번호 (필요시 이 값만 바꾸면 됨)
+  var _missingListUnlocked = false;
+  function toggleMissingList(){
+    var list = document.getElementById('missingList');
+    var icon = document.getElementById('missingToggleIcon');
+    if(!list) return;
+    if(list.style.display === 'flex'){
+      list.style.display = 'none';
+      icon.textContent = '🔒';
+      return;
+    }
+    if(!_missingListUnlocked){
+      var pw = prompt('미배치 대상자 목록을 보려면 비밀번호를 입력하세요');
+      if(pw === null) return;
+      if(pw !== MISSING_LIST_PW){ alert('비밀번호가 올바르지 않습니다.'); return; }
+      _missingListUnlocked = true;
+    }
+    list.style.display = 'flex';
+    icon.textContent = '🔓';
   }
 
   function fillRow(r, name, phone, team){
