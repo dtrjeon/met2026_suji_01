@@ -270,12 +270,6 @@
   <div class="search-results" id="searchResults"></div>
 </div>
 
-<div style="margin:14px 16px 0;">
-  <button id="syncBtn" onclick="syncRoster()" style="width:100%;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;font-weight:800;font-size:13.5px;cursor:pointer;font-family:inherit;">🔄 admin 명단과 동기화 (삭제/추가 대상 확인)</button>
-  <button id="saveBtn" onclick="savePrayerListToSheet()" style="width:100%;margin-top:8px;padding:12px;border:none;border-radius:12px;background:#166534;color:#fff;font-weight:800;font-size:13.5px;cursor:pointer;font-family:inherit;">💾 구글시트에 저장</button>
-  <div id="syncResultBox" style="display:none;margin-top:10px;background:var(--card);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.6;box-shadow:0 4px 14px rgba(20,30,80,0.08);"></div>
-</div>
-
 <div class="tabs">
   <div class="tab active" data-day="d21">☀️ 7/21(화)</div>
   <div class="tab" data-day="d22">☀️ 7/22(수)</div>
@@ -883,6 +877,13 @@
     </div>
   </div>
 
+<div style="margin:14px 16px 0;">
+  <button id="syncBtn" onclick="syncRoster()" style="width:100%;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;font-weight:800;font-size:13.5px;cursor:pointer;font-family:inherit;">🔄 admin 명단과 동기화 (삭제/추가 대상 확인)</button>
+  <button id="saveBtn" onclick="savePrayerListToSheet()" style="width:100%;margin-top:8px;padding:12px;border:none;border-radius:12px;background:#166534;color:#fff;font-weight:800;font-size:13.5px;cursor:pointer;font-family:inherit;">💾 구글시트에 저장</button>
+  <button id="addSlotBtn" onclick="addTimeSlot()" style="width:100%;margin-top:8px;padding:12px;border:none;border-radius:12px;background:#7c3aed;color:#fff;font-weight:800;font-size:13.5px;cursor:pointer;font-family:inherit;">➕ 누락된 시간대 추가</button>
+  <div id="syncResultBox" style="display:none;margin-top:10px;background:var(--card);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.6;box-shadow:0 4px 14px rgba(20,30,80,0.08);"></div>
+</div>
+
 <script>
   document.querySelectorAll('.tab').forEach(function(tab){
     tab.addEventListener('click', function(){
@@ -939,6 +940,44 @@
   }
 
   // 현재 화면 상태(ALL_ROWS)를 구글시트에 저장
+  function addTimeSlot(){
+    var day = prompt('시간대를 추가할 날짜를 입력하세요 (21 또는 22)', '21');
+    if(day === null) return;
+    day = day.trim();
+    if(day !== '21' && day !== '22'){ alert('21 또는 22만 입력해주세요.'); return; }
+    var time = prompt('추가할 시간을 입력하세요 (예: 13:40~13:50)', '');
+    if(!time) return;
+    time = time.trim();
+
+    var daySec = document.getElementById('d'+day);
+    var list = daySec ? daySec.querySelector('.p-list') : null;
+    if(!list){ alert('해당 날짜 탭을 찾을 수 없습니다.'); return; }
+
+    var dup = ALL_ROWS.some(function(r){
+      return r.el.closest('.day-sec') === daySec && r.time === time;
+    });
+    if(dup){ alert('이미 그 시간대가 존재합니다.'); return; }
+
+    var row = document.createElement('div');
+    row.className = 'p-row unassigned';
+    row.innerHTML = '<div class="p-main"><span class="p-time">'+escHtml(time)+'</span><span class="p-name">(미배정)</span></div>';
+
+    // 시간 순서에 맞는 위치에 삽입
+    var existingRows = Array.prototype.slice.call(list.querySelectorAll('.p-row'));
+    var inserted = false;
+    for(var i=0;i<existingRows.length;i++){
+      var t = existingRows[i].querySelector('.p-time').textContent.trim();
+      if(t.localeCompare(time) > 0){ list.insertBefore(row, existingRows[i]); inserted = true; break; }
+    }
+    if(!inserted) list.appendChild(row);
+
+    var rowObj = { el: row, name: '', time: time };
+    row.onclick = function(){ assignRow(rowObj); };
+    ALL_ROWS.push(rowObj);
+
+    alert('✅ '+day+'일 '+time+' 시간대가 추가되었습니다. 저장하려면 "💾 구글시트에 저장"을 눌러주세요.');
+  }
+
   function savePrayerListToSheet(){
     var btn = document.getElementById('saveBtn');
     btn.disabled = true; btn.textContent = '⏳ 저장 중...';
