@@ -1871,7 +1871,7 @@ function renderDetailFor(d) {
     + row('숙소', d.accom)
     + '</div></div>'
     + (d.spouse||d.note?'<div class="detail-sec"><div class="detail-sec-title">기타</div><div class="detail-grid">'
-      +(d.spouse?row('배우자성명',d.spouse):'')
+      +(d.spouse?row('배우자/보호자성명',d.spouse):'')
       +(d.note?row('비고',d.note,true):'')
       +'</div></div>':'')
     + '<div class="detail-sec"><div class="detail-sec-title">제출 정보</div><div class="detail-grid">'
