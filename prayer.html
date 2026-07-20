@@ -268,6 +268,12 @@
   <div class="search-results" id="searchResults"></div>
 </div>
 
+<div style="margin:14px 16px 0;">
+  <button id="syncBtn" onclick="syncRoster()" style="width:100%;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;font-weight:800;font-size:13.5px;cursor:pointer;font-family:inherit;">🔄 admin 명단과 동기화 (삭제/추가 대상 확인)</button>
+  <button id="saveBtn" onclick="savePrayerListToSheet()" style="width:100%;margin-top:8px;padding:12px;border:none;border-radius:12px;background:#166534;color:#fff;font-weight:800;font-size:13.5px;cursor:pointer;font-family:inherit;">💾 구글시트에 저장</button>
+  <div id="syncResultBox" style="display:none;margin-top:10px;background:var(--card);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.6;box-shadow:0 4px 14px rgba(20,30,80,0.08);"></div>
+</div>
+
 <div class="tabs">
   <div class="tab active" data-day="d21">☀️ 7/21(화)</div>
   <div class="tab" data-day="d22">☀️ 7/22(수)</div>
@@ -893,6 +899,167 @@
       time: row.querySelector('.p-time').textContent.trim()
     });
   });
+
+  // ── admin.html(구글시트 명단)과 동기화: 명단에 없는 인원 삭제 / 명단에는 있으나 기도표에 없는 인원 추가 ──
+  var PRAYER_GAS_URL = 'https://script.google.com/macros/s/AKfycbzvO5lEtq4xEmSrOy3oAR84M8_-hdG8SOm8xoWWCR65PRA2muH6BDvtgQjodnO9PfRq0g/exec';
+
+  // 구글시트에 저장된 기도표가 있으면(이전에 "저장" 눌러둔 상태) 그 내용을 우선 불러와 화면을 덮어씀
+  function loadSavedPrayerList(){
+    fetch(PRAYER_GAS_URL + '?action=prayerList')
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        if(res.result !== 'ok' || !res.data || !res.data.length) return; // 저장된 게 없으면 원본(하드코딩) 그대로 사용
+        rebuildFromData(res.data);
+      })
+      .catch(function(e){ console.log('기도표 불러오기 실패:', e.message); });
+  }
+
+  function rebuildFromData(data){
+    ['21','22'].forEach(function(day){
+      var daySec = document.getElementById('d'+day);
+      if(!daySec) return;
+      var list = daySec.querySelector('.p-list');
+      list.innerHTML = '';
+    });
+    ALL_ROWS = [];
+    data.slice().sort(function(a,b){ return (a.time||'').localeCompare(b.time||''); }).forEach(function(r){
+      var daySec = document.getElementById('d'+r.day);
+      if(!daySec) return;
+      var list = daySec.querySelector('.p-list');
+      var row = document.createElement('div');
+      row.className = 'p-row';
+      row.innerHTML = '<div class="p-main"><span class="p-time">'+escHtml(r.time)+'</span><span class="p-name">'+escHtml(r.name)+'</span>'
+        + (r.phone ? '<a class="p-phone" href="tel:'+escHtml(r.phone)+'">'+escHtml(r.phone)+'</a>' : '') + '</div>'
+        + (r.team ? '<div class="p-team-wrap"><span class="p-team">'+escHtml(r.team)+'</span></div>' : '');
+      list.appendChild(row);
+      ALL_ROWS.push({ el:row, name:r.name, time:r.time });
+    });
+  }
+
+  // 현재 화면 상태(ALL_ROWS)를 구글시트에 저장
+  function savePrayerListToSheet(){
+    var btn = document.getElementById('saveBtn');
+    btn.disabled = true; btn.textContent = '⏳ 저장 중...';
+    var rows = ALL_ROWS.map(function(r){
+      var daySec = r.el.closest('.day-sec');
+      var day = daySec ? daySec.id.replace('d','') : '';
+      var phoneEl = r.el.querySelector('.p-phone');
+      var teamEl = r.el.querySelector('.p-team');
+      return {
+        day: day, time: r.name ? r.time : r.time,
+        name: r.name,
+        phone: phoneEl ? phoneEl.textContent.trim() : '',
+        team: teamEl ? teamEl.textContent.trim() : ''
+      };
+    });
+    fetch(PRAYER_GAS_URL, {
+      method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:'data='+encodeURIComponent(JSON.stringify({ action:'savePrayerList', rows:rows }))
+    })
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        btn.disabled = false; btn.textContent = '💾 구글시트에 저장';
+        if(res.result === 'ok') alert('✅ 저장 완료 ('+res.saved+'명) — 이제 누구든 이 페이지를 열면 이 내용이 보입니다.');
+        else alert('❌ 저장 실패: ' + (res.message||''));
+      })
+      .catch(function(e){
+        btn.disabled = false; btn.textContent = '💾 구글시트에 저장';
+        alert('네트워크 오류: ' + e.message);
+      });
+  }
+
+  loadSavedPrayerList();
+
+  function escHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  function syncRoster(){
+    var btn = document.getElementById('syncBtn');
+    btn.disabled = true; btn.textContent = '⏳ 명단 확인 중...';
+    fetch(PRAYER_GAS_URL + '?action=names')
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        btn.disabled = false; btn.textContent = '🔄 admin 명단과 동기화 (삭제/추가 대상 확인)';
+        if(res.result !== 'ok'){ alert('명단 조회 실패: ' + (res.message||'')); return; }
+        var rosterNames = {};
+        (res.data||[]).forEach(function(p){ if(p.name) rosterNames[p.name.trim()] = true; });
+
+        // 1) 명단에 없는 사람 찾기
+        var toRemove = ALL_ROWS.filter(function(r){ return !rosterNames[r.name]; });
+
+        if(toRemove.length){
+          var ok = confirm('명단에 없는 '+toRemove.length+'명을 기도표에서 삭제합니다:\n' + toRemove.map(function(r){return r.name;}).join(', ') + '\n\n계속하시겠습니까?');
+          if(ok){
+            toRemove.forEach(function(r){
+              if(r.el && r.el.parentNode) r.el.parentNode.removeChild(r.el);
+              var idx = ALL_ROWS.indexOf(r);
+              if(idx>=0) ALL_ROWS.splice(idx,1);
+            });
+          }
+        }
+
+        // 2) 명단엔 있지만 기도표엔 없는 사람 찾기
+        var scheduled = {};
+        ALL_ROWS.forEach(function(r){ scheduled[r.name] = true; });
+        var missing = Object.keys(rosterNames).filter(function(n){ return !scheduled[n]; }).sort(function(a,b){ return a.localeCompare(b,'ko'); });
+
+        renderSyncResult(toRemove, missing);
+      })
+      .catch(function(e){
+        btn.disabled = false; btn.textContent = '🔄 admin 명단과 동기화 (삭제/추가 대상 확인)';
+        alert('네트워크 오류: ' + e.message);
+      });
+  }
+
+  function renderSyncResult(removed, missing){
+    var box = document.getElementById('syncResultBox');
+    var html = '';
+    html += removed.length
+      ? '<div style="margin-bottom:10px;">🗑 <b>'+removed.length+'명 삭제됨:</b> ' + escHtml(removed.map(function(r){return r.name;}).join(', ')) + '</div>'
+      : '<div style="margin-bottom:10px;color:var(--sub);">🗑 삭제할 인원 없음</div>';
+
+    if(missing.length){
+      html += '<div><b>➕ 명단에는 있으나 기도표에 없는 '+missing.length+'명 — 탭하여 추가</b></div>';
+      html += '<div id="missingList" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">' +
+        missing.map(function(n){
+          return '<span class="miss-chip" data-name="'+escHtml(n)+'" onclick="addMissing(this)" '
+            + 'style="padding:6px 12px;border-radius:20px;background:#eef2fd;color:var(--navy);font-size:12.5px;font-weight:700;cursor:pointer;">'+escHtml(n)+'</span>';
+        }).join('') + '</div>';
+    } else {
+      html += '<div style="color:var(--sub);margin-top:6px;">➕ 추가할 인원 없음</div>';
+    }
+    box.innerHTML = html;
+    box.style.display = 'block';
+  }
+
+  function addMissing(chipEl){
+    var name = chipEl.getAttribute('data-name');
+    var day = prompt(name+'님을 추가할 날짜를 입력하세요 (21 또는 22)', '21');
+    if(day === null) return;
+    day = day.trim();
+    if(day !== '21' && day !== '22'){ alert('21 또는 22만 입력해주세요.'); return; }
+    var time = prompt(name+'님의 기도 시간을 입력하세요 (예: 10:30~10:40)', '');
+    if(!time) return;
+    var team = prompt(name+'님의 사역팀을 입력하세요 (없으면 빈칸으로 확인)', '') || '';
+    var phone = prompt(name+'님의 전화번호를 입력하세요 (없으면 빈칸으로 확인)', '') || '';
+
+    var daySec = document.getElementById('d'+day);
+    var list = daySec ? daySec.querySelector('.p-list') : null;
+    if(!list){ alert('해당 날짜 탭을 찾을 수 없습니다.'); return; }
+
+    var row = document.createElement('div');
+    row.className = 'p-row';
+    row.innerHTML = '<div class="p-main"><span class="p-time">'+escHtml(time)+'</span><span class="p-name">'+escHtml(name)+'</span>'
+      + (phone ? '<a class="p-phone" href="tel:'+escHtml(phone)+'">'+escHtml(phone)+'</a>' : '') + '</div>'
+      + (team ? '<div class="p-team-wrap"><span class="p-team">'+escHtml(team)+'</span></div>' : '');
+    list.appendChild(row);
+
+    ALL_ROWS.push({el: row, name: name, time: time});
+    chipEl.parentNode.removeChild(chipEl);
+    if(!document.querySelectorAll('#missingList .miss-chip').length){
+      var box = document.getElementById('syncResultBox');
+      box.innerHTML += '<div style="color:var(--sub);margin-top:6px;">➕ 추가할 인원 없음</div>';
+    }
+  }
 
   function searchName(val){
     var box = document.getElementById('searchResults');
