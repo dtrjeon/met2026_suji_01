@@ -52,6 +52,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:linear-gradient(160deg,#fd
 .hd-sub{font-size:12px;color:rgba(40,50,80,0.85);letter-spacing:2px;}
 .hd-dir{font-size:11px;color:rgba(40,50,80,0.55);margin-top:4px;letter-spacing:1px;}
 .hd-badge{display:inline-flex;flex-direction:column;align-items:center;gap:4px;margin-top:14px;padding:10px 20px;background:rgba(32,80,200,0.06);border:1px solid rgba(32,80,200,0.16);border-radius:6px;font-size:12px;color:rgba(20,50,160,1);letter-spacing:1px;}
+.hd-quicklinks{display:flex;justify-content:space-between;gap:16px;width:70%;margin:14px auto 0;}
+.hd-qbtn{flex:1;display:flex;align-items:center;justify-content:center;padding:12px 0;background:rgba(32,80,200,0.08);border:1px solid rgba(32,80,200,0.22);border-radius:14px;font-size:24px;line-height:1;text-decoration:none;color:#1a3a9e;cursor:pointer;-webkit-appearance:none;box-sizing:border-box;}
+.hd-qbtn:active{background:rgba(32,80,200,0.16);}
 .con{max-width:720px;margin:0 auto;padding:28px 18px 20px;}
 .sec{margin-bottom:20px;}
 .sec-lbl{font-size:10px;font-weight:700;letter-spacing:3px;color:#1a3a9e;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
@@ -552,9 +555,12 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
     <span style="font-size:11px;font-weight:400;opacity:0.8;">유준규 목사 · 곽미영 사모</span>
   </div>
 
-  <a href="buscheck.html" style="display:inline-block;margin-top:12px;margin-right:6px;padding:8px 16px;background:rgba(32,80,200,0.08);border:1px solid rgba(32,80,200,0.22);border-radius:20px;font-size:11px;font-weight:700;color:#1a3a9e;text-decoration:none;letter-spacing:0.5px;">🚌 버스 탑승체크</a>
-  <a href="schedule.html" style="display:inline-block;margin-top:12px;margin-right:6px;padding:8px 16px;background:rgba(32,80,200,0.08);border:1px solid rgba(32,80,200,0.22);border-radius:20px;font-size:11px;font-weight:700;color:#1a3a9e;text-decoration:none;letter-spacing:0.5px;">📅 사역일정</a>
-  <a href="prayer.html" style="display:inline-block;margin-top:12px;padding:8px 16px;background:rgba(32,80,200,0.08);border:1px solid rgba(32,80,200,0.22);border-radius:20px;font-size:11px;font-weight:700;color:#1a3a9e;text-decoration:none;letter-spacing:0.5px;">🙏 중보기도</a>
+  <div class="hd-quicklinks">
+    <a href="buscheck.html" class="hd-qbtn" title="버스 탑승체크">🚌</a>
+    <a href="schedule.html" class="hd-qbtn" title="사역일정">📅</a>
+    <a href="prayer.html" class="hd-qbtn" title="중보기도">🙏</a>
+    <button type="button" class="hd-qbtn" onclick="openRoomStatus()" title="숙소배치 현황">🏠</button>
+  </div>
 
 </div>
 
@@ -629,10 +635,7 @@ textarea{resize:none;min-height:52px;-webkit-user-select:text;user-select:text;}
     <div class="apply-toggle-title">✍️ 신청하기 <span class="apply-toggle-arrow" id="applyToggleArrow">▾</span></div>
   </div>
 
-  <!-- 숙소배치 현황 (현재 비활성화) -->
-  <button type="button" class="lkup-btn" disabled style="opacity:0.45;cursor:not-allowed;">
-    🏠 숙소배치 현황
-  </button>
+  <!-- 숙소배치 현황 버튼은 상단 헤더 아이콘 그룹(🏠)으로 이동됨 -->
 
   <div class="apply-form-wrap" id="applyFormWrap">
   <div class="sec">
