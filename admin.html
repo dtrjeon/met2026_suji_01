@@ -237,6 +237,16 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .editlog-empty{text-align:center;padding:40px 20px;font-size:13px;color:var(--text3);}
 .editlog-card.self{border-left:3px solid var(--primary);background:linear-gradient(to right,rgba(26,58,176,0.04),var(--card));}
 .editlog-self-badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;color:var(--primary);background:rgba(26,58,176,0.1);border:1px solid rgba(26,58,176,0.25);border-radius:10px;padding:1px 7px;margin-left:6px;letter-spacing:.3px;vertical-align:middle;}
+.cancelpaid-panel{display:none;padding:12px 16px 20px;}
+.cancelpaid-panel.show{display:block;}
+.cancelpaid-card{background:var(--card);border-radius:10px;padding:10px 14px;margin-bottom:8px;box-shadow:var(--shadow);border:1px solid var(--red);border-left:4px solid var(--red);}
+.cancelpaid-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.cancelpaid-name{font-size:13px;font-weight:700;color:var(--text);}
+.cancelpaid-rno{font-size:10px;color:rgba(198,40,40,0.7);font-weight:700;}
+.cancelpaid-sub{font-size:11px;color:var(--text2);margin-top:4px;line-height:1.6;}
+.cancelpaid-pay{font-size:11px;color:var(--red);font-weight:700;margin-top:4px;}
+.cancelpaid-meta{font-size:10px;color:var(--text3);margin-top:6px;}
+.cancelpaid-empty{text-align:center;padding:40px 20px;font-size:13px;color:var(--text3);}
 
 /* 명단 수정 화면 (풀스크린) */
 .edit-ovl{position:fixed;inset:0;background:var(--bg);z-index:300;display:none;flex-direction:column;}
@@ -700,6 +710,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     <div class="tab" id="tabEditlog" onclick="switchTab('editlog')">
       <span class="tab-ico">📝</span><span class="tab-lbl">수정로그</span>
     </div>
+    <div class="tab" id="tabCancelPaid" onclick="switchTab('cancelpaid')">
+      <span class="tab-ico">🗂️</span><span class="tab-lbl">취소납부자</span>
+    </div>
     <div class="tab" id="tabAccom" onclick="switchTab('accom')" style="display:none">
       <span class="tab-ico">🏕️</span><span class="tab-lbl">숙소배치</span>
     </div>
@@ -781,6 +794,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
   <!-- 수정로그 패널 -->
   <div class="editlog-panel" id="editlogPanel"></div>
+  <div class="cancelpaid-panel" id="cancelPaidPanel"></div>
 
   <!-- 숙소배치 패널 (전태룡 전용) -->
   <div class="accom-panel" id="accomPanel" style="display:none"></div>
@@ -921,6 +935,10 @@ function getUserRole(){ return currentUser ? currentUser.role : 'full'; }
 function canPopup(){    return currentUser ? currentUser.detailPopup : true; }
 function canTab(tab){   return ROLE_TABS[getUserRole()].indexOf(tab) >= 0; }
 function canEdit(){     return getUserRole()==='super'; }
+// 취소납부자 명단 전용: 김영미, 전태룡, 고영수만 접근 가능
+function isCancelPaidUser(){
+  return !!(currentUser && (currentUser.name==='김영미'||currentUser.name==='전태룡'||currentUser.name==='고영수'));
+}
 
 var TEST_DATA = [
   // ── 개인 ──
@@ -2462,6 +2480,10 @@ function switchTab(tab) {
   if(familyPanel) familyPanel.className = 'family-panel'+(tab==='family'?' show':'');
   var editlogPanel = document.getElementById('editlogPanel');
   if(editlogPanel) editlogPanel.className = 'editlog-panel'+(tab==='editlog'?' show':'');
+  var tabCancelPaid = document.getElementById('tabCancelPaid');
+  if(tabCancelPaid) tabCancelPaid.className = 'tab'+(tab==='cancelpaid'?' active':'');
+  var cancelPaidPanel = document.getElementById('cancelPaidPanel');
+  if(cancelPaidPanel) cancelPaidPanel.className = 'cancelpaid-panel'+(tab==='cancelpaid'?' show':'');
   document.getElementById('filterWrap').style.display  = tab==='list'?'flex':'none';
   document.querySelector('.search-wrap').style.display = tab==='list'?'flex':'none';
   document.getElementById('resultBar').style.display   = tab==='list'?'block':'none';
@@ -2478,6 +2500,7 @@ function switchTab(tab) {
   if(tab==='acct')    renderAcct();
   if(tab==='family')  renderFamily();
   if(tab==='editlog') loadEditLog();
+  if(tab==='cancelpaid') loadCancelledPaid();
   if(tab==='veh')      renderVeh();
   if(tab==='accom'){
     renderAccom();
@@ -2487,7 +2510,7 @@ function switchTab(tab) {
     if(fh) fh.style.display='none';
     if(window._accomScrollHandler) window.removeEventListener('scroll',window._accomScrollHandler);
   }
-  if(tab!=='miss'&&tab!=='acct'&&tab!=='family'&&tab!=='editlog'&&tab!=='accom') buildFilters();
+  if(tab!=='miss'&&tab!=='acct'&&tab!=='family'&&tab!=='editlog'&&tab!=='accom'&&tab!=='cancelpaid') buildFilters();
 }
 
 // ── 누락자 렌더링 ──
@@ -4350,6 +4373,91 @@ function renderEditLog(logs) {
       + '</div>';
   });
   panel.innerHTML = html;
+}
+
+// ── 취소납부자 명단 (삭제 시 이미 납부한 인원 보관 목록) ──
+var _cancelledPaidData = [];
+function loadCancelledPaid() {
+  var panel = document.getElementById('cancelPaidPanel');
+  if (!panel) return;
+  if (!isCancelPaidUser()) {
+    panel.innerHTML = '<div class="cancelpaid-empty">접근 권한이 없습니다.</div>';
+    return;
+  }
+  panel.innerHTML = '<div class="loading"><div class="spinner"></div><div class="loading-txt">취소납부자 명단을 불러오는 중입니다…</div></div>';
+
+  var url = GAS_URL + '?action=cancelledPaid&pw=' + encodeURIComponent(currentUser.name + ':' + currentUser.phone);
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (res.result !== 'ok') {
+        panel.innerHTML = '<div class="cancelpaid-empty">⚠️ ' + esc(res.message||'조회 실패') + '</div>';
+        return;
+      }
+      _cancelledPaidData = res.data || [];
+      renderCancelledPaid(_cancelledPaidData);
+    })
+    .catch(function(e){
+      panel.innerHTML = '<div class="cancelpaid-empty">⚠️ 네트워크 오류: ' + esc(e.message) + '</div>';
+    });
+}
+
+function renderCancelledPaid(list) {
+  var panel = document.getElementById('cancelPaidPanel');
+  if (!list.length) {
+    panel.innerHTML = '<div class="cancelpaid-empty">🗂️ 취소납부자 명단이 없습니다.</div>';
+    return;
+  }
+  var statLabel = {paid:'납부완료', exempt:'면제'};
+  var html = '<div style="padding:4px 0 10px;font-size:11px;font-weight:700;color:rgba(60,70,100,0.6);letter-spacing:1px;display:flex;align-items:center;justify-content:space-between;">'
+    + '<span>총 '+list.length+'건 (명단 삭제 시 자동 이관 · 최신순)</span>'
+    + '<button onclick="exportCancelledPaidExcel()" style="flex-shrink:0;padding:5px 10px;font-size:11px;font-weight:700;color:#fff;background:#166534;border:none;border-radius:6px;cursor:pointer;">📊 엑셀저장</button>'
+    + '</div>';
+  list.forEach(function(row){
+    html += '<div class="cancelpaid-card">'
+      + '<div class="cancelpaid-top">'
+      + '<div class="cancelpaid-name">'+esc(row.name||'-')+(row.gender?' ('+esc(row.gender)+')':'')+'</div>'
+      + '<div class="cancelpaid-rno">'+esc(row.rno||'')+'</div>'
+      + '</div>'
+      + '<div class="cancelpaid-sub">'+esc(row.village||'-')+' / '+esc(row.moksang||'-')+' · '+esc(row.mteam||'-')+'</div>'
+      + '<div class="cancelpaid-sub">'+esc(row.sched||'-')+' · 숙소: '+esc(row.accom||'-')+' · 전화: '+esc(row.phone||'-')+'</div>'
+      + '<div class="cancelpaid-pay">💰 '+esc(statLabel[row.payStatus]||row.payStatus||'-')
+      + (row.payAmount?' · '+esc(String(row.payAmount))+'원':'')
+      + (row.payDate?' · '+esc(row.payDate):'')
+      + (row.payMemo?' · '+esc(row.payMemo):'')+'</div>'
+      + '<div class="cancelpaid-meta">삭제: '+esc(row.delTime||'')+' · 삭제자: '+esc(row.editor||'')+'</div>'
+      + '</div>';
+  });
+  panel.innerHTML = html;
+}
+
+function exportCancelledPaidExcel(){
+  if(typeof XLSX==='undefined'){
+    var s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload=function(){ _doCancelledPaidExcel(); };
+    s.onerror=function(){ alert('엑셀 라이브러리 로드 실패'); };
+    document.head.appendChild(s);
+  } else { _doCancelledPaidExcel(); }
+}
+function _doCancelledPaidExcel(){
+  var statLabel = {paid:'납부완료', exempt:'면제'};
+  var rows = _cancelledPaidData.map(function(row){
+    return {
+      '삭제시각': row.delTime||'', '삭제자': row.editor||'', '관리번호': row.rno||'',
+      '이름': row.name||'', '성별': row.gender||'', '전화번호': row.phone||'',
+      '마을': row.village||'', '목장': row.moksang||'', '사역팀': row.mteam||'',
+      '참여일정': row.sched||'', '숙소': row.accom||'',
+      '납부상태': statLabel[row.payStatus]||row.payStatus||'', '납부금액': row.payAmount||'',
+      '납부일': row.payDate||'', '납부메모': row.payMemo||''
+    };
+  });
+  var ws=XLSX.utils.json_to_sheet(rows);
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '취소납부자명단');
+  var now=new Date();
+  var stamp=now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'_'+String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
+  XLSX.writeFile(wb, 'MET2026_취소납부자명단_'+stamp+'.xlsx');
 }
 
 // ══════════════════════════════════════════
